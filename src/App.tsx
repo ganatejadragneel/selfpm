@@ -8,7 +8,9 @@ import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { TaskModal } from './components/TaskModal';
 import { AddTaskModal } from './components/AddTaskModal';
-import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react';
+import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnalyticsDashboard';
+import { SmartNotificationsDisplay } from './components/notifications/SmartNotificationsDisplay';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3 } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -39,6 +41,7 @@ function AppContent() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickAddCategory, setQuickAddCategory] = useState<TaskCategory>('life_admin');
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -317,6 +320,43 @@ function AppContent() {
                 Add Task
               </button>
               
+              {/* Analytics Button */}
+              <button
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  background: showAnalytics ? 'rgba(102, 126, 234, 0.1)' : theme.colors.surface.glass,
+                  backdropFilter: theme.effects.blur,
+                  borderRadius: theme.borderRadius.full,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  marginRight: theme.spacing.sm
+                }}
+                onMouseEnter={(e) => {
+                  if (!showAnalytics) {
+                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!showAnalytics) {
+                    e.currentTarget.style.background = theme.colors.surface.glass;
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+                title="View Analytics"
+              >
+                <BarChart3 className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
+              </button>
+
+              {/* Notifications */}
+              <SmartNotificationsDisplay />
+              
               <UserMenu />
             </div>
           </div>
@@ -325,6 +365,13 @@ function AppContent() {
 
       {/* Main Content */}
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px' }}>
+        {/* Analytics Dashboard - Collapsible */}
+        {showAnalytics && (
+          <div style={{ marginBottom: '32px' }}>
+            <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+          </div>
+        )}
+
         {/* Weekly Summary */}
         <div style={{ marginBottom: '32px' }}>
           <WeeklySummary tasks={tasks} weekNumber={currentWeek} />
