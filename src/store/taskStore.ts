@@ -31,6 +31,10 @@ interface TaskStore {
   // Note actions
   addNote: (taskId: string, content: string) => Promise<void>;
   
+  // Attachment actions
+  uploadAttachment: (taskId: string, file: File) => Promise<void>;
+  deleteAttachment: (attachmentId: string) => Promise<void>;
+  
   // Task reordering and category management
   reorderTasks: (sourceCategory: string, destinationCategory: string, taskIds: string[]) => Promise<void>;
   moveTaskToCategory: (taskId: string, newCategory: string) => Promise<void>;
@@ -75,10 +79,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
         (tasks || []).map(async (task) => {
-          const [subtasksRes, updatesRes, notesRes] = await Promise.all([
+          const [subtasksRes, updatesRes, notesRes, attachmentsRes] = await Promise.all([
             supabase.from('subtasks').select('*').eq('task_id', task.id).order('position'),
             supabase.from('task_updates').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
-            supabase.from('notes').select('*').eq('task_id', task.id).order('created_at', { ascending: false })
+            supabase.from('notes').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
+            supabase.from('attachments').select('*').eq('task_id', task.id).order('uploaded_at', { ascending: false })
           ]);
           
           // Convert database snake_case to frontend camelCase
@@ -113,7 +118,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               progressValue: update.progress_value,
               createdAt: update.created_at
             })),
-            notes: notesRes.data || []
+            notes: notesRes.data || [],
+            attachments: (attachmentsRes.data || []).map(attachment => ({
+              id: attachment.id,
+              taskId: attachment.task_id,
+              userId: attachment.user_id,
+              fileName: attachment.file_name,
+              fileSize: attachment.file_size,
+              fileType: attachment.file_type,
+              fileUrl: attachment.file_url,
+              thumbnailUrl: attachment.thumbnail_url,
+              uploadedAt: attachment.uploaded_at
+            }))
           };
         })
       );
@@ -162,7 +178,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       if (error) throw error;
       
       set(state => ({
-        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], notes: [] }]
+        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], notes: [], attachments: [] }]
       }));
     } catch (error) {
       set({ error: (error as Error).message });
@@ -512,7 +528,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       set(state => ({
         tasks: state.tasks.map(task => {
           if (taskIds.includes(task.id)) {
-            return { ...task, category: destinationCategory };
+            return { ...task, category: destinationCategory as any };
           }
           return task;
         })
@@ -533,8 +549,99 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       set(state => ({
         tasks: state.tasks.map(task =>
-          task.id === taskId ? { ...task, category: newCategory } : task
+          task.id === taskId ? { ...task, category: newCategory as any } : task
         )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  uploadAttachment: async (taskId, file) => {
+    try {
+      // Get current user from auth store
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) {
+        set({ error: 'User not authenticated' });
+        return;
+      }
+
+      // For now, we'll store the file as a base64 data URL in the database
+      // This is a temporary solution until the storage bucket is properly configured
+      const reader = new FileReader();
+      
+      const fileDataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      // Create thumbnail URL if it's an image
+      let thumbnailUrl = undefined;
+      if (file.type.startsWith('image/')) {
+        thumbnailUrl = fileDataUrl; // Use the data URL as thumbnail
+      }
+      
+      // Save attachment metadata to database with data URL
+      const { data, error } = await supabase
+        .from('attachments')
+        .insert([{
+          task_id: taskId,
+          user_id: userId,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          file_url: fileDataUrl, // Store the data URL directly
+          thumbnail_url: thumbnailUrl
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update local state
+      const formattedAttachment = {
+        id: data.id,
+        taskId: data.task_id,
+        userId: data.user_id,
+        fileName: data.file_name,
+        fileSize: data.file_size,
+        fileType: data.file_type,
+        fileUrl: data.file_url,
+        thumbnailUrl: data.thumbnail_url,
+        uploadedAt: data.uploaded_at
+      };
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, attachments: [...(task.attachments || []), formattedAttachment] }
+            : task
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  deleteAttachment: async (attachmentId) => {
+    try {
+      // Delete from database (no need to delete from storage since we're using data URLs)
+      const { error } = await supabase
+        .from('attachments')
+        .delete()
+        .eq('id', attachmentId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          attachments: task.attachments?.filter(a => a.id !== attachmentId)
+        }))
       }));
     } catch (error) {
       set({ error: (error as Error).message });

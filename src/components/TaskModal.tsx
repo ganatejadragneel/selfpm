@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus } from '../types';
 import { useTaskStore } from '../store/taskStore';
-import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity } from 'lucide-react';
+import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
-import { clsx } from 'clsx';
 import { SubtaskList } from './subtasks/SubtaskList';
+import { AttachmentUpload } from './attachments/AttachmentUpload';
+import { AttachmentList } from './attachments/AttachmentList';
 import { theme } from '../styles/theme';
 
 interface TaskModalProps {
@@ -852,6 +853,27 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     No updates yet. Add your first progress update above!
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Attachments Section */}
+            <div style={{ marginBottom: theme.spacing.xl }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+                <Paperclip className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
+                <h3 style={{
+                  fontSize: theme.typography.sizes.lg,
+                  fontWeight: theme.typography.weights.bold,
+                  color: theme.colors.text.primary,
+                  margin: 0
+                }}>
+                  Attachments {task.attachments && task.attachments.length > 0 && `(${task.attachments.length})`}
+                </h3>
+              </div>
+              
+              <AttachmentList attachments={task.attachments || []} />
+              
+              <div style={{ marginTop: theme.spacing.lg }}>
+                <AttachmentUpload taskId={task.id} />
               </div>
             </div>
 

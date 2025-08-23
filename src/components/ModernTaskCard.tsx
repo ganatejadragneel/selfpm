@@ -140,7 +140,7 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
         
         <div 
           style={{ flex: 1, minWidth: 0 }}
-          onClick={(e) => {
+          onClick={() => {
             // Only trigger onClick if not dragging
             if (!isDragging) {
               onClick();

@@ -21,6 +21,7 @@ export interface Task {
   subtasks?: Subtask[];
   updates?: TaskUpdate[];
   notes?: Note[];
+  attachments?: Attachment[];
 }
 
 export interface Subtask {
@@ -45,6 +46,18 @@ export interface Note {
   taskId: string;
   content: string;
   createdAt: string;
+}
+
+export interface Attachment {
+  id: string;
+  taskId: string;
+  userId: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  fileUrl: string;
+  thumbnailUrl?: string;
+  uploadedAt: string;
 }
 
 export interface WeeklySummary {

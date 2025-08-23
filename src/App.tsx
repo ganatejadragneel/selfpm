@@ -31,7 +31,6 @@ function AppContent() {
     currentWeek,
     fetchTasks,
     setCurrentWeek,
-    reorderTasks,
     moveTaskToCategory
   } = useTaskStore();
 
