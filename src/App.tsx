@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useTaskStore } from './store/taskStore';
 import { useTaskActions } from './hooks/useTaskActions';
+import { AuthGuard } from './components/auth/AuthGuard';
+import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { TaskModal } from './components/TaskModal';
@@ -11,6 +13,14 @@ import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
 
 function App() {
+  return (
+    <AuthGuard>
+      <AppContent />
+    </AuthGuard>
+  );
+}
+
+function AppContent() {
   const {
     tasks,
     loading,
@@ -65,9 +75,16 @@ function App() {
         background: theme.colors.surface.glass,
         backdropFilter: theme.effects.blur,
         borderBottom: `1px solid ${theme.colors.surface.glassBorder}`,
-        boxShadow: theme.effects.shadow.md
+        boxShadow: theme.effects.shadow.md,
+        position: 'relative',
+        zIndex: 100
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px' }}>
+        <div style={{ 
+          maxWidth: '1280px', 
+          margin: '0 auto', 
+          padding: '16px 24px',
+          position: 'relative'
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -176,10 +193,9 @@ function App() {
               </div>
             </div>
             
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <button
                 onClick={() => {
-                  console.log('Quick Add clicked');
                   setShowQuickAdd(true);
                 }}
                 style={{
@@ -209,6 +225,8 @@ function App() {
                 <Plus className="w-4 h-4" />
                 Add Task
               </button>
+              
+              <UserMenu />
             </div>
           </div>
         </div>

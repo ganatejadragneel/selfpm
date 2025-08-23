@@ -178,6 +178,8 @@ export const styleUtils = {
   
   input: () => ({
     width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box' as const,
     border: `2px solid ${theme.colors.border.light}`,
     borderRadius: theme.borderRadius.md,
     padding: `${theme.spacing.md} ${theme.spacing.lg}`,

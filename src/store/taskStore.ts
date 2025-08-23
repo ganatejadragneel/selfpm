@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Task } from '../types';
 import { supabase } from '../lib/supabase';
 import { getWeek, getYear } from 'date-fns';
+import { useAuthStore } from './authStore';
 
 interface TaskStore {
   tasks: Task[];
@@ -44,11 +45,21 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ loading: true, error: null });
     const week = weekNumber || get().currentWeek;
     
+    // Get current user from auth store
+    const authStore = useAuthStore.getState();
+    const userId = authStore.user?.id;
+    
+    if (!userId) {
+      set({ loading: false, error: 'User not authenticated' });
+      return;
+    }
+    
     try {
-      // Fetch tasks for the current week
+      // Fetch tasks for the current week and user
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
+        .eq('user_id', userId)
         .eq('week_number', week)
         .order('category')
         .order('created_at');
@@ -108,7 +119,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   createTask: async (taskData) => {
     const week = get().currentWeek;
+    
+    // Get current user from auth store
+    const authStore = useAuthStore.getState();
+    const userId = authStore.user?.id;
+    
+    if (!userId) {
+      set({ error: 'User not authenticated' });
+      return;
+    }
+    
     const newTask = {
+      user_id: userId,
       category: taskData.category,
       title: taskData.title,
       description: taskData.description,
