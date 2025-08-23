@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { SubtaskList } from './subtasks/SubtaskList';
 import { AttachmentUpload } from './attachments/AttachmentUpload';
 import { AttachmentList } from './attachments/AttachmentList';
+import { ActivityTimeline } from './activity/ActivityTimeline';
+import { CommentSection } from './activity/CommentSection';
 import { theme } from '../styles/theme';
 
 interface TaskModalProps {
@@ -1034,6 +1036,38 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                   Add Note
                 </button>
               </div>
+            </div>
+
+            {/* Comments Section */}
+            <div style={{ marginTop: theme.spacing['2xl'] }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+                <MessageSquare className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
+                <h3 style={{
+                  fontSize: theme.typography.sizes.lg,
+                  fontWeight: theme.typography.weights.bold,
+                  color: theme.colors.text.primary,
+                  margin: 0
+                }}>
+                  Comments
+                </h3>
+              </div>
+              <CommentSection taskId={task.id} comments={task.comments || []} />
+            </div>
+
+            {/* Activity Timeline */}
+            <div style={{ marginTop: theme.spacing['2xl'] }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
+                <Activity className="w-5 h-5" style={{ color: theme.colors.status.info.dark }} />
+                <h3 style={{
+                  fontSize: theme.typography.sizes.lg,
+                  fontWeight: theme.typography.weights.bold,
+                  color: theme.colors.text.primary,
+                  margin: 0
+                }}>
+                  Activity
+                </h3>
+              </div>
+              <ActivityTimeline activities={task.activities || []} />
             </div>
           </div>
         </div>

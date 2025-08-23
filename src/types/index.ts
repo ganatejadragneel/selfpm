@@ -22,6 +22,8 @@ export interface Task {
   updates?: TaskUpdate[];
   notes?: Note[];
   attachments?: Attachment[];
+  activities?: TaskActivity[];
+  comments?: TaskComment[];
 }
 
 export interface Subtask {
@@ -58,6 +60,55 @@ export interface Attachment {
   fileUrl: string;
   thumbnailUrl?: string;
   uploadedAt: string;
+}
+
+export type ActivityType = 
+  | 'created' 
+  | 'updated' 
+  | 'status_changed' 
+  | 'priority_changed'
+  | 'due_date_changed' 
+  | 'description_updated' 
+  | 'subtask_added'
+  | 'subtask_completed' 
+  | 'subtask_deleted' 
+  | 'attachment_added'
+  | 'attachment_deleted' 
+  | 'comment_added' 
+  | 'progress_updated'
+  | 'note_added' 
+  | 'moved_category' 
+  | 'reordered';
+
+export interface TaskActivity {
+  id: string;
+  taskId: string;
+  userId: string;
+  activityType: ActivityType;
+  oldValue?: string;
+  newValue?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  user?: {
+    id: string;
+    username: string;
+  };
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  parentCommentId?: string;
+  content: string;
+  isEdited: boolean;
+  editedAt?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    username: string;
+  };
+  replies?: TaskComment[];
 }
 
 export interface WeeklySummary {

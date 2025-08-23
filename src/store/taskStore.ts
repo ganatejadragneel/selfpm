@@ -35,6 +35,12 @@ interface TaskStore {
   uploadAttachment: (taskId: string, file: File) => Promise<void>;
   deleteAttachment: (attachmentId: string) => Promise<void>;
   
+  // Activity and Comment actions
+  logActivity: (taskId: string, activityType: string, oldValue?: string, newValue?: string, metadata?: any) => Promise<void>;
+  addComment: (taskId: string, content: string, parentCommentId?: string) => Promise<void>;
+  editComment: (commentId: string, content: string) => Promise<void>;
+  deleteComment: (commentId: string) => Promise<void>;
+  
   // Task reordering and category management
   reorderTasks: (sourceCategory: string, destinationCategory: string, taskIds: string[]) => Promise<void>;
   moveTaskToCategory: (taskId: string, newCategory: string) => Promise<void>;
@@ -79,11 +85,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
         (tasks || []).map(async (task) => {
-          const [subtasksRes, updatesRes, notesRes, attachmentsRes] = await Promise.all([
+          const [subtasksRes, updatesRes, notesRes, attachmentsRes, activitiesRes, commentsRes] = await Promise.all([
             supabase.from('subtasks').select('*').eq('task_id', task.id).order('position'),
             supabase.from('task_updates').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
             supabase.from('notes').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
-            supabase.from('attachments').select('*').eq('task_id', task.id).order('uploaded_at', { ascending: false })
+            supabase.from('attachments').select('*').eq('task_id', task.id).order('uploaded_at', { ascending: false }),
+            supabase.from('task_activities').select('*, user:users(id, username)').eq('task_id', task.id).order('created_at', { ascending: false }).limit(20),
+            supabase.from('task_comments').select('*, user:users(id, username)').eq('task_id', task.id).is('parent_comment_id', null).order('created_at', { ascending: false })
           ]);
           
           // Convert database snake_case to frontend camelCase
@@ -129,6 +137,28 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               fileUrl: attachment.file_url,
               thumbnailUrl: attachment.thumbnail_url,
               uploadedAt: attachment.uploaded_at
+            })),
+            activities: (activitiesRes.data || []).map(activity => ({
+              id: activity.id,
+              taskId: activity.task_id,
+              userId: activity.user_id,
+              activityType: activity.activity_type,
+              oldValue: activity.old_value,
+              newValue: activity.new_value,
+              metadata: activity.metadata,
+              createdAt: activity.created_at,
+              user: activity.user
+            })),
+            comments: (commentsRes.data || []).map(comment => ({
+              id: comment.id,
+              taskId: comment.task_id,
+              userId: comment.user_id,
+              parentCommentId: comment.parent_comment_id,
+              content: comment.content,
+              isEdited: comment.is_edited,
+              editedAt: comment.edited_at,
+              createdAt: comment.created_at,
+              user: comment.user
             }))
           };
         })
@@ -177,8 +207,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Log activity for task creation
+      await get().logActivity(data.id, 'created', undefined, data.title, { category: data.category });
+      
       set(state => ({
-        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], notes: [], attachments: [] }]
+        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], notes: [], attachments: [], activities: [], comments: [] }]
       }));
     } catch (error) {
       set({ error: (error as Error).message });
@@ -187,6 +220,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   updateTask: async (id, updates) => {
     try {
+      // Get current task for comparison
+      const currentTask = get().tasks.find(t => t.id === id);
+      if (!currentTask) return;
+      
       // Convert camelCase updates to snake_case for database
       const dbUpdates: any = {};
       if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
@@ -210,6 +247,23 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Log activities for significant changes
+      if (updates.status !== undefined && updates.status !== currentTask.status) {
+        await get().logActivity(id, 'status_changed', currentTask.status, updates.status);
+      }
+      if (updates.priority !== undefined && updates.priority !== currentTask.priority) {
+        await get().logActivity(id, 'priority_changed', currentTask.priority, updates.priority);
+      }
+      if (updates.dueDate !== undefined && updates.dueDate !== currentTask.dueDate) {
+        await get().logActivity(id, 'due_date_changed', currentTask.dueDate, updates.dueDate);
+      }
+      if (updates.description !== undefined && updates.description !== currentTask.description) {
+        await get().logActivity(id, 'description_updated');
+      }
+      if (updates.category !== undefined && updates.category !== currentTask.category) {
+        await get().logActivity(id, 'moved_category', currentTask.category, updates.category);
+      }
       
       set(state => ({
         tasks: state.tasks.map(task =>
@@ -250,6 +304,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         .single();
       
       if (error) throw error;
+      
+      // Log activity
+      await get().logActivity(taskId, 'subtask_added', undefined, title);
       
       // Convert snake_case to camelCase to match frontend expectations
       const formattedSubtask = {
@@ -313,6 +370,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Log activity
+      if (!subtask.isCompleted) {
+        await get().logActivity(task.id, 'subtask_completed', undefined, subtask.title);
+      }
+      
       set(state => ({
         tasks: state.tasks.map(t =>
           t.id === task.id
@@ -332,12 +394,23 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   deleteSubtask: async (subtaskId) => {
     try {
+      // Find the subtask to get its title for activity log
+      const task = get().tasks.find(t => 
+        t.subtasks?.some(s => s.id === subtaskId)
+      );
+      const subtask = task?.subtasks?.find(s => s.id === subtaskId);
+      
       const { error } = await supabase
         .from('subtasks')
         .delete()
         .eq('id', subtaskId);
       
       if (error) throw error;
+      
+      // Log activity
+      if (task && subtask) {
+        await get().logActivity(task.id, 'subtask_deleted', subtask.title);
+      }
       
       set(state => ({
         tasks: state.tasks.map(task => ({
@@ -410,7 +483,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       // If progress value provided, update task progress too
       if (progressValue !== undefined) {
+        const task = get().tasks.find(t => t.id === taskId);
+        const oldProgress = task?.progressCurrent;
         await get().updateProgress(taskId, progressValue);
+        await get().logActivity(taskId, 'progress_updated', oldProgress?.toString(), progressValue.toString(), 
+          { progress_total: task?.progressTotal });
       }
       
       // Convert snake_case to camelCase to match frontend expectations
@@ -443,6 +520,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         .single();
       
       if (error) throw error;
+      
+      // Log activity
+      await get().logActivity(taskId, 'note_added', undefined, content.substring(0, 50));
       
       // Convert snake_case to camelCase to match frontend expectations
       const formattedNote = {
@@ -601,6 +681,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Log activity
+      await get().logActivity(taskId, 'attachment_added', undefined, file.name);
+      
       // Update local state
       const formattedAttachment = {
         id: data.id,
@@ -628,6 +711,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   deleteAttachment: async (attachmentId) => {
     try {
+      // Find the attachment to log activity
+      const attachment = get().tasks
+        .flatMap(t => t.attachments || [])
+        .find(a => a.id === attachmentId);
+      const task = get().tasks.find(t => 
+        t.attachments?.some(a => a.id === attachmentId)
+      );
+      
       // Delete from database (no need to delete from storage since we're using data URLs)
       const { error } = await supabase
         .from('attachments')
@@ -636,11 +727,164 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Log activity
+      if (task && attachment) {
+        await get().logActivity(task.id, 'attachment_deleted', attachment.fileName);
+      }
+      
       // Update local state
       set(state => ({
         tasks: state.tasks.map(task => ({
           ...task,
           attachments: task.attachments?.filter(a => a.id !== attachmentId)
+        }))
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  logActivity: async (taskId, activityType, oldValue, newValue, metadata) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('task_activities')
+        .insert([{
+          task_id: taskId,
+          user_id: userId,
+          activity_type: activityType,
+          old_value: oldValue,
+          new_value: newValue,
+          metadata
+        }])
+        .select('*, user:users(id, username)')
+        .single();
+      
+      if (error) throw error;
+      
+      // Update local state
+      const formattedActivity = {
+        id: data.id,
+        taskId: data.task_id,
+        userId: data.user_id,
+        activityType: data.activity_type,
+        oldValue: data.old_value,
+        newValue: data.new_value,
+        metadata: data.metadata,
+        createdAt: data.created_at,
+        user: data.user
+      };
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, activities: [formattedActivity, ...(task.activities || [])] }
+            : task
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to log activity:', error);
+    }
+  },
+
+  addComment: async (taskId, content, parentCommentId) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) {
+        set({ error: 'User not authenticated' });
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('task_comments')
+        .insert([{
+          task_id: taskId,
+          user_id: userId,
+          parent_comment_id: parentCommentId,
+          content
+        }])
+        .select('*, user:users(id, username)')
+        .single();
+      
+      if (error) throw error;
+      
+      // Log activity
+      await get().logActivity(taskId, 'comment_added', undefined, content.substring(0, 50));
+      
+      // Update local state
+      const formattedComment = {
+        id: data.id,
+        taskId: data.task_id,
+        userId: data.user_id,
+        parentCommentId: data.parent_comment_id,
+        content: data.content,
+        isEdited: data.is_edited,
+        editedAt: data.edited_at,
+        createdAt: data.created_at,
+        user: data.user
+      };
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, comments: [...(task.comments || []), formattedComment] }
+            : task
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  editComment: async (commentId, content) => {
+    try {
+      const { error } = await supabase
+        .from('task_comments')
+        .update({ 
+          content,
+          is_edited: true,
+          edited_at: new Date().toISOString()
+        })
+        .eq('id', commentId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          comments: task.comments?.map(comment =>
+            comment.id === commentId
+              ? { ...comment, content, isEdited: true, editedAt: new Date().toISOString() }
+              : comment
+          )
+        }))
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  deleteComment: async (commentId) => {
+    try {
+      const { error } = await supabase
+        .from('task_comments')
+        .delete()
+        .eq('id', commentId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          comments: task.comments?.filter(c => c.id !== commentId)
         }))
       }));
     } catch (error) {
