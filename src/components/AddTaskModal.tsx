@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { TaskCategory } from '../types';
 import { useTaskStore } from '../store/taskStore';
-import { theme, categoryConfigs, styleUtils } from '../styles/theme';
+import { theme } from '../styles/theme';
 
 interface AddTaskModalProps {
   isOpen: boolean;

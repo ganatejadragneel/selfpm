@@ -2,7 +2,7 @@ import React from 'react';
 import type { Task, TaskCategory } from '../types';
 import { ModernTaskCard } from './ModernTaskCard';
 import { Plus, Home, Briefcase, RotateCcw } from 'lucide-react';
-import { theme, categoryConfigs } from '../styles/theme';
+import { categoryConfigs } from '../styles/theme';
 
 interface ModernCategoryColumnProps {
   category: TaskCategory;

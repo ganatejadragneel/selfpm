@@ -144,14 +144,14 @@ export const styleUtils = {
   }),
   
   button: {
-    primary: (accent: string = theme.colors.primary.dark) => ({
+    primary: () => ({
       background: theme.colors.primary.gradient,
       color: 'white',
       border: 'none',
       borderRadius: theme.borderRadius.md,
       cursor: 'pointer',
       transition: 'all 0.2s ease',
-      boxShadow: `0 4px 15px ${accent}33`,
+      boxShadow: `0 4px 15px ${theme.colors.primary.dark}33`,
     }),
     
     secondary: () => ({
@@ -163,7 +163,7 @@ export const styleUtils = {
       transition: 'all 0.2s ease',
     }),
     
-    icon: (accent: string) => ({
+    icon: () => ({
       border: 'none',
       background: 'none',
       cursor: 'pointer',

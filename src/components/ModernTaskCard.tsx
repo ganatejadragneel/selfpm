@@ -84,7 +84,7 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
             onStatusToggle();
           }}
           style={{
-            ...styleUtils.button.icon(categoryConfig.accentColor),
+            ...styleUtils.button.icon(),
             marginTop: '2px'
           }}
           onMouseEnter={(e) => {
