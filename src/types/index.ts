@@ -24,6 +24,13 @@ export interface Task {
   attachments?: Attachment[];
   activities?: TaskActivity[];
   comments?: TaskComment[];
+  dependencies?: TaskDependency[];
+  dependents?: TaskDependency[];
+  autoProgress?: boolean;
+  weightedProgress?: boolean;
+  completionVelocity?: number;
+  estimatedCompletionDate?: string;
+  recurringTemplateId?: string;
 }
 
 export interface Subtask {
@@ -32,6 +39,8 @@ export interface Subtask {
   title: string;
   isCompleted: boolean;
   position: number;
+  weight?: number;
+  autoCompleteParent?: boolean;
   createdAt: string;
 }
 
@@ -123,4 +132,77 @@ export interface WeeklySummary {
     work: { total: number; completed: number };
     weeklyRecurring: { total: number; completed: number };
   };
+}
+
+export type DependencyType = 'finish_to_start' | 'start_to_start' | 'finish_to_finish' | 'start_to_finish';
+
+export interface TaskDependency {
+  id: string;
+  taskId: string;
+  dependsOnTaskId: string;
+  dependencyType: DependencyType;
+  dependsOnTask?: Task;
+  createdAt: string;
+}
+
+export type RecurrencePattern = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface RecurringTaskTemplate {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  category: TaskCategory;
+  priority: TaskPriority;
+  recurrencePattern: RecurrencePattern;
+  recurrenceDayOfWeek?: number;
+  recurrenceDayOfMonth?: number;
+  recurrenceMonths?: string[];
+  autoCreateDaysBefore: number;
+  isActive: boolean;
+  lastCreatedAt?: string;
+  nextCreateAt?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NotificationType = 
+  | 'due_soon'
+  | 'overdue'
+  | 'stale'
+  | 'dependency_completed'
+  | 'milestone_reached'
+  | 'weekly_summary'
+  | 'recurring_created';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  taskId?: string;
+  notificationType: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  readAt?: string;
+  actionUrl?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+export interface TaskAnalytics {
+  id: string;
+  userId: string;
+  periodType: 'daily' | 'weekly' | 'monthly';
+  periodDate: string;
+  category?: TaskCategory;
+  tasksCreated: number;
+  tasksCompleted: number;
+  tasksOverdue: number;
+  subtasksCompleted: number;
+  averageCompletionTime?: string;
+  totalProgressPoints: number;
+  completionRate: number;
+  metadata?: Record<string, any>;
+  createdAt: string;
 }

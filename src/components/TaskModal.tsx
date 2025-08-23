@@ -8,6 +8,8 @@ import { AttachmentUpload } from './attachments/AttachmentUpload';
 import { AttachmentList } from './attachments/AttachmentList';
 import { ActivityTimeline } from './activity/ActivityTimeline';
 import { CommentSection } from './activity/CommentSection';
+import { SmartProgressManager } from './progress/SmartProgressManager';
+import { TaskDependencyManager } from './dependencies/TaskDependencyManager';
 import { theme } from '../styles/theme';
 
 interface TaskModalProps {
@@ -17,7 +19,16 @@ interface TaskModalProps {
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) => {
-  const { updateTask, addTaskUpdate, addNote } = useTaskStore();
+  const { 
+    tasks,
+    updateTask, 
+    addTaskUpdate, 
+    addNote,
+    updateProgressSettings,
+    updateSubtaskWeight,
+    addDependency,
+    removeDependency,
+  } = useTaskStore();
   
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -588,6 +599,29 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
 
             {/* Enhanced Subtasks */}
             <SubtaskList taskId={task.id} subtasks={task.subtasks || []} />
+
+            {/* Smart Progress Tracking */}
+            {task.subtasks && task.subtasks.length > 0 && (
+              <div style={{ marginBottom: theme.spacing.xl }}>
+                <SmartProgressManager 
+                  task={task}
+                  onUpdateProgress={updateProgressSettings}
+                  onUpdateSubtaskWeight={updateSubtaskWeight}
+                />
+              </div>
+            )}
+
+            {/* Task Dependencies */}
+            <div style={{ marginBottom: theme.spacing.xl }}>
+              <TaskDependencyManager
+                task={task}
+                allTasks={tasks}
+                dependencies={task.dependencies || []}
+                dependents={task.dependents || []}
+                onAddDependency={addDependency}
+                onRemoveDependency={removeDependency}
+              />
+            </div>
 
             {/* Add Update Section */}
             <div style={{ marginBottom: theme.spacing.xl }}>

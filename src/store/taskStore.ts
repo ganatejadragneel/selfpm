@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { Task } from '../types';
+import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, Notification } from '../types';
 import { supabase } from '../lib/supabase';
-import { getWeek, getYear } from 'date-fns';
+import { getWeek, getYear, addDays, format } from 'date-fns';
 import { useAuthStore } from './authStore';
 
 interface TaskStore {
@@ -10,6 +10,9 @@ interface TaskStore {
   error: string | null;
   currentWeek: number;
   currentYear: number;
+  dependencies: TaskDependency[];
+  notifications: Notification[];
+  recurringTemplates: RecurringTaskTemplate[];
   
   // Actions
   fetchTasks: (weekNumber?: number) => Promise<void>;
@@ -23,10 +26,13 @@ interface TaskStore {
   toggleSubtask: (subtaskId: string) => Promise<void>;
   deleteSubtask: (subtaskId: string) => Promise<void>;
   reorderSubtasks: (taskId: string, subtaskIds: string[]) => Promise<void>;
+  updateSubtaskWeight: (subtaskId: string, weight: number) => Promise<void>;
   
   // Progress actions
   updateProgress: (taskId: string, current: number) => Promise<void>;
   addTaskUpdate: (taskId: string, updateText: string, progressValue?: number) => Promise<void>;
+  updateProgressSettings: (taskId: string, settings: { autoProgress: boolean; weightedProgress: boolean }) => Promise<void>;
+  calculateAutoProgress: (taskId: string) => Promise<void>;
   
   // Note actions
   addNote: (taskId: string, content: string) => Promise<void>;
@@ -48,6 +54,31 @@ interface TaskStore {
   // Week management
   rolloverIncompleteTasks: () => Promise<void>;
   setCurrentWeek: (weekNumber: number) => void;
+  
+  // Dependency actions
+  addDependency: (taskId: string, dependsOnTaskId: string, type: DependencyType) => Promise<void>;
+  removeDependency: (dependencyId: string) => Promise<void>;
+  fetchDependencies: () => Promise<void>;
+  checkDependencyStatus: (taskId: string) => boolean;
+  
+  // Recurring task actions
+  createRecurringTemplate: (template: Partial<RecurringTaskTemplate>) => Promise<void>;
+  updateRecurringTemplate: (id: string, updates: Partial<RecurringTaskTemplate>) => Promise<void>;
+  deleteRecurringTemplate: (id: string) => Promise<void>;
+  fetchRecurringTemplates: () => Promise<void>;
+  generateRecurringTasks: () => Promise<void>;
+  
+  // Notification actions
+  fetchNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  createNotification: (notification: Partial<Notification>) => Promise<void>;
+  checkDueDates: () => Promise<void>;
+  checkStaleTasks: () => Promise<void>;
+  
+  // Bulk operations
+  bulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => Promise<void>;
+  bulkDeleteTasks: (taskIds: string[]) => Promise<void>;
+  bulkMoveTasks: (taskIds: string[], category: string) => Promise<void>;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -56,6 +87,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   error: null,
   currentWeek: getWeek(new Date()),
   currentYear: getYear(new Date()),
+  dependencies: [],
+  notifications: [],
+  recurringTemplates: [],
 
   fetchTasks: async (weekNumber) => {
     set({ loading: true, error: null });
@@ -85,13 +119,15 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
         (tasks || []).map(async (task) => {
-          const [subtasksRes, updatesRes, notesRes, attachmentsRes, activitiesRes, commentsRes] = await Promise.all([
+          const [subtasksRes, updatesRes, notesRes, attachmentsRes, activitiesRes, commentsRes, dependenciesRes, dependentsRes] = await Promise.all([
             supabase.from('subtasks').select('*').eq('task_id', task.id).order('position'),
             supabase.from('task_updates').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
             supabase.from('notes').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
             supabase.from('attachments').select('*').eq('task_id', task.id).order('uploaded_at', { ascending: false }),
             supabase.from('task_activities').select('*, user:users(id, username)').eq('task_id', task.id).order('created_at', { ascending: false }).limit(20),
-            supabase.from('task_comments').select('*, user:users(id, username)').eq('task_id', task.id).is('parent_comment_id', null).order('created_at', { ascending: false })
+            supabase.from('task_comments').select('*, user:users(id, username)').eq('task_id', task.id).is('parent_comment_id', null).order('created_at', { ascending: false }),
+            supabase.from('task_dependencies').select('*').eq('task_id', task.id),
+            supabase.from('task_dependencies').select('*').eq('depends_on_task_id', task.id)
           ]);
           
           // Convert database snake_case to frontend camelCase
@@ -117,6 +153,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               title: subtask.title,
               isCompleted: subtask.is_completed,
               position: subtask.position,
+              weight: subtask.weight,
+              autoCompleteParent: subtask.auto_complete_parent,
               createdAt: subtask.created_at
             })),
             updates: (updatesRes.data || []).map(update => ({
@@ -159,7 +197,26 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               editedAt: comment.edited_at,
               createdAt: comment.created_at,
               user: comment.user
-            }))
+            })),
+            dependencies: (dependenciesRes.data || []).map(dep => ({
+              id: dep.id,
+              taskId: dep.task_id,
+              dependsOnTaskId: dep.depends_on_task_id,
+              dependencyType: dep.dependency_type,
+              createdAt: dep.created_at
+            })),
+            dependents: (dependentsRes.data || []).map(dep => ({
+              id: dep.id,
+              taskId: dep.task_id,
+              dependsOnTaskId: dep.depends_on_task_id,
+              dependencyType: dep.dependency_type,
+              createdAt: dep.created_at
+            })),
+            autoProgress: task.auto_progress,
+            weightedProgress: task.weighted_progress,
+            completionVelocity: task.completion_velocity,
+            estimatedCompletionDate: task.estimated_completion_date,
+            recurringTemplateId: task.recurring_template_id
           };
         })
       );
@@ -387,6 +444,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             : t
         )
       }));
+      
+      // Recalculate progress if auto-progress is enabled
+      if (task.autoProgress) {
+        await get().calculateAutoProgress(task.id);
+      }
     } catch (error) {
       set({ error: (error as Error).message });
     }
@@ -886,6 +948,613 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           ...task,
           comments: task.comments?.filter(c => c.id !== commentId)
         }))
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  // Smart Progress Methods
+  updateSubtaskWeight: async (subtaskId, weight) => {
+    try {
+      const { error } = await supabase
+        .from('subtasks')
+        .update({ weight })
+        .eq('id', subtaskId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          subtasks: task.subtasks?.map(st =>
+            st.id === subtaskId ? { ...st, weight } : st
+          )
+        }))
+      }));
+      
+      // Recalculate progress if auto-progress is enabled
+      const task = get().tasks.find(t => t.subtasks?.some(st => st.id === subtaskId));
+      if (task?.autoProgress) {
+        await get().calculateAutoProgress(task.id);
+      }
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  updateProgressSettings: async (taskId, settings) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          auto_progress: settings.autoProgress,
+          weighted_progress: settings.weightedProgress
+        })
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, autoProgress: settings.autoProgress, weightedProgress: settings.weightedProgress }
+            : task
+        )
+      }));
+      
+      // Calculate progress if auto-progress is enabled
+      if (settings.autoProgress) {
+        await get().calculateAutoProgress(taskId);
+      }
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  calculateAutoProgress: async (taskId) => {
+    const task = get().tasks.find(t => t.id === taskId);
+    if (!task || !task.autoProgress || !task.subtasks || task.subtasks.length === 0) return;
+    
+    let progress = 0;
+    
+    if (task.weightedProgress) {
+      const totalWeight = task.subtasks.reduce((sum, st) => sum + (st.weight || 1), 0);
+      const completedWeight = task.subtasks
+        .filter(st => st.isCompleted)
+        .reduce((sum, st) => sum + (st.weight || 1), 0);
+      progress = Math.round((completedWeight / totalWeight) * 100);
+    } else {
+      const completed = task.subtasks.filter(st => st.isCompleted).length;
+      progress = Math.round((completed / task.subtasks.length) * 100);
+    }
+    
+    // Update progress in database and locally
+    await get().updateProgress(taskId, progress);
+  },
+
+  // Dependency Methods
+  addDependency: async (taskId, dependsOnTaskId, type) => {
+    try {
+      const { data, error } = await supabase
+        .from('task_dependencies')
+        .insert([{
+          task_id: taskId,
+          depends_on_task_id: dependsOnTaskId,
+          dependency_type: type
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      const formattedDependency: TaskDependency = {
+        id: data.id,
+        taskId: data.task_id,
+        dependsOnTaskId: data.depends_on_task_id,
+        dependencyType: data.dependency_type,
+        createdAt: data.created_at
+      };
+      
+      set(state => ({
+        dependencies: [...state.dependencies, formattedDependency],
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, dependencies: [...(task.dependencies || []), formattedDependency] }
+            : task
+        )
+      }));
+      
+      // Check if task should be blocked
+      const canStart = get().checkDependencyStatus(taskId);
+      if (!canStart && get().tasks.find(t => t.id === taskId)?.status === 'todo') {
+        await get().updateTask(taskId, { status: 'blocked' });
+      }
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  removeDependency: async (dependencyId) => {
+    try {
+      const { error } = await supabase
+        .from('task_dependencies')
+        .delete()
+        .eq('id', dependencyId);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        dependencies: state.dependencies.filter(d => d.id !== dependencyId),
+        tasks: state.tasks.map(task => ({
+          ...task,
+          dependencies: task.dependencies?.filter(d => d.id !== dependencyId)
+        }))
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  fetchDependencies: async () => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('task_dependencies')
+        .select('*, task:tasks!task_id(user_id)')
+        .eq('task.user_id', userId);
+      
+      if (error) throw error;
+      
+      const formattedDeps = (data || []).map(dep => ({
+        id: dep.id,
+        taskId: dep.task_id,
+        dependsOnTaskId: dep.depends_on_task_id,
+        dependencyType: dep.dependency_type,
+        createdAt: dep.created_at
+      }));
+      
+      set({ dependencies: formattedDeps });
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  checkDependencyStatus: (taskId) => {
+    const task = get().tasks.find(t => t.id === taskId);
+    if (!task || !task.dependencies || task.dependencies.length === 0) return true;
+    
+    return task.dependencies.every(dep => {
+      const depTask = get().tasks.find(t => t.id === dep.dependsOnTaskId);
+      if (!depTask) return true;
+      
+      switch (dep.dependencyType) {
+        case 'finish_to_start':
+          return depTask.status === 'done';
+        case 'start_to_start':
+          return depTask.status !== 'todo';
+        case 'finish_to_finish':
+          return true;
+        case 'start_to_finish':
+          return depTask.status !== 'todo';
+        default:
+          return true;
+      }
+    });
+  },
+
+  // Notification Methods
+  fetchNotifications: async () => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      
+      const formattedNotifications = (data || []).map(n => ({
+        id: n.id,
+        userId: n.user_id,
+        taskId: n.task_id,
+        notificationType: n.notification_type,
+        title: n.title,
+        message: n.message,
+        isRead: n.is_read,
+        readAt: n.read_at,
+        actionUrl: n.action_url,
+        metadata: n.metadata,
+        createdAt: n.created_at
+      }));
+      
+      set({ notifications: formattedNotifications });
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  markNotificationRead: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        notifications: state.notifications.map(n =>
+          n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  createNotification: async (notification) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: userId,
+          task_id: notification.taskId,
+          notification_type: notification.notificationType,
+          title: notification.title,
+          message: notification.message,
+          action_url: notification.actionUrl,
+          metadata: notification.metadata
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      const formattedNotification: Notification = {
+        id: data.id,
+        userId: data.user_id,
+        taskId: data.task_id,
+        notificationType: data.notification_type,
+        title: data.title,
+        message: data.message,
+        isRead: data.is_read,
+        readAt: data.read_at,
+        actionUrl: data.action_url,
+        metadata: data.metadata,
+        createdAt: data.created_at
+      };
+      
+      set(state => ({
+        notifications: [formattedNotification, ...state.notifications]
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  checkDueDates: async () => {
+    const tasks = get().tasks;
+    const now = new Date();
+    
+    for (const task of tasks) {
+      if (task.dueDate && task.status !== 'done') {
+        const dueDate = new Date(task.dueDate);
+        const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursUntilDue < 0) {
+          // Overdue
+          await get().createNotification({
+            taskId: task.id,
+            notificationType: 'overdue',
+            title: 'Task Overdue',
+            message: `"${task.title}" was due ${format(dueDate, 'MMM d, h:mm a')}`,
+            actionUrl: `/task/${task.id}`
+          });
+        } else if (hoursUntilDue < 24) {
+          // Due soon
+          await get().createNotification({
+            taskId: task.id,
+            notificationType: 'due_soon',
+            title: 'Task Due Soon',
+            message: `"${task.title}" is due in ${Math.round(hoursUntilDue)} hours`,
+            actionUrl: `/task/${task.id}`
+          });
+        }
+      }
+    }
+  },
+
+  checkStaleTasks: async () => {
+    const tasks = get().tasks;
+    const now = new Date();
+    const staleThreshold = 7; // days
+    
+    for (const task of tasks) {
+      if (task.status === 'in_progress') {
+        const lastUpdate = new Date(task.updatedAt);
+        const daysSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+        
+        if (daysSinceUpdate > staleThreshold) {
+          await get().createNotification({
+            taskId: task.id,
+            notificationType: 'stale',
+            title: 'Task Needs Attention',
+            message: `"${task.title}" hasn't been updated in ${Math.round(daysSinceUpdate)} days`,
+            actionUrl: `/task/${task.id}`
+          });
+        }
+      }
+    }
+  },
+
+  // Recurring Task Methods
+  createRecurringTemplate: async (template) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('recurring_task_templates')
+        .insert([{
+          user_id: userId,
+          title: template.title,
+          description: template.description,
+          category: template.category,
+          priority: template.priority,
+          recurrence_pattern: template.recurrencePattern,
+          recurrence_day_of_week: template.recurrenceDayOfWeek,
+          recurrence_day_of_month: template.recurrenceDayOfMonth,
+          recurrence_months: template.recurrenceMonths,
+          auto_create_days_before: template.autoCreateDaysBefore || 0,
+          is_active: true,
+          metadata: template.metadata
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      const formattedTemplate: RecurringTaskTemplate = {
+        id: data.id,
+        userId: data.user_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        priority: data.priority,
+        recurrencePattern: data.recurrence_pattern,
+        recurrenceDayOfWeek: data.recurrence_day_of_week,
+        recurrenceDayOfMonth: data.recurrence_day_of_month,
+        recurrenceMonths: data.recurrence_months,
+        autoCreateDaysBefore: data.auto_create_days_before,
+        isActive: data.is_active,
+        lastCreatedAt: data.last_created_at,
+        nextCreateAt: data.next_create_at,
+        metadata: data.metadata,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+      
+      set(state => ({
+        recurringTemplates: [...state.recurringTemplates, formattedTemplate]
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  updateRecurringTemplate: async (id, updates) => {
+    try {
+      const { error } = await supabase
+        .from('recurring_task_templates')
+        .update({
+          title: updates.title,
+          description: updates.description,
+          category: updates.category,
+          priority: updates.priority,
+          recurrence_pattern: updates.recurrencePattern,
+          recurrence_day_of_week: updates.recurrenceDayOfWeek,
+          recurrence_day_of_month: updates.recurrenceDayOfMonth,
+          recurrence_months: updates.recurrenceMonths,
+          auto_create_days_before: updates.autoCreateDaysBefore,
+          is_active: updates.isActive,
+          metadata: updates.metadata,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        recurringTemplates: state.recurringTemplates.map(t =>
+          t.id === id ? { ...t, ...updates } : t
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  deleteRecurringTemplate: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('recurring_task_templates')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        recurringTemplates: state.recurringTemplates.filter(t => t.id !== id)
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  fetchRecurringTemplates: async () => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return;
+      
+      const { data, error } = await supabase
+        .from('recurring_task_templates')
+        .select('*')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      const formattedTemplates = (data || []).map(t => ({
+        id: t.id,
+        userId: t.user_id,
+        title: t.title,
+        description: t.description,
+        category: t.category,
+        priority: t.priority,
+        recurrencePattern: t.recurrence_pattern,
+        recurrenceDayOfWeek: t.recurrence_day_of_week,
+        recurrenceDayOfMonth: t.recurrence_day_of_month,
+        recurrenceMonths: t.recurrence_months,
+        autoCreateDaysBefore: t.auto_create_days_before,
+        isActive: t.is_active,
+        lastCreatedAt: t.last_created_at,
+        nextCreateAt: t.next_create_at,
+        metadata: t.metadata,
+        createdAt: t.created_at,
+        updatedAt: t.updated_at
+      }));
+      
+      set({ recurringTemplates: formattedTemplates });
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  generateRecurringTasks: async () => {
+    const templates = get().recurringTemplates;
+    const currentWeek = get().currentWeek;
+    
+    for (const template of templates) {
+      if (!template.isActive) continue;
+      
+      // Logic to determine if task should be created based on recurrence pattern
+      // This is simplified - you'd need more complex date logic for production
+      await get().createTask({
+        title: template.title,
+        description: template.description,
+        category: template.category,
+        priority: template.priority,
+        status: 'todo',
+        isRecurring: true,
+        recurringTemplateId: template.id,
+        weekNumber: currentWeek
+      });
+      
+      // Update template's last created date
+      await supabase
+        .from('recurring_task_templates')
+        .update({ 
+          last_created_at: new Date().toISOString(),
+          next_create_at: addDays(new Date(), 7).toISOString() // Simplified
+        })
+        .eq('id', template.id);
+    }
+  },
+
+  // Bulk Operations
+  bulkUpdateTasks: async (taskIds, updates) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({
+          status: updates.status,
+          priority: updates.priority,
+          category: updates.category,
+          due_date: updates.dueDate,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', taskIds);
+      
+      if (error) throw error;
+      
+      // Log activity for each task
+      for (const taskId of taskIds) {
+        await get().logActivity(taskId, 'updated', undefined, 'Bulk update');
+      }
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          taskIds.includes(task.id) ? { ...task, ...updates } : task
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  bulkDeleteTasks: async (taskIds) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', taskIds);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        tasks: state.tasks.filter(task => !taskIds.includes(task.id))
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  bulkMoveTasks: async (taskIds, category) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          category,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', taskIds);
+      
+      if (error) throw error;
+      
+      // Log activity for each task
+      for (const taskId of taskIds) {
+        const task = get().tasks.find(t => t.id === taskId);
+        if (task) {
+          await get().logActivity(taskId, 'moved_category', task.category, category);
+        }
+      }
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          taskIds.includes(task.id) ? { ...task, category: category as any } : task
+        )
       }));
     } catch (error) {
       set({ error: (error as Error).message });
