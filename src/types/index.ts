@@ -15,6 +15,7 @@ export interface Task {
   progressCurrent?: number;
   progressTotal?: number;
   weekNumber: number;
+  order?: number;
   createdAt: string;
   updatedAt: string;
   subtasks?: Subtask[];

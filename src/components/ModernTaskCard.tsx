@@ -4,6 +4,8 @@ import { CheckCircle2, Circle, Clock, AlertCircle, ChevronRight, Calendar, Trash
 import { format } from 'date-fns';
 import { theme, styleUtils } from '../styles/theme';
 import { useTaskPriority } from '../hooks/useTaskPriority';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ModernTaskCardProps {
   task: Task;
@@ -22,6 +24,26 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { getPriorityStyle, getDueDateBadgeStyle } = useTaskPriority();
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: task.id,
+    data: {
+      type: 'task',
+      task
+    }
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
   
   const getStatusIcon = () => {
     const iconProps = { className: "w-5 h-5" };
@@ -55,29 +77,46 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
 
   return (
     <div
+      ref={setNodeRef}
       style={{
+        ...style,
         ...priorityStyle,
         borderRadius: theme.borderRadius.lg,
-        border: `1px solid ${theme.colors.surface.glassBorder}`,
-        cursor: 'pointer',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: isDragging 
+          ? `2px solid ${categoryConfig.accentColor}` 
+          : `1px solid ${theme.colors.surface.glassBorder}`,
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        transition: isDragging ? 'none' : 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         backdropFilter: theme.effects.blur,
-        boxShadow: theme.effects.shadow.sm,
+        boxShadow: isDragging 
+          ? `0 8px 32px ${categoryConfig.accentColor}44` 
+          : theme.effects.shadow.sm,
         overflow: 'hidden',
-        opacity: task.status === 'done' ? 0.75 : 1
+        opacity: isDragging ? 0.8 : (task.status === 'done' ? 0.75 : 1),
+        transform: isDragging ? `${style.transform} rotate(2deg)` : style.transform,
+        zIndex: isDragging ? 1000 : 'auto',
+        touchAction: 'none'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = theme.effects.shadow.md;
-        e.currentTarget.style.borderColor = `${categoryConfig.accentColor}44`;
+        if (!isDragging) {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = theme.effects.shadow.md;
+          e.currentTarget.style.borderColor = `${categoryConfig.accentColor}44`;
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0px)';
-        e.currentTarget.style.boxShadow = theme.effects.shadow.sm;
-        e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+        if (!isDragging) {
+          e.currentTarget.style.transform = 'translateY(0px)';
+          e.currentTarget.style.boxShadow = theme.effects.shadow.sm;
+          e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+        }
       }}
     >
-      <div style={{ padding: theme.spacing.lg, display: 'flex', alignItems: 'flex-start', gap: theme.spacing.md }}>
+      <div 
+        style={{ padding: theme.spacing.lg, display: 'flex', alignItems: 'flex-start', gap: theme.spacing.md }}
+        {...attributes}
+        {...listeners}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -101,7 +140,12 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
         
         <div 
           style={{ flex: 1, minWidth: 0 }}
-          onClick={onClick}
+          onClick={(e) => {
+            // Only trigger onClick if not dragging
+            if (!isDragging) {
+              onClick();
+            }
+          }}
         >
           <h3 style={{
             fontSize: theme.typography.sizes.lg,

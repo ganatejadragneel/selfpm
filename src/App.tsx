@@ -11,6 +11,9 @@ import { AddTaskModal } from './components/AddTaskModal';
 import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
+import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 
 function App() {
   return (
@@ -27,13 +30,25 @@ function AppContent() {
     error,
     currentWeek,
     fetchTasks,
-    setCurrentWeek
+    setCurrentWeek,
+    reorderTasks,
+    moveTaskToCategory
   } = useTaskStore();
 
   const { handleStatusToggle, handleDelete } = useTaskActions();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickAddCategory, setQuickAddCategory] = useState<TaskCategory>('life_admin');
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 500,
+        tolerance: 5
+      },
+    })
+  );
 
   useEffect(() => {
     fetchTasks();
@@ -46,9 +61,86 @@ function AppContent() {
   };
 
   const tasksByCategory = {
-    life_admin: tasks.filter(t => t.category === 'life_admin'),
-    work: tasks.filter(t => t.category === 'work'),
-    weekly_recurring: tasks.filter(t => t.category === 'weekly_recurring')
+    life_admin: tasks.filter(t => t.category === 'life_admin').sort((a, b) => (a.order || 0) - (b.order || 0)),
+    work: tasks.filter(t => t.category === 'work').sort((a, b) => (a.order || 0) - (b.order || 0)),
+    weekly_recurring: tasks.filter(t => t.category === 'weekly_recurring').sort((a, b) => (a.order || 0) - (b.order || 0))
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const task = tasks.find(t => t.id === active.id);
+    setActiveTask(task || null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const activeTaskId = active.id as string;
+    const overId = over.id as string;
+    
+    // Find the active task
+    const activeTask = tasks.find(t => t.id === activeTaskId);
+    if (!activeTask) return;
+
+    // Check if we're dropping over a category column or another task
+    const isDroppedOnCategory = ['life_admin', 'work', 'weekly_recurring'].includes(overId);
+    
+    if (isDroppedOnCategory) {
+      // Moving to a different category (dropped on empty category area)
+      const newCategory = overId as TaskCategory;
+      if (activeTask.category !== newCategory) {
+        await moveTaskToCategory(activeTaskId, newCategory);
+      }
+    } else {
+      // Dropped on another task
+      const overTask = tasks.find(t => t.id === overId);
+      if (!overTask) return;
+
+      const activeCategory = activeTask.category;
+      const overCategory = overTask.category;
+      
+      if (activeCategory === overCategory) {
+        // Reordering within the same category
+        const categoryTasks = tasksByCategory[activeCategory];
+        const oldIndex = categoryTasks.findIndex(t => t.id === activeTaskId);
+        const newIndex = categoryTasks.findIndex(t => t.id === overId);
+        
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          // Create new order array
+          const newTaskOrder = arrayMove(categoryTasks, oldIndex, newIndex);
+          // Update the local state immediately for smooth UX
+          const updatedTasks = tasks.map(task => {
+            const orderIndex = newTaskOrder.findIndex(t => t.id === task.id);
+            if (orderIndex !== -1) {
+              return { ...task, order: orderIndex };
+            }
+            return task;
+          });
+          
+          // Sort tasks by order for display
+          useTaskStore.setState({ tasks: updatedTasks });
+          
+          // Then update in database (will work when order column exists)
+          try {
+            await Promise.all(
+              newTaskOrder.map((task, index) => 
+                useTaskStore.getState().updateTask(task.id, { 
+                  order: index 
+                })
+              )
+            );
+          } catch (error) {
+            console.log('Order column may not exist yet. Tasks reordered in UI only.');
+          }
+        }
+      } else {
+        // Moving between categories
+        await moveTaskToCategory(activeTaskId, overCategory);
+      }
+    }
   };
 
   const currentDate = new Date();
@@ -260,59 +352,99 @@ function AppContent() {
             </style>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-            gap: '24px',
-            minHeight: 'calc(100vh - 400px)'
-          }}>
-            <ModernCategoryColumn
-              category="life_admin"
-              tasks={tasksByCategory.life_admin}
-              onTaskClick={setSelectedTask}
-              onTaskStatusToggle={handleStatusToggle}
-              onDeleteTask={(task) => handleDelete(task.id)}
-              onAddTask={() => {
-                setQuickAddCategory('life_admin');
-                setShowQuickAdd(true);
-              }}
-            />
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: '24px',
+              minHeight: 'calc(100vh - 400px)'
+            }}>
+              <ModernCategoryColumn
+                category="life_admin"
+                tasks={tasksByCategory.life_admin}
+                onTaskClick={setSelectedTask}
+                onTaskStatusToggle={handleStatusToggle}
+                onDeleteTask={(task) => handleDelete(task.id)}
+                onAddTask={() => {
+                  setQuickAddCategory('life_admin');
+                  setShowQuickAdd(true);
+                }}
+              />
+              
+              <ModernCategoryColumn
+                category="work"
+                tasks={tasksByCategory.work}
+                onTaskClick={setSelectedTask}
+                onTaskStatusToggle={handleStatusToggle}
+                onDeleteTask={(task) => handleDelete(task.id)}
+                onAddTask={() => {
+                  setQuickAddCategory('work');
+                  setShowQuickAdd(true);
+                }}
+              />
+              
+              <ModernCategoryColumn
+                category="weekly_recurring"
+                tasks={tasksByCategory.weekly_recurring}
+                onTaskClick={setSelectedTask}
+                onTaskStatusToggle={handleStatusToggle}
+                onDeleteTask={(task) => handleDelete(task.id)}
+                onAddTask={() => {
+                  setQuickAddCategory('weekly_recurring');
+                  setShowQuickAdd(true);
+                }}
+              />
+            </div>
             
-            <ModernCategoryColumn
-              category="work"
-              tasks={tasksByCategory.work}
-              onTaskClick={setSelectedTask}
-              onTaskStatusToggle={handleStatusToggle}
-              onDeleteTask={(task) => handleDelete(task.id)}
-              onAddTask={() => {
-                setQuickAddCategory('work');
-                setShowQuickAdd(true);
-              }}
-            />
-            
-            <ModernCategoryColumn
-              category="weekly_recurring"
-              tasks={tasksByCategory.weekly_recurring}
-              onTaskClick={setSelectedTask}
-              onTaskStatusToggle={handleStatusToggle}
-              onDeleteTask={(task) => handleDelete(task.id)}
-              onAddTask={() => {
-                setQuickAddCategory('weekly_recurring');
-                setShowQuickAdd(true);
-              }}
-            />
-          </div>
+            <DragOverlay>
+              {activeTask ? (
+                <div style={{
+                  opacity: 0.8,
+                  transform: 'rotate(5deg)',
+                  pointerEvents: 'none'
+                }}>
+                  <div style={{
+                    padding: theme.spacing.lg,
+                    background: theme.colors.surface.glass,
+                    borderRadius: theme.borderRadius.lg,
+                    border: '2px solid rgba(102, 126, 234, 0.5)',
+                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                    backdropFilter: theme.effects.blur
+                  }}>
+                    <h3 style={{
+                      fontSize: theme.typography.sizes.lg,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: theme.colors.text.primary,
+                      margin: 0
+                    }}>
+                      {activeTask.title}
+                    </h3>
+                  </div>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
 
       {/* Modals */}
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          isOpen={!!selectedTask}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
+      {selectedTask && (() => {
+        // Get the most up-to-date task from the store
+        const currentTask = tasks.find(t => t.id === selectedTask.id);
+        return currentTask ? (
+          <TaskModal
+            key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
+            task={currentTask}
+            isOpen={!!selectedTask}
+            onClose={() => setSelectedTask(null)}
+          />
+        ) : null;
+      })()}
 
       {showQuickAdd && (
         <AddTaskModal

@@ -19,8 +19,10 @@ interface TaskStore {
   
   // Subtask actions
   addSubtask: (taskId: string, title: string) => Promise<void>;
+  updateSubtask: (subtaskId: string, title: string) => Promise<void>;
   toggleSubtask: (subtaskId: string) => Promise<void>;
   deleteSubtask: (subtaskId: string) => Promise<void>;
+  reorderSubtasks: (taskId: string, subtaskIds: string[]) => Promise<void>;
   
   // Progress actions
   updateProgress: (taskId: string, current: number) => Promise<void>;
@@ -28,6 +30,10 @@ interface TaskStore {
   
   // Note actions
   addNote: (taskId: string, content: string) => Promise<void>;
+  
+  // Task reordering and category management
+  reorderTasks: (sourceCategory: string, destinationCategory: string, taskIds: string[]) => Promise<void>;
+  moveTaskToCategory: (taskId: string, newCategory: string) => Promise<void>;
   
   // Week management
   rolloverIncompleteTasks: () => Promise<void>;
@@ -62,7 +68,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         .eq('user_id', userId)
         .eq('week_number', week)
         .order('category')
-        .order('created_at');
+        .order('order', { ascending: true });
       
       if (tasksError) throw tasksError;
       
@@ -89,6 +95,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             progressCurrent: task.progress_current,
             progressTotal: task.progress_total,
             weekNumber: task.week_number,
+            order: task.order || 0,
             createdAt: task.created_at,
             updatedAt: task.updated_at,
             subtasks: (subtasksRes.data || []).map(subtask => ({
@@ -141,7 +148,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       recurrence_pattern: taskData.recurrencePattern,
       progress_current: taskData.progressCurrent || 0,
       progress_total: taskData.progressTotal,
-      week_number: week
+      week_number: week,
+      order: taskData.order || 999
     };
     
     try {
@@ -178,6 +186,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.order !== undefined) dbUpdates.order = updates.order;
       
       const { error } = await supabase
         .from('tasks')
@@ -226,12 +235,44 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Convert snake_case to camelCase to match frontend expectations
+      const formattedSubtask = {
+        id: data.id,
+        taskId: data.task_id,
+        title: data.title,
+        isCompleted: data.is_completed,
+        position: data.position,
+        createdAt: data.created_at
+      };
+
       set(state => ({
         tasks: state.tasks.map(task =>
           task.id === taskId
-            ? { ...task, subtasks: [...(task.subtasks || []), data] }
+            ? { ...task, subtasks: [...(task.subtasks || []), formattedSubtask] }
             : task
         )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  updateSubtask: async (subtaskId, title) => {
+    try {
+      const { error } = await supabase
+        .from('subtasks')
+        .update({ title })
+        .eq('id', subtaskId);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          subtasks: task.subtasks?.map(subtask =>
+            subtask.id === subtaskId ? { ...subtask, title } : subtask
+          )
+        }))
       }));
     } catch (error) {
       set({ error: (error as Error).message });
@@ -293,6 +334,35 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     }
   },
 
+  reorderSubtasks: async (taskId, subtaskIds) => {
+    try {
+      // Update positions in database
+      await Promise.all(
+        subtaskIds.map((subtaskId, index) =>
+          supabase
+            .from('subtasks')
+            .update({ position: index + 1 })
+            .eq('id', subtaskId)
+        )
+      );
+
+      // Update local state to reflect new order
+      set(state => ({
+        tasks: state.tasks.map(task => {
+          if (task.id === taskId && task.subtasks) {
+            const reorderedSubtasks = subtaskIds.map(id => 
+              task.subtasks!.find(s => s.id === id)!
+            ).filter(Boolean);
+            return { ...task, subtasks: reorderedSubtasks };
+          }
+          return task;
+        })
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
   updateProgress: async (taskId, current) => {
     try {
       const { error } = await supabase
@@ -327,10 +397,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         await get().updateProgress(taskId, progressValue);
       }
       
+      // Convert snake_case to camelCase to match frontend expectations
+      const formattedUpdate = {
+        id: data.id,
+        taskId: data.task_id,
+        updateText: data.update_text,
+        progressValue: data.progress_value,
+        createdAt: data.created_at
+      };
+
       set(state => ({
         tasks: state.tasks.map(task =>
           task.id === taskId
-            ? { ...task, updates: [data, ...(task.updates || [])] }
+            ? { ...task, updates: [formattedUpdate, ...(task.updates || [])] }
             : task
         )
       }));
@@ -349,10 +428,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       if (error) throw error;
       
+      // Convert snake_case to camelCase to match frontend expectations
+      const formattedNote = {
+        id: data.id,
+        taskId: data.task_id,
+        content: data.content,
+        createdAt: data.created_at
+      };
+
       set(state => ({
         tasks: state.tasks.map(task =>
           task.id === taskId
-            ? { ...task, notes: [data, ...(task.notes || [])] }
+            ? { ...task, notes: [formattedNote, ...(task.notes || [])] }
             : task
         )
       }));
@@ -405,5 +492,52 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   setCurrentWeek: (weekNumber) => {
     set({ currentWeek: weekNumber });
+  },
+
+  reorderTasks: async (sourceCategory, destinationCategory, taskIds) => {
+    try {
+      // If tasks are moving to a different category, update their category
+      if (sourceCategory !== destinationCategory) {
+        await Promise.all(
+          taskIds.map(taskId =>
+            supabase
+              .from('tasks')
+              .update({ category: destinationCategory })
+              .eq('id', taskId)
+          )
+        );
+      }
+
+      // Update local state to reflect the reordering
+      set(state => ({
+        tasks: state.tasks.map(task => {
+          if (taskIds.includes(task.id)) {
+            return { ...task, category: destinationCategory };
+          }
+          return task;
+        })
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
+  },
+
+  moveTaskToCategory: async (taskId, newCategory) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ category: newCategory })
+        .eq('id', taskId);
+      
+      if (error) throw error;
+      
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId ? { ...task, category: newCategory } : task
+        )
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+    }
   }
 }));

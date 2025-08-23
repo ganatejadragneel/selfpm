@@ -3,6 +3,11 @@ import type { Task, TaskCategory } from '../types';
 import { ModernTaskCard } from './ModernTaskCard';
 import { Plus, Home, Briefcase, RotateCcw } from 'lucide-react';
 import { categoryConfigs } from '../styles/theme';
+import {
+  SortableContext,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 
 interface ModernCategoryColumnProps {
   category: TaskCategory;
@@ -34,19 +39,30 @@ export const ModernCategoryColumn: React.FC<ModernCategoryColumnProps> = ({
   const totalCount = tasks.length;
   const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  const { setNodeRef, isOver } = useDroppable({
+    id: category,
+  });
+
   return (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      borderRadius: '20px',
-      border: `1px solid ${config.borderColor}`,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-      overflow: 'hidden',
-      position: 'relative'
-    }}>
+    <div 
+      ref={setNodeRef}
+      style={{
+        background: isOver ? 'rgba(102, 126, 234, 0.05)' : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '20px',
+        border: isOver 
+          ? `2px solid ${config.accentColor}` 
+          : `1px solid ${config.borderColor}`,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: isOver 
+          ? `0 8px 32px ${config.accentColor}33` 
+          : '0 8px 32px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden',
+        position: 'relative',
+        transition: 'all 0.2s ease'
+      }}>
       {/* Top accent line */}
       <div style={{
         height: '3px',
@@ -190,18 +206,20 @@ export const ModernCategoryColumn: React.FC<ModernCategoryColumnProps> = ({
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {tasks.map(task => (
-              <ModernTaskCard
-                key={task.id}
-                task={task}
-                categoryConfig={config}
-                onClick={() => onTaskClick(task)}
-                onStatusToggle={() => onTaskStatusToggle(task)}
-                onDelete={() => onDeleteTask(task)}
-              />
-            ))}
-          </div>
+          <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {tasks.map(task => (
+                <ModernTaskCard
+                  key={task.id}
+                  task={task}
+                  categoryConfig={config}
+                  onClick={() => onTaskClick(task)}
+                  onStatusToggle={() => onTaskStatusToggle(task)}
+                  onDelete={() => onDeleteTask(task)}
+                />
+              ))}
+            </div>
+          </SortableContext>
         )}
       </div>
     </div>
