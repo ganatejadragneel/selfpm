@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, Notification } from '../types';
+import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate } from '../types';
 import { supabase } from '../lib/supabase';
-import { getWeek, getYear, addDays, format } from 'date-fns';
+import { getWeek, getYear, addDays } from 'date-fns';
 import { useAuthStore } from './authStore';
 
 interface TaskStore {
@@ -11,7 +11,6 @@ interface TaskStore {
   currentWeek: number;
   currentYear: number;
   dependencies: TaskDependency[];
-  notifications: Notification[];
   recurringTemplates: RecurringTaskTemplate[];
   
   // Actions
@@ -68,13 +67,6 @@ interface TaskStore {
   fetchRecurringTemplates: () => Promise<void>;
   generateRecurringTasks: () => Promise<void>;
   
-  // Notification actions
-  fetchNotifications: () => Promise<void>;
-  markNotificationRead: (id: string) => Promise<void>;
-  createNotification: (notification: Partial<Notification>) => Promise<void>;
-  checkDueDates: () => Promise<void>;
-  checkStaleTasks: () => Promise<void>;
-  
   // Bulk operations
   bulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => Promise<void>;
   bulkDeleteTasks: (taskIds: string[]) => Promise<void>;
@@ -88,7 +80,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   currentWeek: getWeek(new Date()),
   currentYear: getYear(new Date()),
   dependencies: [],
-  notifications: [],
   recurringTemplates: [],
 
   fetchTasks: async (weekNumber) => {
@@ -1147,163 +1138,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           return true;
       }
     });
-  },
-
-  // Notification Methods
-  fetchNotifications: async () => {
-    try {
-      const authStore = useAuthStore.getState();
-      const userId = authStore.user?.id;
-      
-      if (!userId) return;
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_read', false)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      
-      if (error) throw error;
-      
-      const formattedNotifications = (data || []).map(n => ({
-        id: n.id,
-        userId: n.user_id,
-        taskId: n.task_id,
-        notificationType: n.notification_type,
-        title: n.title,
-        message: n.message,
-        isRead: n.is_read,
-        readAt: n.read_at,
-        actionUrl: n.action_url,
-        metadata: n.metadata,
-        createdAt: n.created_at
-      }));
-      
-      set({ notifications: formattedNotifications });
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
-
-  markNotificationRead: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      set(state => ({
-        notifications: state.notifications.map(n =>
-          n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
-        )
-      }));
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
-
-  createNotification: async (notification) => {
-    try {
-      const authStore = useAuthStore.getState();
-      const userId = authStore.user?.id;
-      
-      if (!userId) return;
-      
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert([{
-          user_id: userId,
-          task_id: notification.taskId,
-          notification_type: notification.notificationType,
-          title: notification.title,
-          message: notification.message,
-          action_url: notification.actionUrl,
-          metadata: notification.metadata
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      const formattedNotification: Notification = {
-        id: data.id,
-        userId: data.user_id,
-        taskId: data.task_id,
-        notificationType: data.notification_type,
-        title: data.title,
-        message: data.message,
-        isRead: data.is_read,
-        readAt: data.read_at,
-        actionUrl: data.action_url,
-        metadata: data.metadata,
-        createdAt: data.created_at
-      };
-      
-      set(state => ({
-        notifications: [formattedNotification, ...state.notifications]
-      }));
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
-
-  checkDueDates: async () => {
-    const tasks = get().tasks;
-    const now = new Date();
-    
-    for (const task of tasks) {
-      if (task.dueDate && task.status !== 'done') {
-        const dueDate = new Date(task.dueDate);
-        const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-        
-        if (hoursUntilDue < 0) {
-          // Overdue
-          await get().createNotification({
-            taskId: task.id,
-            notificationType: 'overdue',
-            title: 'Task Overdue',
-            message: `"${task.title}" was due ${format(dueDate, 'MMM d, h:mm a')}`,
-            actionUrl: `/task/${task.id}`
-          });
-        } else if (hoursUntilDue < 24) {
-          // Due soon
-          await get().createNotification({
-            taskId: task.id,
-            notificationType: 'due_soon',
-            title: 'Task Due Soon',
-            message: `"${task.title}" is due in ${Math.round(hoursUntilDue)} hours`,
-            actionUrl: `/task/${task.id}`
-          });
-        }
-      }
-    }
-  },
-
-  checkStaleTasks: async () => {
-    const tasks = get().tasks;
-    const now = new Date();
-    const staleThreshold = 7; // days
-    
-    for (const task of tasks) {
-      if (task.status === 'in_progress') {
-        const lastUpdate = new Date(task.updatedAt);
-        const daysSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
-        
-        if (daysSinceUpdate > staleThreshold) {
-          await get().createNotification({
-            taskId: task.id,
-            notificationType: 'stale',
-            title: 'Task Needs Attention',
-            message: `"${task.title}" hasn't been updated in ${Math.round(daysSinceUpdate)} days`,
-            actionUrl: `/task/${task.id}`
-          });
-        }
-      }
-    }
   },
 
   // Recurring Task Methods

@@ -9,7 +9,6 @@ import { WeeklySummary } from './components/WeeklySummary';
 import { TaskModal } from './components/TaskModal';
 import { AddTaskModal } from './components/AddTaskModal';
 import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnalyticsDashboard';
-import { SmartNotificationsDisplay } from './components/notifications/SmartNotificationsDisplay';
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3 } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
@@ -353,9 +352,6 @@ function AppContent() {
               >
                 <BarChart3 className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
               </button>
-
-              {/* Notifications */}
-              <SmartNotificationsDisplay />
               
               <UserMenu />
             </div>
