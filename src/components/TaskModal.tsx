@@ -36,6 +36,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
   
   const [tempTitle, setTempTitle] = useState(task.title);
   const [tempDescription, setTempDescription] = useState(task.description || '');
+  const [addingProgress, setAddingProgress] = useState(false);
+  const [tempProgressTotal, setTempProgressTotal] = useState('');
 
   // Sync local state with task prop changes when not editing
   useEffect(() => {
@@ -421,7 +423,44 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             </div>
 
             {/* Progress Section */}
-            {task.progressTotal && (
+            {!task.progressTotal && !addingProgress && (
+              <div style={{ marginBottom: theme.spacing.xl }}>
+                <button
+                  onClick={() => setAddingProgress(true)}
+                  style={{
+                    width: '100%',
+                    padding: theme.spacing.lg,
+                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                    border: `2px dashed ${theme.colors.primary.light}`,
+                    borderRadius: theme.borderRadius.lg,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: theme.spacing.sm,
+                    transition: 'all 0.2s ease',
+                    fontSize: theme.typography.sizes.base,
+                    fontWeight: theme.typography.weights.medium,
+                    color: theme.colors.primary.dark
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)';
+                    e.currentTarget.style.borderColor = theme.colors.primary.dark;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
+                    e.currentTarget.style.borderColor = theme.colors.primary.light;
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Progress Goal
+                </button>
+              </div>
+            )}
+            
+            {(task.progressTotal || addingProgress) && (
               <div style={{ marginBottom: theme.spacing.xl }}>
                 <label style={{
                   display: 'block',
@@ -432,82 +471,185 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 }}>
                   Progress
                 </label>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: theme.spacing.lg,
-                  padding: theme.spacing.lg,
-                  background: theme.colors.surface.glass,
-                  backdropFilter: theme.effects.blur,
-                  borderRadius: theme.borderRadius.lg,
-                  border: `1px solid ${theme.colors.surface.glassBorder}`
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      width: '100%',
-                      height: '12px',
-                      background: 'rgba(0, 0, 0, 0.1)',
-                      borderRadius: theme.borderRadius.full,
-                      overflow: 'hidden',
-                      boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
-                    }}>
+                {addingProgress && !task.progressTotal ? (
+                  <div style={{ 
+                    padding: theme.spacing.lg,
+                    background: theme.colors.surface.glass,
+                    backdropFilter: theme.effects.blur,
+                    borderRadius: theme.borderRadius.lg,
+                    border: `1px solid ${theme.colors.surface.glassBorder}`
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                      <input
+                        type="number"
+                        value={tempProgressTotal}
+                        onChange={(e) => setTempProgressTotal(e.target.value)}
+                        placeholder="Enter progress goal (e.g., 50)"
+                        style={{
+                          flex: 1,
+                          border: `1px solid ${theme.colors.surface.glassBorder}`,
+                          borderRadius: theme.borderRadius.md,
+                          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                          fontSize: theme.typography.sizes.sm,
+                          fontWeight: theme.typography.weights.medium,
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          color: theme.colors.text.primary,
+                          outline: 'none'
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = theme.colors.primary.dark;
+                          e.currentTarget.style.boxShadow = `0 0 0 2px rgba(102, 126, 234, 0.1)`;
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && tempProgressTotal) {
+                            updateTask(task.id, { progressTotal: parseInt(tempProgressTotal) || 0 });
+                            setAddingProgress(false);
+                            setTempProgressTotal('');
+                          }
+                          if (e.key === 'Escape') {
+                            setAddingProgress(false);
+                            setTempProgressTotal('');
+                          }
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (tempProgressTotal) {
+                            updateTask(task.id, { progressTotal: parseInt(tempProgressTotal) || 0 });
+                            setAddingProgress(false);
+                            setTempProgressTotal('');
+                          }
+                        }}
+                        style={{
+                          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                          background: theme.colors.primary.dark,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: theme.borderRadius.md,
+                          fontSize: theme.typography.sizes.sm,
+                          fontWeight: theme.typography.weights.medium,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = theme.colors.primary.light;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = theme.colors.primary.dark;
+                        }}
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setAddingProgress(false);
+                          setTempProgressTotal('');
+                        }}
+                        style={{
+                          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: theme.colors.status.error.dark,
+                          border: 'none',
+                          borderRadius: theme.borderRadius.md,
+                          fontSize: theme.typography.sizes.sm,
+                          fontWeight: theme.typography.weights.medium,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: theme.spacing.lg,
+                    padding: theme.spacing.lg,
+                    background: theme.colors.surface.glass,
+                    backdropFilter: theme.effects.blur,
+                    borderRadius: theme.borderRadius.lg,
+                    border: `1px solid ${theme.colors.surface.glassBorder}`
+                  }}>
+                    <div style={{ flex: 1 }}>
                       <div style={{
-                        height: '100%',
-                        background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                        width: '100%',
+                        height: '12px',
+                        background: 'rgba(0, 0, 0, 0.1)',
                         borderRadius: theme.borderRadius.full,
-                        width: `${(task.progressCurrent || 0) / task.progressTotal * 100}%`,
-                        transition: 'width 0.3s ease',
-                        boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
-                      }} />
-                    </div>
-                    <div style={{
-                      marginTop: theme.spacing.xs,
-                      fontSize: theme.typography.sizes.sm,
-                      color: theme.colors.text.secondary,
-                      textAlign: 'center'
-                    }}>
-                      {Math.round((task.progressCurrent || 0) / task.progressTotal * 100)}% Complete
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
-                    <input
-                      type="number"
-                      value={task.progressCurrent || 0}
-                      onChange={(e) => updateTask(task.id, { progressCurrent: parseInt(e.target.value) || 0 })}
-                      min="0"
-                      max={task.progressTotal}
-                      style={{
-                        width: '80px',
-                        maxWidth: '80px',
-                        border: `1px solid ${theme.colors.surface.glassBorder}`,
-                        borderRadius: theme.borderRadius.md,
-                        padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                        overflow: 'hidden',
+                        boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                          borderRadius: theme.borderRadius.full,
+                          width: `${(task.progressCurrent || 0) / task.progressTotal * 100}%`,
+                          transition: 'width 0.3s ease',
+                          boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
+                        }} />
+                      </div>
+                      <div style={{
+                        marginTop: theme.spacing.xs,
                         fontSize: theme.typography.sizes.sm,
-                        fontWeight: theme.typography.weights.medium,
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        color: theme.colors.text.primary,
-                        outline: 'none',
-                        textAlign: 'center',
-                        boxSizing: 'border-box'
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = theme.colors.primary.dark;
-                        e.currentTarget.style.boxShadow = `0 0 0 2px rgba(102, 126, 234, 0.1)`;
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    />
-                    <span style={{
-                      fontSize: theme.typography.sizes.sm,
-                      color: theme.colors.text.secondary,
-                      fontWeight: theme.typography.weights.medium
-                    }}>
-                      / {task.progressTotal}
-                    </span>
+                        color: theme.colors.text.secondary,
+                        textAlign: 'center'
+                      }}>
+                        {Math.round((task.progressCurrent || 0) / task.progressTotal * 100)}% Complete
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                      <input
+                        type="number"
+                        value={task.progressCurrent || 0}
+                        onChange={(e) => updateTask(task.id, { progressCurrent: parseInt(e.target.value) || 0 })}
+                        min="0"
+                        max={task.progressTotal}
+                        style={{
+                          width: '80px',
+                          maxWidth: '80px',
+                          border: `1px solid ${theme.colors.surface.glassBorder}`,
+                          borderRadius: theme.borderRadius.md,
+                          padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                          fontSize: theme.typography.sizes.sm,
+                          fontWeight: theme.typography.weights.medium,
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          color: theme.colors.text.primary,
+                          outline: 'none',
+                          textAlign: 'center',
+                          boxSizing: 'border-box'
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = theme.colors.primary.dark;
+                          e.currentTarget.style.boxShadow = `0 0 0 2px rgba(102, 126, 234, 0.1)`;
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                      />
+                      <span style={{
+                        fontSize: theme.typography.sizes.sm,
+                        color: theme.colors.text.secondary,
+                        fontWeight: theme.typography.weights.medium
+                      }}>
+                        / {task.progressTotal}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
