@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Task } from '../types';
-import { CheckCircle2, Circle, Clock, AlertCircle, ChevronRight, Calendar, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, AlertCircle, ChevronRight, Calendar, Trash2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { theme, styleUtils } from '../styles/theme';
 import { useTaskPriority } from '../hooks/useTaskPriority';
@@ -211,6 +211,23 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
                 color: '#2563eb'
               }}>
                 ✓ {completedSubtasks}/{totalSubtasks}
+              </div>
+            )}
+            
+            {task.updates && task.updates.length > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing.xs,
+                padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                borderRadius: theme.borderRadius.sm,
+                fontSize: theme.typography.sizes.xs,
+                fontWeight: theme.typography.weights.medium,
+                background: 'rgba(147, 51, 234, 0.1)',
+                color: '#9333ea'
+              }}>
+                <FileText className="w-3 h-3" />
+                Updates: {task.updates.length}
               </div>
             )}
             

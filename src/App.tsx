@@ -14,7 +14,7 @@ import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnaly
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
-import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -462,7 +462,7 @@ function AppContent() {
         ) : (
           <DndContext 
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >

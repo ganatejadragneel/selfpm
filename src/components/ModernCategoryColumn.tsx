@@ -163,64 +163,77 @@ export const ModernCategoryColumn: React.FC<ModernCategoryColumnProps> = ({
         flex: 1, 
         overflowY: 'auto', 
         padding: '8px 20px 20px 20px',
-        minHeight: '200px'
+        minHeight: '300px',
+        position: 'relative'
       }}>
-        {tasks.length === 0 ? (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '48px 0',
-            color: '#6b7280'
+        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+          <div style={{
+            minHeight: '250px',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
-            <div style={{
-              fontSize: '48px',
-              marginBottom: '16px'
-            }}>
-              {config.emoji}
-            </div>
-            <p style={{ fontSize: '16px', fontWeight: '500', margin: '0 0 8px 0' }}>
-              No tasks yet
-            </p>
-            <button
-              onClick={onAddTask}
-              style={{
-                background: 'none',
-                border: `2px dashed ${config.borderColor}`,
-                color: config.accentColor,
-                padding: '12px 24px',
-                borderRadius: '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = config.bgGradient;
-                e.currentTarget.style.borderColor = config.accentColor;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'none';
-                e.currentTarget.style.borderColor = config.borderColor;
-              }}
-            >
-              Add your first task
-            </button>
+            {tasks.length === 0 ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '48px 0',
+                color: '#6b7280',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <div style={{
+                  fontSize: '48px',
+                  marginBottom: '16px'
+                }}>
+                  {config.emoji}
+                </div>
+                <p style={{ fontSize: '16px', fontWeight: '500', margin: '0 0 8px 0' }}>
+                  No tasks yet
+                </p>
+                <button
+                  onClick={onAddTask}
+                  style={{
+                    background: 'none',
+                    border: `2px dashed ${config.borderColor}`,
+                    color: config.accentColor,
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = config.bgGradient;
+                    e.currentTarget.style.borderColor = config.accentColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'none';
+                    e.currentTarget.style.borderColor = config.borderColor;
+                  }}
+                >
+                  Add your first task
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {tasks.map(task => (
+                  <ModernTaskCard
+                    key={task.id}
+                    task={task}
+                    categoryConfig={config}
+                    onClick={() => onTaskClick(task)}
+                    onStatusToggle={() => onTaskStatusToggle(task)}
+                    onDelete={() => onDeleteTask(task)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {tasks.map(task => (
-                <ModernTaskCard
-                  key={task.id}
-                  task={task}
-                  categoryConfig={config}
-                  onClick={() => onTaskClick(task)}
-                  onStatusToggle={() => onTaskStatusToggle(task)}
-                  onDelete={() => onDeleteTask(task)}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        )}
+        </SortableContext>
       </div>
     </div>
   );

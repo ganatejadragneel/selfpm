@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus } from '../types';
 import { useTaskStore } from '../store/taskStore';
 import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SubtaskList } from './subtasks/SubtaskList';
 import { AttachmentUpload } from './attachments/AttachmentUpload';
 import { AttachmentList } from './attachments/AttachmentList';
@@ -349,6 +349,74 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
+              </div>
+              
+              {/* Week Field */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: theme.typography.sizes.sm,
+                  fontWeight: theme.typography.weights.semibold,
+                  color: theme.colors.text.primary,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  Week Number
+                </label>
+                <div style={{
+                  display: 'flex',
+                  gap: theme.spacing.sm,
+                  alignItems: 'center'
+                }}>
+                  <input
+                    type="number"
+                    value={task.weekNumber}
+                    onChange={(e) => {
+                      const newWeek = parseInt(e.target.value);
+                      if (newWeek >= 1 && newWeek <= 53) {
+                        updateTask(task.id, { weekNumber: newWeek });
+                      }
+                    }}
+                    min="1"
+                    max="53"
+                    style={{
+                      width: '100px',
+                      border: `1px solid ${theme.colors.surface.glassBorder}`,
+                      borderRadius: theme.borderRadius.lg,
+                      padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                      fontSize: theme.typography.sizes.base,
+                      fontWeight: theme.typography.weights.medium,
+                      background: theme.colors.surface.glass,
+                      backdropFilter: theme.effects.blur,
+                      color: theme.colors.text.primary,
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.primary.dark;
+                      e.currentTarget.style.boxShadow = `0 0 0 3px rgba(102, 126, 234, 0.1)`;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  />
+                  <span style={{
+                    fontSize: theme.typography.sizes.sm,
+                    color: theme.colors.text.secondary
+                  }}>
+                    {(() => {
+                      const currentDate = new Date();
+                      const currentYear = currentDate.getFullYear();
+                      const januaryFirst = new Date(currentYear, 0, 1);
+                      const daysToAdd = (task.weekNumber - 1) * 7;
+                      const weekDate = new Date(januaryFirst.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+                      const weekStart = startOfWeek(weekDate);
+                      const weekEnd = endOfWeek(weekDate);
+                      return `(${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')})`;
+                    })()}
+                  </span>
+                </div>
               </div>
             </div>
 
