@@ -436,7 +436,11 @@ function AppContent() {
 
         {/* Weekly Summary */}
         <div style={{ marginBottom: '32px' }}>
-          <WeeklySummary tasks={tasks} weekNumber={currentWeek} />
+          <WeeklySummary 
+            tasks={tasks} 
+            weekNumber={currentWeek} 
+            onTaskClick={(task) => setSelectedTask(task)}
+          />
         </div>
 
         {/* Task Columns */}
