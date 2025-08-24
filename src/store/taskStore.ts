@@ -108,10 +108,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
         (tasks || []).map(async (task) => {
-          const [subtasksRes, updatesRes, notesRes, attachmentsRes, activitiesRes, commentsRes, dependenciesRes, dependentsRes] = await Promise.all([
+          const [subtasksRes, updatesRes, attachmentsRes, activitiesRes, commentsRes, dependenciesRes, dependentsRes] = await Promise.all([
             supabase.from('subtasks').select('*').eq('task_id', task.id).order('position'),
             supabase.from('task_updates').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
-            supabase.from('notes').select('*').eq('task_id', task.id).order('created_at', { ascending: false }),
             supabase.from('attachments').select('*').eq('task_id', task.id).order('uploaded_at', { ascending: false }),
             supabase.from('task_activities').select('*, user:users(id, username)').eq('task_id', task.id).order('created_at', { ascending: false }).limit(20),
             supabase.from('task_comments').select('*, user:users(id, username)').eq('task_id', task.id).is('parent_comment_id', null).order('created_at', { ascending: false }),
@@ -153,7 +152,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               progressValue: update.progress_value,
               createdAt: update.created_at
             })),
-            notes: notesRes.data || [],
             attachments: (attachmentsRes.data || []).map(attachment => ({
               id: attachment.id,
               taskId: attachment.task_id,
@@ -257,7 +255,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       await get().logActivity(data.id, 'created', undefined, data.title, { category: data.category });
       
       set(state => ({
-        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], notes: [], attachments: [], activities: [], comments: [] }]
+        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], attachments: [], activities: [], comments: [] }]
       }));
     } catch (error) {
       set({ error: (error as Error).message });

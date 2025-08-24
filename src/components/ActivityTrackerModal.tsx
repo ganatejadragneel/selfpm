@@ -122,7 +122,7 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     const task = tasks.find(t => t.id === activity.taskId);
     const taskTitle = task?.title || 'Unknown Task';
 
-    switch (activity.activityType) {
+    switch (activity.activityType as string) {
       case 'created':
         return `Task "${taskTitle}" was created in ${activity.metadata?.category || 'unknown'} board`;
       case 'status_changed':
@@ -415,6 +415,7 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
             }}>
               {(Object.keys(activityConfig) as ActivityType[]).map(type => {
                 const config = activityConfig[type];
+                if (!config) return null;
                 const Icon = config.icon;
                 const isSelected = selectedTypes.has(type);
                 
@@ -500,7 +501,11 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {filteredActivities.map(activity => {
-                const config = activityConfig[activity.activityType];
+                const config = activityConfig[activity.activityType] || {
+                  icon: Edit,
+                  color: theme.colors.text.secondary,
+                  label: 'Unknown Activity'
+                };
                 const Icon = config.icon;
                 
                 return (
