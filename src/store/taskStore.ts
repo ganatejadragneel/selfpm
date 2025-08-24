@@ -215,7 +215,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   createTask: async (taskData) => {
-    const week = get().currentWeek;
+    const currentWeek = get().currentWeek;
+    // Ensure we have a valid week number, fallback to current week of the year
+    const week = (currentWeek && typeof currentWeek === 'number' && currentWeek >= 1) 
+      ? currentWeek 
+      : Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
     
     // Get current user from auth store
     const authStore = useAuthStore.getState();
@@ -254,8 +258,32 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       // Log activity for task creation
       await get().logActivity(data.id, 'created', undefined, data.title, { category: data.category });
       
+      // Transform database format to frontend format (snake_case to camelCase)
+      const transformedTask = {
+        id: data.id,
+        category: data.category,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.due_date,
+        isRecurring: data.is_recurring,
+        recurrencePattern: data.recurrence_pattern,
+        progressCurrent: data.progress_current,
+        progressTotal: data.progress_total,
+        weekNumber: data.week_number,
+        order: data.order || 0,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        subtasks: [],
+        updates: [],
+        attachments: [],
+        activities: [],
+        comments: []
+      };
+      
       set(state => ({
-        tasks: [...state.tasks, { ...data, subtasks: [], updates: [], attachments: [], activities: [], comments: [] }]
+        tasks: [...state.tasks, transformedTask]
       }));
     } catch (error) {
       set({ error: (error as Error).message });

@@ -178,8 +178,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         }}>
           {/* Slide 1: Overview */}
           <div style={{
-            minWidth: '100%',
-            paddingRight: currentSlide === 0 ? '0' : '32px'
+            minWidth: '100%'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
               <div>
@@ -373,9 +372,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           {/* Slide 2: Deadline View */}
           <div style={{
             minWidth: '100%',
-            paddingLeft: currentSlide === 1 ? '0' : '32px'
+            paddingLeft: currentSlide === 1 ? '0' : '32px',
+            position: 'relative'
           }}>
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px', paddingLeft: '80px', paddingRight: '80px' }}>
               <h2 style={{ 
                 fontSize: '24px', 
                 fontWeight: 'bold', 
@@ -387,7 +387,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                 Deadline Priority View
               </h2>
               <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                {sortedTasks.length} pending tasks sorted by urgency
+                {sortedTasks.length} Urgent pending tasks
               </p>
             </div>
 
@@ -402,15 +402,13 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                 <p style={{ fontSize: '14px', marginTop: '8px' }}>All tasks are completed!</p>
               </div>
             ) : (
-              <div style={{ position: 'relative', height: '270px', padding: '0 30px', marginBottom: '30px' }}>
+              <div style={{ position: 'relative', height: '270px', marginBottom: '30px', paddingLeft: '60px', paddingRight: '60px' }}>
                 {/* Task Cards Container */}
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '16px',
-                  height: '100%',
-                  marginLeft: '30px',
-                  marginRight: '30px'
+                  gap: '12px',
+                  height: '100%'
                 }}>
                   {currentPageTasks.map((task) => {
                     const urgencyStyle = getUrgencyStyle(task.dueDate);
@@ -563,7 +561,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                       disabled={currentPage === 0}
                       style={{
                         position: 'absolute',
-                        left: '0',
+                        left: '5px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         width: '48px',
@@ -610,7 +608,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                       disabled={currentPage === totalPages - 1}
                       style={{
                         position: 'absolute',
-                        right: '0',
+                        right: '5px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         width: '48px',

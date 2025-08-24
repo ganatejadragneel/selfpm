@@ -38,6 +38,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
   const [tempDescription, setTempDescription] = useState(task.description || '');
   const [addingProgress, setAddingProgress] = useState(false);
   const [tempProgressTotal, setTempProgressTotal] = useState('');
+  const [editingProgressTotal, setEditingProgressTotal] = useState(false);
+  const [tempEditProgressTotal, setTempEditProgressTotal] = useState('');
 
   // Sync local state with task prop changes when not editing
   useEffect(() => {
@@ -408,14 +410,36 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     color: theme.colors.text.secondary
                   }}>
                     {(() => {
-                      const currentDate = new Date();
-                      const currentYear = currentDate.getFullYear();
-                      const januaryFirst = new Date(currentYear, 0, 1);
-                      const daysToAdd = (task.weekNumber - 1) * 7;
-                      const weekDate = new Date(januaryFirst.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-                      const weekStart = startOfWeek(weekDate);
-                      const weekEnd = endOfWeek(weekDate);
-                      return `(${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')})`;
+                      // Check if weekNumber is valid
+                      if (!task.weekNumber || typeof task.weekNumber !== 'number' || task.weekNumber < 1) {
+                        return '';
+                      }
+                      
+                      try {
+                        const currentDate = new Date();
+                        const currentYear = currentDate.getFullYear();
+                        const januaryFirst = new Date(currentYear, 0, 1);
+                        const daysToAdd = (task.weekNumber - 1) * 7;
+                        const weekDate = new Date(januaryFirst.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+                        
+                        // Validate the calculated date
+                        if (isNaN(weekDate.getTime())) {
+                          return '';
+                        }
+                        
+                        const weekStart = startOfWeek(weekDate);
+                        const weekEnd = endOfWeek(weekDate);
+                        
+                        // Validate start and end dates
+                        if (isNaN(weekStart.getTime()) || isNaN(weekEnd.getTime())) {
+                          return '';
+                        }
+                        
+                        return `(${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')})`;
+                      } catch (error) {
+                        console.warn('Error formatting week dates:', error);
+                        return '';
+                      }
                     })()}
                   </span>
                 </div>
@@ -462,15 +486,40 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             
             {(task.progressTotal || addingProgress) && (
               <div style={{ marginBottom: theme.spacing.xl }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: theme.typography.sizes.sm,
-                  fontWeight: theme.typography.weights.semibold,
-                  color: theme.colors.text.primary,
-                  marginBottom: theme.spacing.sm
-                }}>
-                  Progress
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                  <label style={{
+                    fontSize: theme.typography.sizes.sm,
+                    fontWeight: theme.typography.weights.semibold,
+                    color: theme.colors.text.primary
+                  }}>
+                    Progress
+                  </label>
+                  {task.progressTotal && !editingProgressTotal && (
+                    <>
+                      <Edit3 
+                        className="w-4 h-4" 
+                        style={{ 
+                          color: theme.colors.text.muted,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                          setEditingProgressTotal(true);
+                          setTempEditProgressTotal(task.progressTotal?.toString() || '');
+                        }}
+                      />
+                      <X 
+                        className="w-4 h-4" 
+                        style={{ 
+                          color: theme.colors.status.error.dark,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => {
+                          updateTask(task.id, { progressTotal: undefined, progressCurrent: 0 });
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
                 {addingProgress && !task.progressTotal ? (
                   <div style={{ 
                     padding: theme.spacing.lg,
@@ -640,13 +689,76 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                           e.currentTarget.style.boxShadow = 'none';
                         }}
                       />
-                      <span style={{
-                        fontSize: theme.typography.sizes.sm,
-                        color: theme.colors.text.secondary,
-                        fontWeight: theme.typography.weights.medium
-                      }}>
-                        / {task.progressTotal}
-                      </span>
+                      {editingProgressTotal ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.xs }}>
+                          <span style={{
+                            fontSize: theme.typography.sizes.sm,
+                            color: theme.colors.text.secondary,
+                            fontWeight: theme.typography.weights.medium
+                          }}>
+                            /
+                          </span>
+                          <input
+                            type="number"
+                            value={tempEditProgressTotal}
+                            onChange={(e) => setTempEditProgressTotal(e.target.value)}
+                            style={{
+                              width: '60px',
+                              border: `1px solid ${theme.colors.primary.dark}`,
+                              borderRadius: theme.borderRadius.md,
+                              padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                              fontSize: theme.typography.sizes.sm,
+                              fontWeight: theme.typography.weights.medium,
+                              background: 'rgba(255, 255, 255, 0.9)',
+                              color: theme.colors.text.primary,
+                              outline: 'none',
+                              textAlign: 'center',
+                              boxShadow: `0 0 0 2px rgba(102, 126, 234, 0.1)`
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && tempEditProgressTotal) {
+                                const newTotal = parseInt(tempEditProgressTotal) || 0;
+                                const currentProgress = task.progressCurrent || 0;
+                                // If new total is less than current progress, adjust current progress
+                                const updates: any = { progressTotal: newTotal };
+                                if (currentProgress > newTotal) {
+                                  updates.progressCurrent = newTotal;
+                                }
+                                updateTask(task.id, updates);
+                                setEditingProgressTotal(false);
+                                setTempEditProgressTotal('');
+                              }
+                              if (e.key === 'Escape') {
+                                setEditingProgressTotal(false);
+                                setTempEditProgressTotal('');
+                              }
+                            }}
+                            onBlur={() => {
+                              if (tempEditProgressTotal) {
+                                const newTotal = parseInt(tempEditProgressTotal) || 0;
+                                const currentProgress = task.progressCurrent || 0;
+                                // If new total is less than current progress, adjust current progress
+                                const updates: any = { progressTotal: newTotal };
+                                if (currentProgress > newTotal) {
+                                  updates.progressCurrent = newTotal;
+                                }
+                                updateTask(task.id, updates);
+                              }
+                              setEditingProgressTotal(false);
+                              setTempEditProgressTotal('');
+                            }}
+                            autoFocus
+                          />
+                        </div>
+                      ) : (
+                        <span style={{
+                          fontSize: theme.typography.sizes.sm,
+                          color: theme.colors.text.secondary,
+                          fontWeight: theme.typography.weights.medium
+                        }}>
+                          / {task.progressTotal}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
