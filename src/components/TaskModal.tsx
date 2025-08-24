@@ -596,7 +596,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                           height: '100%',
                           background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
                           borderRadius: theme.borderRadius.full,
-                          width: `${(task.progressCurrent || 0) / task.progressTotal * 100}%`,
+                          width: `${(task.progressCurrent || 0) / (task.progressTotal || 1) * 100}%`,
                           transition: 'width 0.3s ease',
                           boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
                         }} />
@@ -607,7 +607,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                         color: theme.colors.text.secondary,
                         textAlign: 'center'
                       }}>
-                        {Math.round((task.progressCurrent || 0) / task.progressTotal * 100)}% Complete
+                        {Math.round((task.progressCurrent || 0) / (task.progressTotal || 1) * 100)}% Complete
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
