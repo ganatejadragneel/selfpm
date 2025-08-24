@@ -8,8 +8,9 @@ import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { TaskModal } from './components/TaskModal';
 import { AddTaskModal } from './components/AddTaskModal';
+import { BulkUploadModal } from './components/BulkUploadModal';
 import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnalyticsDashboard';
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -41,6 +42,7 @@ function AppContent() {
   const [quickAddCategory, setQuickAddCategory] = useState<TaskCategory>('life_admin');
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -319,6 +321,37 @@ function AppContent() {
                 Add Task
               </button>
               
+              {/* Bulk Upload Button */}
+              <button
+                onClick={() => setShowBulkUpload(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: 'transparent',
+                  color: '#667eea',
+                  border: '2px solid #667eea',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0px)';
+                }}
+                title="Bulk upload tasks from CSV"
+              >
+                <Upload className="w-4 h-4" />
+                Bulk Upload
+              </button>
+              
               {/* Analytics Button */}
               <button
                 onClick={() => setShowAnalytics(!showAnalytics)}
@@ -496,6 +529,14 @@ function AppContent() {
             console.log('Closing AddTask modal');
             setShowQuickAdd(false);
           }}
+        />
+      )}
+      
+      {/* Bulk Upload Modal */}
+      {showBulkUpload && (
+        <BulkUploadModal
+          isOpen={showBulkUpload}
+          onClose={() => setShowBulkUpload(false)}
         />
       )}
     </div>
