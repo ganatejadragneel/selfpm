@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText } from 'lucide-react';
 import { startOfWeek, endOfWeek, format, addWeeks, getWeek, differenceInDays } from 'date-fns';
@@ -11,9 +11,44 @@ interface WeeklySummaryProps {
 }
 
 export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber, onTaskClick }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // Get today's date at midnight for consistent comparison
+  const todayForComparison = new Date();
+  todayForComparison.setHours(0, 0, 0, 0);
+  
+  // Helper function to parse date string without timezone conversion
+  const parseLocalDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  
+  // Determine initial slide based on urgent tasks or today's deadlines
+  const shouldShowDeadlineView = useMemo(() => {
+    const pendingTasks = tasks.filter(t => t.status !== 'done' && !t.isRecurring);
+    
+    // Check for extreme priority tasks
+    const hasUrgentTasks = pendingTasks.some(t => t.priority === 'urgent');
+    
+    // Check for tasks due today or overdue
+    const hasTodayOrOverdueDeadlines = pendingTasks.some(t => {
+      if (!t.dueDate) return false;
+      const dueDate = parseLocalDate(t.dueDate);
+      return dueDate.getTime() <= todayForComparison.getTime(); // Today or past dates
+    });
+    
+    return hasUrgentTasks || hasTodayOrOverdueDeadlines;
+  }, [tasks]);
+  
+  const [currentSlide, setCurrentSlide] = useState(shouldShowDeadlineView ? 1 : 0);
   const [currentPage, setCurrentPage] = useState(0);
+  const [hasUserNavigated, setHasUserNavigated] = useState(false);
   const CARDS_PER_PAGE = 3;
+  
+  // Auto-switch to deadline view only on initial load and if user hasn't manually navigated
+  useEffect(() => {
+    if (shouldShowDeadlineView && currentSlide === 0 && !hasUserNavigated) {
+      setCurrentSlide(1);
+    }
+  }, [shouldShowDeadlineView, currentSlide, hasUserNavigated]);
 
   // Use the same calculation as App.tsx for consistency
   const currentDate = new Date();
@@ -21,15 +56,8 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
   const weekStart = startOfWeek(weekStartDate);
   const weekEnd = endOfWeek(weekStart);
   
-  // Helper function to parse date string without timezone conversion
-  const parseLocalDate = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  // Get today's date at midnight for consistent comparison
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Use the same today variable for consistency
+  const today = todayForComparison;
 
   // Filter and sort tasks for deadline view
   const sortedTasks = useMemo(() => {
@@ -39,6 +67,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
     );
 
     return filtered.sort((a, b) => {
+      // First priority: Extreme priority tasks come first
+      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+      if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
+      
       // Handle tasks without due dates - they go to the end
       if (!a.dueDate && !b.dueDate) return 0;
       if (!a.dueDate) return 1;
@@ -701,6 +733,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         <button
           onClick={() => {
             setCurrentSlide(Math.max(0, currentSlide - 1));
+            setHasUserNavigated(true);
             if (currentSlide === 1) setCurrentPage(0); // Reset pagination when leaving deadline view
           }}
           disabled={currentSlide === 0}
@@ -758,6 +791,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         <button
           onClick={() => {
             setCurrentSlide(Math.min(1, currentSlide + 1));
+            setHasUserNavigated(true);
             if (currentSlide === 0) setCurrentPage(0); // Reset pagination when entering deadline view
           }}
           disabled={currentSlide === 1}
