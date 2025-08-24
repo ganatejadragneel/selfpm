@@ -6,13 +6,8 @@ import { theme, styleUtils, priorityConfigs } from '../styles/theme';
 import { useTaskPriority } from '../hooks/useTaskPriority';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
-// Helper function to parse date string without timezone conversion
-const parseLocalDate = (dateString: string): Date => {
-  // Split the date string (YYYY-MM-DD) and create date with local timezone
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed in JS Date
-};
+import { parseLocalDate } from '../utils/dateUtils';
+import { calculateSubtaskStats } from '../utils/taskStatistics';
 
 interface ModernTaskCardProps {
   task: Task;
@@ -67,8 +62,7 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
     }
   };
 
-  const completedSubtasks = task.subtasks?.filter(s => s.isCompleted).length || 0;
-  const totalSubtasks = task.subtasks?.length || 0;
+  const { completed: completedSubtasks, total: totalSubtasks } = calculateSubtaskStats(task);
   const priorityStyle = getPriorityStyle(task, categoryConfig.accentColor);
 
   const handleDeleteClick = (e: React.MouseEvent) => {

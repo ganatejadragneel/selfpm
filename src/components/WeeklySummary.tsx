@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText } from 'lucide-react';
-import { startOfWeek, endOfWeek, format, addWeeks, getWeek, differenceInDays } from 'date-fns';
+import { startOfWeek, endOfWeek, format, addWeeks, getWeek } from 'date-fns';
 import { theme, priorityConfigs } from '../styles/theme';
+import { parseLocalDate, getDaysUntilDate, getDateUrgency } from '../utils/dateUtils';
+import { filterPendingTasks, sortTasksByDeadlinePriority, shouldShowDeadlineView as checkShouldShowDeadlineView } from '../utils/taskFilters';
+import { calculateTaskStatistics, calculateSubtaskStats } from '../utils/taskStatistics';
 
 interface WeeklySummaryProps {
   tasks: Task[];
@@ -11,32 +14,8 @@ interface WeeklySummaryProps {
 }
 
 export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber, onTaskClick }) => {
-  // Get today's date at midnight for consistent comparison
-  const todayForComparison = new Date();
-  todayForComparison.setHours(0, 0, 0, 0);
-  
-  // Helper function to parse date string without timezone conversion
-  const parseLocalDate = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-  
   // Determine initial slide based on urgent tasks or today's deadlines
-  const shouldShowDeadlineView = useMemo(() => {
-    const pendingTasks = tasks.filter(t => t.status !== 'done' && !t.isRecurring);
-    
-    // Check for extreme priority tasks
-    const hasUrgentTasks = pendingTasks.some(t => t.priority === 'urgent');
-    
-    // Check for tasks due today or overdue
-    const hasTodayOrOverdueDeadlines = pendingTasks.some(t => {
-      if (!t.dueDate) return false;
-      const dueDate = parseLocalDate(t.dueDate);
-      return dueDate.getTime() <= todayForComparison.getTime(); // Today or past dates
-    });
-    
-    return hasUrgentTasks || hasTodayOrOverdueDeadlines;
-  }, [tasks]);
+  const shouldShowDeadlineView = useMemo(() => checkShouldShowDeadlineView(tasks), [tasks]);
   
   const [currentSlide, setCurrentSlide] = useState(shouldShowDeadlineView ? 1 : 0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -56,32 +35,11 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
   const weekStart = startOfWeek(weekStartDate);
   const weekEnd = endOfWeek(weekStart);
   
-  // Use the same today variable for consistency
-  const today = todayForComparison;
 
   // Filter and sort tasks for deadline view
   const sortedTasks = useMemo(() => {
-    const filtered = tasks.filter(t => 
-      t.status !== 'done' &&           // Filter out completed
-      !t.isRecurring                    // Filter out recurring
-    );
-
-    return filtered.sort((a, b) => {
-      // First priority: Extreme priority tasks come first
-      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-      if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
-      
-      // Handle tasks without due dates - they go to the end
-      if (!a.dueDate && !b.dueDate) return 0;
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-
-      const dateA = parseLocalDate(a.dueDate);
-      const dateB = parseLocalDate(b.dueDate);
-      
-      // Sort by date (earliest first)
-      return dateA.getTime() - dateB.getTime();
-    });
+    const filtered = filterPendingTasks(tasks);
+    return sortTasksByDeadlinePriority(filtered);
   }, [tasks]);
 
   // Calculate total pages
@@ -95,72 +53,51 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
 
   // Get urgency style for a task
   const getUrgencyStyle = (dueDate: string | undefined) => {
-    if (!dueDate) return { 
-      background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.1) 0%, rgba(107, 114, 128, 0.1) 100%)',
-      border: theme.colors.surface.glassBorder,
-      glow: 'none',
-      textColor: theme.colors.text.secondary
-    };
+    const urgency = getDateUrgency(dueDate);
     
-    const due = parseLocalDate(dueDate);
-    const daysUntil = differenceInDays(due, today);
-    
-    if (daysUntil < 0) return { 
-      background: 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)', // dark red for overdue
-      border: '#dc2626',
-      glow: '0 4px 20px rgba(220, 38, 38, 0.4)',
-      textColor: 'white'
-    };
-    if (daysUntil === 0) return { 
-      background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', // super red for today
-      border: '#ef4444',
-      glow: '0 4px 25px rgba(239, 68, 68, 0.5)',
-      textColor: 'white'
-    };
-    if (daysUntil <= 2) return { 
-      background: 'linear-gradient(135deg, #a16207 0%, #ca8a04 100%)', // dark yellow
-      border: '#eab308',
-      glow: '0 4px 20px rgba(234, 179, 8, 0.4)',
-      textColor: 'white'
-    };
-    
-    return { 
-      background: 'rgba(255, 255, 255, 0.95)',
-      border: theme.colors.surface.glassBorder,
-      glow: theme.effects.shadow.sm,
-      textColor: theme.colors.text.primary
-    };
-  };
-
-  const stats = {
-    total: tasks.length,
-    completed: tasks.filter(t => t.status === 'done').length,
-    inProgress: tasks.filter(t => t.status === 'in_progress').length,
-    blocked: tasks.filter(t => t.status === 'blocked').length,
-    todo: tasks.filter(t => t.status === 'todo').length,
-    
-    categories: {
-      lifeAdmin: {
-        total: tasks.filter(t => t.category === 'life_admin').length,
-        completed: tasks.filter(t => t.category === 'life_admin' && t.status === 'done').length
-      },
-      work: {
-        total: tasks.filter(t => t.category === 'work').length,
-        completed: tasks.filter(t => t.category === 'work' && t.status === 'done').length
-      },
-      weeklyRecurring: {
-        total: tasks.filter(t => t.category === 'weekly_recurring').length,
-        completed: tasks.filter(t => t.category === 'weekly_recurring' && t.status === 'done').length
-      }
+    switch (urgency) {
+      case 'overdue':
+        return { 
+          background: 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)',
+          border: '#dc2626',
+          glow: '0 4px 20px rgba(220, 38, 38, 0.4)',
+          textColor: 'white'
+        };
+      case 'today':
+        return { 
+          background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
+          border: '#ef4444',
+          glow: '0 4px 25px rgba(239, 68, 68, 0.5)',
+          textColor: 'white'
+        };
+      case 'urgent':
+        return { 
+          background: 'linear-gradient(135deg, #a16207 0%, #ca8a04 100%)',
+          border: '#eab308',
+          glow: '0 4px 20px rgba(234, 179, 8, 0.4)',
+          textColor: 'white'
+        };
+      case 'none':
+        return { 
+          background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.1) 0%, rgba(107, 114, 128, 0.1) 100%)',
+          border: theme.colors.surface.glassBorder,
+          glow: 'none',
+          textColor: theme.colors.text.secondary
+        };
+      default:
+        return { 
+          background: 'rgba(255, 255, 255, 0.95)',
+          border: theme.colors.surface.glassBorder,
+          glow: theme.effects.shadow.sm,
+          textColor: theme.colors.text.primary
+        };
     }
   };
-  
-  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
-  
-  // Calculate progress for tasks with measurable progress
-  const progressTasks = tasks.filter(t => t.progressTotal);
-  const totalProgress = progressTasks.reduce((acc, t) => acc + (t.progressCurrent || 0), 0);
-  const totalGoal = progressTasks.reduce((acc, t) => acc + (t.progressTotal || 0), 0);
+
+  const stats = useMemo(() => calculateTaskStatistics(tasks), [tasks]);
+  const completionRate = stats.completionRate;
+  const totalProgress = stats.progress.totalCurrent;
+  const totalGoal = stats.progress.totalGoal;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -369,7 +306,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                   🏠 Life Admin
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1d4ed8' }}>
-                  {stats.categories.lifeAdmin.completed}/{stats.categories.lifeAdmin.total}
+                  {stats.categories.life_admin.completed}/{stats.categories.life_admin.total}
                 </div>
               </div>
               <div style={{
@@ -395,7 +332,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                   🔄 Weekly
                 </div>
                 <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#7c3aed' }}>
-                  {stats.categories.weeklyRecurring.completed}/{stats.categories.weeklyRecurring.total}
+                  {stats.categories.weekly_recurring.completed}/{stats.categories.weekly_recurring.total}
                 </div>
               </div>
             </div>
@@ -447,8 +384,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                     const latestUpdate = task.updates && task.updates.length > 0 
                       ? task.updates[task.updates.length - 1].updateText 
                       : null;
-                    const completedSubtasks = task.subtasks?.filter(s => s.isCompleted).length || 0;
-                    const totalSubtasks = task.subtasks?.length || 0;
+                    const { completed: completedSubtasks, total: totalSubtasks } = calculateSubtaskStats(task);
 
                     return (
                       <div
@@ -521,7 +457,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                             <>
                               {format(parseLocalDate(task.dueDate), 'MMM d, yyyy')}
                               {(() => {
-                                const daysUntil = differenceInDays(parseLocalDate(task.dueDate), today);
+                                const daysUntil = getDaysUntilDate(task.dueDate);
                                 if (daysUntil < 0) return ` (${Math.abs(daysUntil)} days overdue)`;
                                 if (daysUntil === 0) return ' (Today!)';
                                 if (daysUntil === 1) return ' (Tomorrow)';
