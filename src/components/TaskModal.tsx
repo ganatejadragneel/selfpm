@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Task, TaskStatus } from '../types';
+import type { Task, TaskStatus, TaskPriority } from '../types';
 import { useTaskStore } from '../store/taskStore';
 import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -10,7 +10,7 @@ import { ActivityTimeline } from './activity/ActivityTimeline';
 import { CommentSection } from './activity/CommentSection';
 import { SmartProgressManager } from './progress/SmartProgressManager';
 import { TaskDependencyManager } from './dependencies/TaskDependencyManager';
-import { theme } from '../styles/theme';
+import { theme, priorityConfigs } from '../styles/theme';
 
 interface TaskModalProps {
   task: Task;
@@ -353,6 +353,60 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
+              </div>
+              
+              {/* Priority Field */}
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: theme.typography.sizes.sm,
+                  fontWeight: theme.typography.weights.semibold,
+                  color: theme.colors.text.primary,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  Priority
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => (
+                    <button
+                      key={prio}
+                      onClick={() => updateTask(task.id, { priority: prio })}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: theme.borderRadius.md,
+                        border: task.priority === prio ? `2px solid ${priorityConfigs[prio].color}` : `1px solid ${theme.colors.surface.glassBorder}`,
+                        fontSize: theme.typography.sizes.sm,
+                        fontWeight: theme.typography.weights.medium,
+                        cursor: 'pointer',
+                        backgroundColor: task.priority === prio ? priorityConfigs[prio].bgColor : theme.colors.surface.glass,
+                        backdropFilter: theme.effects.blur,
+                        color: task.priority === prio ? priorityConfigs[prio].color : theme.colors.text.primary,
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (task.priority !== prio) {
+                          e.currentTarget.style.borderColor = priorityConfigs[prio].color;
+                          e.currentTarget.style.backgroundColor = priorityConfigs[prio].bgColor;
+                          e.currentTarget.style.color = priorityConfigs[prio].color;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (task.priority !== prio) {
+                          e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+                          e.currentTarget.style.backgroundColor = theme.colors.surface.glass;
+                          e.currentTarget.style.color = theme.colors.text.primary;
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: '12px' }}>{priorityConfigs[prio].icon}</span>
+                      <span>{priorityConfigs[prio].title.replace(' Priority', '')}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
               
               {/* Week Field */}

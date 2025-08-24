@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Task } from '../types';
 import { CheckCircle2, Circle, Clock, AlertCircle, ChevronRight, Calendar, Trash2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
-import { theme, styleUtils } from '../styles/theme';
+import { theme, styleUtils, priorityConfigs } from '../styles/theme';
 import { useTaskPriority } from '../hooks/useTaskPriority';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -197,6 +197,23 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
                 {format(parseLocalDate(task.dueDate), 'MMM d')}
               </div>
             )}
+            
+            {/* Priority Badge */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.xs,
+              padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+              borderRadius: theme.borderRadius.sm,
+              fontSize: theme.typography.sizes.xs,
+              fontWeight: theme.typography.weights.semibold,
+              background: priorityConfigs[task.priority].bgColor,
+              color: priorityConfigs[task.priority].color,
+              border: `1px solid ${priorityConfigs[task.priority].borderColor}`
+            }}>
+              <span>{priorityConfigs[task.priority].icon}</span>
+              <span>{priorityConfigs[task.priority].title.replace(' Priority', '')}</span>
+            </div>
             
             {totalSubtasks > 0 && (
               <div style={{

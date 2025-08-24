@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import type { TaskCategory } from '../types';
+import type { TaskCategory, TaskPriority } from '../types';
 import { useTaskStore } from '../store/taskStore';
-import { theme } from '../styles/theme';
+import { theme, priorityConfigs } from '../styles/theme';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [progressTotal, setProgressTotal] = useState('');
+  const [priority, setPriority] = useState<TaskPriority>('medium');
   const [isRecurring, setIsRecurring] = useState(false);
 
   if (!isOpen) return null;
@@ -38,7 +39,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
         dueDate: dueDate || undefined,
         progressTotal: progressTotal ? parseInt(progressTotal) : undefined,
         isRecurring,
-        priority: 'medium'
+        priority
       });
       
       // Reset form
@@ -46,6 +47,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
       setDescription('');
       setDueDate('');
       setProgressTotal('');
+      setPriority('medium');
       setIsRecurring(false);
       onClose();
     } catch (error) {
@@ -238,6 +240,51 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
+          </div>
+
+          {/* Priority Selection */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
+              Priority
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+              {(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => (
+                <button
+                  key={prio}
+                  onClick={() => setPriority(prio)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    border: priority === prio ? `2px solid ${priorityConfigs[prio].color}` : '2px solid #e5e7eb',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    backgroundColor: priority === prio ? priorityConfigs[prio].bgColor : 'white',
+                    color: priority === prio ? priorityConfigs[prio].color : '#374151',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (priority !== prio) {
+                      e.currentTarget.style.borderColor = priorityConfigs[prio].color;
+                      e.currentTarget.style.backgroundColor = priorityConfigs[prio].bgColor;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (priority !== prio) {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
+                  }}
+                >
+                  <span>{priorityConfigs[prio].icon}</span>
+                  <span>{priorityConfigs[prio].title}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Due Date and Progress Goal */}

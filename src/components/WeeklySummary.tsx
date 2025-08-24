@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText } from 'lucide-react';
 import { startOfWeek, endOfWeek, format, addWeeks, getWeek, differenceInDays } from 'date-fns';
-import { theme } from '../styles/theme';
+import { theme, priorityConfigs } from '../styles/theme';
 
 interface WeeklySummaryProps {
   tasks: Task[];
@@ -516,6 +516,21 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                           <span style={{ fontWeight: '500' }}>
                             {task.status.replace('_', ' ').charAt(0).toUpperCase() + task.status.slice(1).replace('_', ' ')}
                           </span>
+                        </div>
+
+                        {/* Priority */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          marginBottom: '12px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: urgencyStyle.textColor,
+                          opacity: urgencyStyle.textColor === 'white' ? 0.9 : 0.8
+                        }}>
+                          <span style={{ fontSize: '11px' }}>{priorityConfigs[task.priority].icon}</span>
+                          <span>{priorityConfigs[task.priority].title.replace(' Priority', '')}</span>
                         </div>
 
                         {/* Subtasks Count */}

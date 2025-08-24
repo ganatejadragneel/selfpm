@@ -196,3 +196,35 @@ export const styleUtils = {
     WebkitTextFillColor: 'transparent',
   }),
 };
+
+// Priority-specific configurations
+export const priorityConfigs = {
+  low: {
+    title: 'Low Priority',
+    color: '#9ca3af',
+    bgColor: 'rgba(156, 163, 175, 0.1)',
+    borderColor: 'rgba(156, 163, 175, 0.3)',
+    icon: '🟢'
+  },
+  medium: {
+    title: 'Medium Priority', 
+    color: '#f59e0b',
+    bgColor: 'rgba(245, 158, 11, 0.1)',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    icon: '🟡'
+  },
+  high: {
+    title: 'High Priority',
+    color: '#ef4444', 
+    bgColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    icon: '🟠'
+  },
+  urgent: {
+    title: 'Extreme Priority',
+    color: '#dc2626',
+    bgColor: 'rgba(220, 38, 38, 0.2)', 
+    borderColor: 'rgba(220, 38, 38, 0.5)',
+    icon: '🔴'
+  }
+} as const;
