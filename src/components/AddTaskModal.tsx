@@ -128,7 +128,12 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           </div>
         </div>
 
-        <div style={{ padding: '32px', overflow: 'auto', maxHeight: 'calc(90vh - 140px)' }}>
+        <div style={{ 
+          padding: '32px', 
+          overflow: 'auto', 
+          maxHeight: 'calc(90vh - 140px)',
+          boxSizing: 'border-box'
+        }}>
           {/* Category Selection */}
           <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
@@ -181,6 +186,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
               placeholder="What needs to be done?"
               style={{
                 width: '100%',
+                boxSizing: 'border-box',
                 border: '2px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '12px 16px',
@@ -213,6 +219,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
               rows={3}
               style={{
                 width: '100%',
+                boxSizing: 'border-box',
                 border: '2px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '12px 16px',
@@ -245,6 +252,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
                 onChange={(e) => setDueDate(e.target.value)}
                 style={{
                   width: '100%',
+                  boxSizing: 'border-box',
                   border: '2px solid #e5e7eb',
                   borderRadius: '12px',
                   padding: '12px 16px',
@@ -275,6 +283,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
                 placeholder="e.g. 50"
                 style={{
                   width: '100%',
+                  boxSizing: 'border-box',
                   border: '2px solid #e5e7eb',
                   borderRadius: '12px',
                   padding: '12px 16px',
