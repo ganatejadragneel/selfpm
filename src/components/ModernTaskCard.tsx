@@ -7,6 +7,13 @@ import { useTaskPriority } from '../hooks/useTaskPriority';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Helper function to parse date string without timezone conversion
+const parseLocalDate = (dateString: string): Date => {
+  // Split the date string (YYYY-MM-DD) and create date with local timezone
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in JS Date
+};
+
 interface ModernTaskCardProps {
   task: Task;
   categoryConfig: any;
@@ -188,7 +195,7 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
                 ...getDueDateBadgeStyle(task.dueDate, task.status)
               }}>
                 <Calendar className="w-3 h-3" />
-                {format(new Date(task.dueDate), 'MMM d')}
+                {format(parseLocalDate(task.dueDate), 'MMM d')}
               </div>
             )}
             

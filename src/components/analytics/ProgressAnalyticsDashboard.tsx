@@ -48,11 +48,35 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
     const inProgress = tasks.filter(t => t.status === 'in_progress').length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
     
-    // Average progress
-    const tasksWithProgress = tasks.filter(t => t.progressTotal);
-    const avgProgress = tasksWithProgress.length > 0
-      ? Math.round(tasksWithProgress.reduce((sum, t) => sum + ((t.progressCurrent || 0) / (t.progressTotal || 1) * 100), 0) / tasksWithProgress.length)
-      : 0;
+    // Average progress - calculate for all tasks, using different methods
+    let avgProgress = 0;
+    let totalProgress = 0;
+    let taskCount = 0;
+    
+    tasks.forEach(task => {
+      let taskProgress = 0;
+      
+      if (task.status === 'done') {
+        // Completed tasks are 100%
+        taskProgress = 100;
+      } else if (task.progressTotal && task.progressTotal > 0) {
+        // Tasks with explicit progress tracking
+        taskProgress = Math.round((task.progressCurrent || 0) / task.progressTotal * 100);
+      } else if (task.subtasks && task.subtasks.length > 0) {
+        // Tasks with subtasks - calculate based on subtask completion
+        const completedSubtasks = task.subtasks.filter(st => st.isCompleted).length;
+        taskProgress = Math.round((completedSubtasks / task.subtasks.length) * 100);
+      } else if (task.status === 'in_progress') {
+        // In progress without progress tracking = 50%
+        taskProgress = 50;
+      }
+      // 'todo' or 'blocked' tasks = 0%
+      
+      totalProgress += taskProgress;
+      taskCount++;
+    });
+    
+    avgProgress = taskCount > 0 ? Math.round(totalProgress / taskCount) : 0;
 
     setOverallStats({
       totalTasks: total,
@@ -97,25 +121,107 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
 
     setCategoryStats(categories);
 
-    // Weekly stats (simplified for now)
+    // Weekly stats - use actual task data
     const today = new Date();
     const weekStart = startOfWeek(today);
     const weekEnd = endOfWeek(today);
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-    const dailyStats = days.map(day => ({
-      date: day,
-      completed: Math.floor(Math.random() * 5), // Placeholder - would need actual daily data
-      created: Math.floor(Math.random() * 3),
-      inProgress: Math.floor(Math.random() * 4)
-    }));
+    // Group tasks by date for created and completed
+    const tasksByDate = new Map<string, { created: Task[], completed: Task[], inProgress: Task[] }>();
+    
+    // Initialize all days
+    days.forEach(day => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      tasksByDate.set(dateKey, { created: [], completed: [], inProgress: [] });
+    });
+    
+    // Categorize tasks by their dates
+    tasks.forEach(task => {
+      // Track created tasks
+      if (task.createdAt) {
+        const createdDate = format(new Date(task.createdAt), 'yyyy-MM-dd');
+        const dayData = tasksByDate.get(createdDate);
+        if (dayData) {
+          dayData.created.push(task);
+        }
+      }
+      
+      // Track completed tasks
+      if (task.status === 'done' && task.updatedAt) {
+        const completedDate = format(new Date(task.updatedAt), 'yyyy-MM-dd');
+        const dayData = tasksByDate.get(completedDate);
+        if (dayData) {
+          dayData.completed.push(task);
+        }
+      }
+      
+      // Track in-progress tasks (current status)
+      if (task.status === 'in_progress') {
+        const currentDate = format(today, 'yyyy-MM-dd');
+        const dayData = tasksByDate.get(currentDate);
+        if (dayData) {
+          dayData.inProgress.push(task);
+        }
+      }
+    });
+
+    const dailyStats = days.map(day => {
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const dayData = tasksByDate.get(dateKey) || { created: [], completed: [], inProgress: [] };
+      
+      return {
+        date: day,
+        completed: dayData.completed.length,
+        created: dayData.created.length,
+        inProgress: dayData.inProgress.length
+      };
+    });
 
     setWeeklyStats(dailyStats);
   };
 
   const calculateStreak = () => {
-    // Simplified streak calculation
-    return Math.floor(Math.random() * 7) + 1;
+    // Calculate the current streak of days with completed tasks
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    let streak = 0;
+    let currentDate = new Date(today);
+    
+    // Group tasks by the date they were completed
+    const completedTasksByDate = new Map<string, number>();
+    
+    tasks.forEach(task => {
+      if (task.status === 'done' && task.updatedAt) {
+        const dateKey = format(new Date(task.updatedAt), 'yyyy-MM-dd');
+        completedTasksByDate.set(dateKey, (completedTasksByDate.get(dateKey) || 0) + 1);
+      }
+    });
+    
+    // Count consecutive days backwards from today
+    while (true) {
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+      
+      // If we have completed tasks on this day, increment streak
+      if (completedTasksByDate.has(dateKey)) {
+        streak++;
+        // Move to previous day
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        // If today doesn't have completed tasks yet, check yesterday
+        if (streak === 0 && currentDate.toDateString() === today.toDateString()) {
+          currentDate.setDate(currentDate.getDate() - 1);
+          continue;
+        }
+        // Streak is broken
+        break;
+      }
+      
+      // Limit to reasonable number of days to check
+      if (streak > 365) break;
+    }
+    
+    return streak;
   };
 
 

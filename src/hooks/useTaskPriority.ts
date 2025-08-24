@@ -2,12 +2,19 @@ import { isPast, isToday, isTomorrow } from 'date-fns';
 import type { Task } from '../types';
 import { theme } from '../styles/theme';
 
+// Helper function to parse date string without timezone conversion
+const parseLocalDate = (dateString: string): Date => {
+  // Split the date string (YYYY-MM-DD) and create date with local timezone
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in JS Date
+};
+
 // Custom hook for task priority calculation
 // Following Single Responsibility Principle
 export const useTaskPriority = () => {
   const getPriorityStyle = (task: Task, categoryAccentColor: string) => {
     if (task.dueDate) {
-      const dueDate = new Date(task.dueDate);
+      const dueDate = parseLocalDate(task.dueDate);
       
       if (isPast(dueDate) && task.status !== 'done') {
         return {
@@ -40,7 +47,7 @@ export const useTaskPriority = () => {
   };
   
   const getDueDateBadgeStyle = (dueDate: string, taskStatus: string) => {
-    const date = new Date(dueDate);
+    const date = parseLocalDate(dueDate);
     
     if (isPast(date) && taskStatus !== 'done') {
       return {
