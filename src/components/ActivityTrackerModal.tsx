@@ -28,7 +28,6 @@ const activityConfig: Record<ActivityType, { icon: React.ElementType; color: str
   attachment_deleted: { icon: Trash2, color: theme.colors.status.error.light, label: 'Attachment Deleted' },
   comment_added: { icon: MessageSquare, color: theme.colors.status.purple.dark, label: 'Comment Added' },
   progress_updated: { icon: TrendingUp, color: theme.colors.status.success.dark, label: 'Progress Updated' },
-  note_added: { icon: FileText, color: theme.colors.text.secondary, label: 'Note Added' },
   moved_category: { icon: ArrowRight, color: theme.colors.status.info.dark, label: 'Moved Category' },
   reordered: { icon: Zap, color: theme.colors.text.secondary, label: 'Reordered' }
 };
@@ -148,8 +147,6 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
         return `Comment added to "${taskTitle}"`;
       case 'progress_updated':
         return `Progress updated to ${activity.newValue} for "${taskTitle}"`;
-      case 'note_added':
-        return `Note added to "${taskTitle}"`;
       case 'moved_category':
         return `"${taskTitle}" moved from ${activity.oldValue} to ${activity.newValue}`;
       case 'reordered':

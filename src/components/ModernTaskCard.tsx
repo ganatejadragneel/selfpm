@@ -191,7 +191,6 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
                 padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
                 borderRadius: theme.borderRadius.sm,
                 fontSize: theme.typography.sizes.xs,
-                fontWeight: theme.typography.weights.medium,
                 ...getDueDateBadgeStyle(task.dueDate, task.status)
               }}>
                 <Calendar className="w-3 h-3" />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Calendar, CheckCircle2, Clock, Target, Award, Activity } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, getWeek } from 'date-fns';
 import { theme } from '../../styles/theme';
 import type { Task } from '../../types';
 
@@ -122,9 +122,11 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
     setCategoryStats(categories);
 
     // Weekly stats - use actual task data
-    const today = new Date();
-    const weekStart = startOfWeek(today);
-    const weekEnd = endOfWeek(today);
+    // Use the same calculation as App.tsx for consistency
+    const currentDate = new Date();
+    const weekStartDate = addWeeks(currentDate, currentWeek - getWeek(currentDate));
+    const weekStart = startOfWeek(weekStartDate);
+    const weekEnd = endOfWeek(weekStart);
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     // Group tasks by date for created and completed
@@ -158,8 +160,8 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
       
       // Track in-progress tasks (current status)
       if (task.status === 'in_progress') {
-        const currentDate = format(today, 'yyyy-MM-dd');
-        const dayData = tasksByDate.get(currentDate);
+        const todayKey = format(new Date(), 'yyyy-MM-dd');
+        const dayData = tasksByDate.get(todayKey);
         if (dayData) {
           dayData.inProgress.push(task);
         }

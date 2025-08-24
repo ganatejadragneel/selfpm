@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Task, Subtask, TaskUpdate, Note } from '../types';
+import type { Task, Subtask, TaskUpdate } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -28,11 +28,6 @@ export type Database = {
         Row: TaskUpdate;
         Insert: Omit<TaskUpdate, 'id' | 'createdAt'>;
         Update: Partial<Omit<TaskUpdate, 'id'>>;
-      };
-      notes: {
-        Row: Note;
-        Insert: Omit<Note, 'id' | 'createdAt'>;
-        Update: Partial<Omit<Note, 'id'>>;
       };
     };
   };

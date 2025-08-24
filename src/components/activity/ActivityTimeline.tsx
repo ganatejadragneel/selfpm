@@ -8,6 +8,13 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { theme } from '../../styles/theme';
 import type { TaskActivity, ActivityType } from '../../types';
 
+// Helper function to parse date string without timezone conversion
+const parseLocalDate = (dateString: string): Date => {
+  // Split the date string (YYYY-MM-DD) and create date with local timezone
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed in JS Date
+};
+
 interface ActivityTimelineProps {
   activities: TaskActivity[];
 }
@@ -36,8 +43,6 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities }
         return MessageSquare;
       case 'progress_updated':
         return TrendingUp;
-      case 'note_added':
-        return FileText;
       case 'moved_category':
         return Folder;
       case 'reordered':
@@ -93,8 +98,8 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities }
       case 'due_date_changed':
         return (
           <span>
-            changed due date {oldValue && `from ${format(new Date(oldValue), 'MMM d')}`} to{' '}
-            <strong>{newValue && format(new Date(newValue), 'MMM d, yyyy')}</strong>
+            changed due date {oldValue && `from ${format(parseLocalDate(oldValue), 'MMM d')}`} to{' '}
+            <strong>{newValue && format(parseLocalDate(newValue), 'MMM d, yyyy')}</strong>
           </span>
         );
       case 'description_updated':
@@ -118,8 +123,6 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities }
             {metadata?.progress_total && ` of ${metadata.progress_total}`}
           </span>
         );
-      case 'note_added':
-        return 'added a note';
       case 'moved_category':
         return (
           <span>

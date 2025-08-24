@@ -33,9 +33,6 @@ interface TaskStore {
   updateProgressSettings: (taskId: string, settings: { autoProgress: boolean; weightedProgress: boolean }) => Promise<void>;
   calculateAutoProgress: (taskId: string) => Promise<void>;
   
-  // Note actions
-  addNote: (taskId: string, content: string) => Promise<void>;
-  
   // Attachment actions
   uploadAttachment: (taskId: string, file: File) => Promise<void>;
   deleteAttachment: (attachmentId: string) => Promise<void>;
@@ -565,39 +562,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     }
   },
 
-  addNote: async (taskId, content) => {
-    try {
-      const { data, error } = await supabase
-        .from('notes')
-        .insert([{ task_id: taskId, content }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Log activity
-      await get().logActivity(taskId, 'note_added', undefined, content.substring(0, 50));
-      
-      // Convert snake_case to camelCase to match frontend expectations
-      const formattedNote = {
-        id: data.id,
-        taskId: data.task_id,
-        content: data.content,
-        createdAt: data.created_at
-      };
-
-      set(state => ({
-        tasks: state.tasks.map(task =>
-          task.id === taskId
-            ? { ...task, notes: [formattedNote, ...(task.notes || [])] }
-            : task
-        )
-      }));
-    } catch (error) {
-      set({ error: (error as Error).message });
-    }
-  },
-
   rolloverIncompleteTasks: async () => {
     const currentWeek = get().currentWeek;
     const nextWeek = currentWeek + 1;
@@ -623,7 +587,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       
       await Promise.all(
         recurringTasks.map(task => {
-          const { id, createdAt, updatedAt, subtasks, updates, notes, ...taskData } = task;
+          const { id, createdAt, updatedAt, subtasks, updates, ...taskData } = task;
           return get().createTask({
             ...taskData,
             status: 'todo',

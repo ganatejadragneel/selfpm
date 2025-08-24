@@ -23,7 +23,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     tasks,
     updateTask, 
     addTaskUpdate, 
-    addNote,
     updateProgressSettings,
     updateSubtaskWeight,
     addDependency,
@@ -34,7 +33,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
   const [editingDescription, setEditingDescription] = useState(false);
   const [newUpdate, setNewUpdate] = useState('');
   const [progressUpdate, setProgressUpdate] = useState('');
-  const [newNote, setNewNote] = useState('');
   
   const [tempTitle, setTempTitle] = useState(task.title);
   const [tempDescription, setTempDescription] = useState(task.description || '');
@@ -78,12 +76,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     }
   };
 
-  const handleAddNote = () => {
-    if (newNote.trim()) {
-      addNote(task.id, newNote.trim());
-      setNewNote('');
-    }
-  };
 
   const statusOptions: { value: TaskStatus; label: string; icon: React.ReactNode; color: string }[] = [
     { value: 'todo', label: 'To Do', icon: <Clock className="w-4 h-4" />, color: 'text-gray-600' },
@@ -910,165 +902,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
               
               <div style={{ marginTop: theme.spacing.lg }}>
                 <AttachmentUpload taskId={task.id} />
-              </div>
-            </div>
-
-            {/* Notes Section */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
-                <MessageSquare className="w-5 h-5" style={{ color: theme.colors.status.warning.dark }} />
-                <h3 style={{
-                  fontSize: theme.typography.sizes.lg,
-                  fontWeight: theme.typography.weights.bold,
-                  color: theme.colors.text.primary,
-                  margin: 0
-                }}>
-                  Notes
-                </h3>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md, marginBottom: theme.spacing.lg }}>
-                {task.notes?.slice(0, 3).map(note => (
-                  <div 
-                    key={note.id} 
-                    style={{
-                      padding: theme.spacing.md,
-                      background: 'rgba(255, 193, 7, 0.1)',
-                      backdropFilter: theme.effects.blur,
-                      borderRadius: theme.borderRadius.md,
-                      border: `1px solid rgba(255, 193, 7, 0.3)`,
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 193, 7, 0.15)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 193, 7, 0.1)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 193, 7, 0.3)';
-                    }}
-                  >
-                    <div style={{
-                      fontSize: theme.typography.sizes.xs,
-                      color: theme.colors.text.muted,
-                      marginBottom: theme.spacing.xs,
-                      fontWeight: theme.typography.weights.medium
-                    }}>
-                      {(() => {
-                        try {
-                          if (note.createdAt) {
-                            const date = new Date(note.createdAt);
-                            if (!isNaN(date.getTime())) {
-                              return format(date, 'MMM d, h:mm a');
-                            }
-                          }
-                          return 'Just now';
-                        } catch (error) {
-                          return 'Just now';
-                        }
-                      })()}
-                    </div>
-                    <div style={{
-                      fontSize: theme.typography.sizes.sm,
-                      color: theme.colors.text.primary,
-                      whiteSpace: 'pre-wrap',
-                      lineHeight: '1.4'
-                    }}>
-                      {note.content}
-                    </div>
-                  </div>
-                ))}
-                {!task.notes?.length && (
-                  <div style={{
-                    padding: theme.spacing.lg,
-                    textAlign: 'center',
-                    color: theme.colors.text.muted,
-                    fontSize: theme.typography.sizes.sm,
-                    fontStyle: 'italic'
-                  }}>
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2" style={{ opacity: 0.3 }} />
-                    No notes yet. Add your first note below!
-                  </div>
-                )}
-              </div>
-              
-              <div style={{ 
-                padding: theme.spacing.md,
-                background: theme.colors.surface.glass,
-                backdropFilter: theme.effects.blur,
-                borderRadius: theme.borderRadius.lg,
-                border: `1px solid ${theme.colors.surface.glassBorder}`,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: theme.spacing.sm
-              }}>
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Add a quick note, reminder, or thought..."
-                  style={{
-                    width: '100%',
-                    minHeight: '80px',
-                    border: `1px solid ${theme.colors.surface.glassBorder}`,
-                    borderRadius: theme.borderRadius.md,
-                    padding: theme.spacing.sm,
-                    fontSize: theme.typography.sizes.sm,
-                    background: 'rgba(255, 255, 255, 0.9)',
-                    backdropFilter: 'blur(10px)',
-                    color: theme.colors.text.primary,
-                    outline: 'none',
-                    resize: 'vertical',
-                    lineHeight: '1.4'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.status.warning.dark;
-                    e.currentTarget.style.boxShadow = `0 0 0 3px rgba(255, 193, 7, 0.1)`;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                />
-                <button
-                  onClick={handleAddNote}
-                  disabled={!newNote.trim()}
-                  style={{
-                    width: '100%',
-                    padding: theme.spacing.md,
-                    background: newNote.trim() 
-                      ? theme.colors.status.warning.dark
-                      : theme.colors.text.muted,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: theme.borderRadius.md,
-                    cursor: newNote.trim() ? 'pointer' : 'not-allowed',
-                    fontSize: theme.typography.sizes.sm,
-                    fontWeight: theme.typography.weights.semibold,
-                    transition: 'all 0.2s ease',
-                    boxShadow: newNote.trim() 
-                      ? '0 4px 12px rgba(255, 193, 7, 0.3)'
-                      : 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: theme.spacing.xs
-                  }}
-                  onMouseEnter={(e) => {
-                    if (newNote.trim()) {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 193, 7, 0.4)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (newNote.trim()) {
-                      e.currentTarget.style.transform = 'translateY(0px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.3)';
-                    }
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Add Note
-                </button>
               </div>
             </div>
 

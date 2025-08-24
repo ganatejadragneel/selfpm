@@ -20,7 +20,6 @@ export interface Task {
   updatedAt: string;
   subtasks?: Subtask[];
   updates?: TaskUpdate[];
-  notes?: Note[];
   attachments?: Attachment[];
   activities?: TaskActivity[];
   comments?: TaskComment[];
@@ -52,13 +51,6 @@ export interface TaskUpdate {
   createdAt: string;
 }
 
-export interface Note {
-  id: string;
-  taskId: string;
-  content: string;
-  createdAt: string;
-}
-
 export interface Attachment {
   id: string;
   taskId: string;
@@ -85,7 +77,6 @@ export type ActivityType =
   | 'attachment_deleted' 
   | 'comment_added' 
   | 'progress_updated'
-  | 'note_added' 
   | 'moved_category' 
   | 'reordered';
 

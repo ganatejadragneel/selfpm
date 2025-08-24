@@ -18,22 +18,25 @@ export const useTaskPriority = () => {
       
       if (isPast(dueDate) && task.status !== 'done') {
         return {
-          borderLeft: `4px solid ${theme.colors.status.error.dark}`,
-          background: `linear-gradient(135deg, ${theme.colors.status.error.light} 0%, rgba(220, 38, 38, 0.02) 100%)`,
+          borderLeft: `5px solid ${theme.colors.status.error.dark}`,
+          background: `linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.15) 100%)`,
+          boxShadow: 'inset 0 0 20px rgba(239, 68, 68, 0.1)',
         };
       }
       
       if (isToday(dueDate)) {
         return {
-          borderLeft: `4px solid ${theme.colors.status.warning.dark}`,
-          background: `linear-gradient(135deg, ${theme.colors.status.warning.light} 0%, rgba(217, 119, 6, 0.02) 100%)`,
+          borderLeft: `5px solid ${theme.colors.status.warning.dark}`,
+          background: `linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%)`,
+          boxShadow: 'inset 0 0 20px rgba(245, 158, 11, 0.1)',
         };
       }
       
       if (isTomorrow(dueDate)) {
         return {
-          borderLeft: '4px solid #eab308',
-          background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, rgba(202, 138, 4, 0.02) 100%)',
+          borderLeft: '5px solid #facc15',
+          background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(234, 179, 8, 0.1) 100%)',
+          boxShadow: 'inset 0 0 15px rgba(250, 204, 21, 0.08)',
         };
       }
     }
@@ -51,21 +54,26 @@ export const useTaskPriority = () => {
     
     if (isPast(date) && taskStatus !== 'done') {
       return {
-        background: theme.colors.status.error.light,
+        background: 'rgba(239, 68, 68, 0.3)',
         color: '#dc2626',
+        fontWeight: '700',
+        border: '1px solid rgba(239, 68, 68, 0.3)',
       };
     }
     
     if (isToday(date)) {
       return {
-        background: theme.colors.status.warning.light,
+        background: 'rgba(245, 158, 11, 0.3)',
         color: '#d97706',
+        fontWeight: '700',
+        border: '1px solid rgba(245, 158, 11, 0.3)',
       };
     }
     
     return {
       background: 'rgba(107, 114, 128, 0.1)',
       color: '#4b5563',
+      fontWeight: '500',
     };
   };
   

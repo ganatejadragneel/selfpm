@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { startOfWeek, endOfWeek, format } from 'date-fns';
+import { startOfWeek, endOfWeek, format, addWeeks, getWeek } from 'date-fns';
 
 interface WeeklySummaryProps {
   tasks: Task[];
@@ -9,8 +9,11 @@ interface WeeklySummaryProps {
 }
 
 export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber }) => {
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+  // Use the same calculation as App.tsx for consistency
+  const currentDate = new Date();
+  const weekStartDate = addWeeks(currentDate, weekNumber - getWeek(currentDate));
+  const weekStart = startOfWeek(weekStartDate);
+  const weekEnd = endOfWeek(weekStart);
   
   const stats = {
     total: tasks.length,

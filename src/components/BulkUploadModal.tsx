@@ -70,12 +70,28 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
   const validateDate = (dateStr?: string): string | undefined => {
     if (!dateStr || dateStr.trim() === '') return undefined;
     
-    // Try to parse the date
-    const date = new Date(dateStr);
+    // Parse the date string without timezone conversion
+    // Handle various date formats
+    const parts = dateStr.trim().match(/(\d{1,4})[-/](\d{1,2})[-/](\d{1,4})/);
+    if (!parts) return undefined;
+    
+    let year, month, day;
+    if (parts[1].length === 4) {
+      // YYYY-MM-DD or YYYY/MM/DD format
+      [, year, month, day] = parts;
+    } else {
+      // MM-DD-YYYY or MM/DD/YYYY format
+      [, month, day, year] = parts;
+    }
+    
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     if (isNaN(date.getTime())) return undefined;
     
     // Return in YYYY-MM-DD format
-    return date.toISOString().split('T')[0];
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   };
 
   const parseCSV = (file: File) => {
