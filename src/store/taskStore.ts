@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate } from '../types';
+import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, TaskActivity } from '../types';
 import { supabase } from '../lib/supabase';
 import { getWeek, getYear, addDays } from 'date-fns';
 import { useAuthStore } from './authStore';
@@ -42,6 +42,7 @@ interface TaskStore {
   
   // Activity and Comment actions
   logActivity: (taskId: string, activityType: string, oldValue?: string, newValue?: string, metadata?: any) => Promise<void>;
+  fetchActivities: (startDate: Date, endDate: Date) => Promise<TaskActivity[]>;
   addComment: (taskId: string, content: string, parentCommentId?: string) => Promise<void>;
   editComment: (commentId: string, content: string) => Promise<void>;
   deleteComment: (commentId: string) => Promise<void>;
@@ -673,12 +674,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   moveTaskToCategory: async (taskId, newCategory) => {
     try {
+      // Get current task for comparison
+      const currentTask = get().tasks.find(t => t.id === taskId);
+      if (!currentTask) return;
+      
       const { error } = await supabase
         .from('tasks')
         .update({ category: newCategory })
         .eq('id', taskId);
       
       if (error) throw error;
+      
+      // Log activity for category change
+      await get().logActivity(taskId, 'moved_category', currentTask.category, newCategory);
       
       set(state => ({
         tasks: state.tasks.map(task =>
@@ -841,6 +849,46 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to log activity:', error);
+    }
+  },
+
+  fetchActivities: async (startDate, endDate) => {
+    try {
+      const authStore = useAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('task_activities')
+        .select(`
+          *,
+          user:users(id, username)
+        `)
+        .eq('user_id', userId)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Format the activities to match our TypeScript interface
+      const formattedActivities = (data || []).map(activity => ({
+        id: activity.id,
+        taskId: activity.task_id,
+        userId: activity.user_id,
+        activityType: activity.activity_type,
+        oldValue: activity.old_value,
+        newValue: activity.new_value,
+        metadata: activity.metadata,
+        createdAt: activity.created_at,
+        user: activity.user
+      }));
+      
+      return formattedActivities;
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      return [];
     }
   },
 

@@ -9,8 +9,9 @@ import { WeeklySummary } from './components/WeeklySummary';
 import { TaskModal } from './components/TaskModal';
 import { AddTaskModal } from './components/AddTaskModal';
 import { BulkUploadModal } from './components/BulkUploadModal';
+import { ActivityTrackerModal } from './components/ActivityTrackerModal';
 import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnalyticsDashboard';
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -43,6 +44,7 @@ function AppContent() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showActivityTracker, setShowActivityTracker] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -352,6 +354,37 @@ function AppContent() {
                 Bulk Upload
               </button>
               
+              {/* Activity Tracker Button */}
+              <button
+                onClick={() => setShowActivityTracker(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 20px',
+                  background: 'transparent',
+                  color: '#667eea',
+                  border: '2px solid #667eea',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0px)';
+                }}
+                title="View activity history"
+              >
+                <Activity className="w-4 h-4" />
+                Activity
+              </button>
+              
               {/* Analytics Button */}
               <button
                 onClick={() => setShowAnalytics(!showAnalytics)}
@@ -537,6 +570,15 @@ function AppContent() {
         <BulkUploadModal
           isOpen={showBulkUpload}
           onClose={() => setShowBulkUpload(false)}
+        />
+      )}
+      
+      {/* Activity Tracker Modal */}
+      {showActivityTracker && (
+        <ActivityTrackerModal
+          isOpen={showActivityTracker}
+          onClose={() => setShowActivityTracker(false)}
+          currentWeek={currentWeek}
         />
       )}
     </div>
