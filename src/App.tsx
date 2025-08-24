@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useTaskStore } from './store/taskStore';
 import { useTaskActions } from './hooks/useTaskActions';
@@ -6,11 +6,12 @@ import { AuthGuard } from './components/auth/AuthGuard';
 import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
-import { TaskModal } from './components/TaskModal';
-import { AddTaskModal } from './components/AddTaskModal';
-import { BulkUploadModal } from './components/BulkUploadModal';
-import { ActivityTrackerModal } from './components/ActivityTrackerModal';
-import { ProgressAnalyticsDashboard } from './components/analytics/ProgressAnalyticsDashboard';
+// Lazy load large modal components
+const TaskModal = lazy(() => import('./components/TaskModal').then(module => ({ default: module.TaskModal })));
+const AddTaskModal = lazy(() => import('./components/AddTaskModal').then(module => ({ default: module.AddTaskModal })));
+const BulkUploadModal = lazy(() => import('./components/BulkUploadModal').then(module => ({ default: module.BulkUploadModal })));
+const ActivityTrackerModal = lazy(() => import('./components/ActivityTrackerModal').then(module => ({ default: module.ActivityTrackerModal })));
+const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
@@ -430,7 +431,9 @@ function AppContent() {
         {/* Analytics Dashboard - Collapsible */}
         {showAnalytics && (
           <div style={{ marginBottom: '32px' }}>
-            <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+            <Suspense fallback={<div>Loading analytics...</div>}>
+              <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+            </Suspense>
           </div>
         )}
 
@@ -549,41 +552,49 @@ function AppContent() {
         // Get the most up-to-date task from the store
         const currentTask = tasks.find(t => t.id === selectedTask.id);
         return currentTask ? (
-          <TaskModal
-            key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
-            task={currentTask}
-            isOpen={!!selectedTask}
-            onClose={() => setSelectedTask(null)}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <TaskModal
+              key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
+              task={currentTask}
+              isOpen={!!selectedTask}
+              onClose={() => setSelectedTask(null)}
+            />
+          </Suspense>
         ) : null;
       })()}
 
       {showQuickAdd && (
-        <AddTaskModal
-          isOpen={showQuickAdd}
-          initialCategory={quickAddCategory}
-          onClose={() => {
-            console.log('Closing AddTask modal');
-            setShowQuickAdd(false);
-          }}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <AddTaskModal
+            isOpen={showQuickAdd}
+            initialCategory={quickAddCategory}
+            onClose={() => {
+              console.log('Closing AddTask modal');
+              setShowQuickAdd(false);
+            }}
+          />
+        </Suspense>
       )}
       
       {/* Bulk Upload Modal */}
       {showBulkUpload && (
-        <BulkUploadModal
-          isOpen={showBulkUpload}
-          onClose={() => setShowBulkUpload(false)}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <BulkUploadModal
+            isOpen={showBulkUpload}
+            onClose={() => setShowBulkUpload(false)}
+          />
+        </Suspense>
       )}
       
       {/* Activity Tracker Modal */}
       {showActivityTracker && (
-        <ActivityTrackerModal
-          isOpen={showActivityTracker}
-          onClose={() => setShowActivityTracker(false)}
-          currentWeek={currentWeek}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <ActivityTrackerModal
+            isOpen={showActivityTracker}
+            onClose={() => setShowActivityTracker(false)}
+            currentWeek={currentWeek}
+          />
+        </Suspense>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Task } from '../types';
 import { CheckCircle2, Circle, Clock, AlertCircle, ChevronRight, Calendar, Trash2, FileText } from 'lucide-react';
-import { format } from 'date-fns';
+import { format } from 'date-fns/format';
 import { theme, styleUtils, priorityConfigs } from '../styles/theme';
 import { useTaskPriority } from '../hooks/useTaskPriority';
 import { useSortable } from '@dnd-kit/sortable';
