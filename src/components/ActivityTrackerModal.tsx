@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Filter, Search, ChevronLeft, ChevronRight, 
-         Plus, Edit, Trash2, CheckCircle, Circle, ArrowRight, 
-         Paperclip, MessageSquare, TrendingUp, Calendar, Tag,
+         Plus, Edit, Trash2, CheckCircle, ArrowRight, 
+         Paperclip, MessageSquare, TrendingUp, Calendar,
          AlertCircle, Zap, FileText } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { useTaskStore } from '../store/taskStore';
