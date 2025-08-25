@@ -387,7 +387,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                   {currentPageTasks.map((task) => {
                     const urgencyStyle = getUrgencyStyle(task.dueDate);
                     const latestUpdate = task.updates && task.updates.length > 0 
-                      ? task.updates[task.updates.length - 1].updateText 
+                      ? task.updates[0].updateText 
                       : null;
                     const { completed: completedSubtasks, total: totalSubtasks } = calculateSubtaskStats(task);
 
