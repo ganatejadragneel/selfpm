@@ -502,8 +502,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                           color: urgencyStyle.textColor,
                           opacity: urgencyStyle.textColor === 'white' ? 0.9 : 0.8
                         }}>
-                          <span style={{ fontSize: '11px' }}>{priorityConfigs[task.priority].icon}</span>
-                          <span>{priorityConfigs[task.priority].title.replace(' Priority', '')}</span>
+                          <span className={task.priority === 'urgent' ? 'urgent-priority-text' : ''} style={{ fontSize: '11px' }}>{priorityConfigs[task.priority].icon}</span>
+                          <span className={task.priority === 'urgent' ? 'urgent-priority-text' : ''}>
+                            {priorityConfigs[task.priority].title.replace(' Priority', '')}
+                          </span>
                         </div>
 
                         {/* Subtasks Count */}
@@ -779,6 +781,22 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           @keyframes gradient-flow {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
+          }
+          @keyframes urgent-text-blink {
+            0%, 100% { 
+              transform: scale(1);
+              filter: brightness(1);
+              text-shadow: 0 0 5px rgba(239, 68, 68, 0.6);
+            }
+            50% { 
+              transform: scale(1.3);
+              filter: brightness(1.4);
+              text-shadow: 0 0 10px rgba(239, 68, 68, 1);
+            }
+          }
+          .urgent-priority-text {
+            animation: urgent-text-blink 2s ease-in-out infinite;
+            display: inline-block;
           }
         `}
       </style>
