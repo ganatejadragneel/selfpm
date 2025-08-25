@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types';
 import { useTaskStore } from '../store/taskStore';
+import { useResponsive } from '../hooks/useResponsive';
 import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SubtaskList } from './subtasks/SubtaskList';
@@ -28,6 +29,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     addDependency,
     removeDependency,
   } = useTaskStore();
+  const { isMobile } = useResponsive();
   
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -97,30 +99,32 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
       background: 'rgba(0, 0, 0, 0.7)',
       backdropFilter: 'blur(8px)',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: isMobile ? 'flex-start' : 'center',
       justifyContent: 'center',
       zIndex: 1000,
-      padding: theme.spacing.lg
+      padding: isMobile ? '8px' : theme.spacing.lg,
+      paddingTop: isMobile ? '20px' : theme.spacing.lg
     }}>
       <div style={{
         background: theme.colors.surface.glass,
         backdropFilter: theme.effects.blur,
-        borderRadius: theme.borderRadius.xl,
+        borderRadius: isMobile ? '16px' : theme.borderRadius.xl,
         border: `1px solid ${theme.colors.surface.glassBorder}`,
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         width: '100%',
-        maxWidth: '1200px',
-        maxHeight: '90vh',
+        maxWidth: isMobile ? '100vw' : '1200px',
+        maxHeight: isMobile ? 'calc(100vh - 40px)' : '90vh',
         overflow: 'hidden',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        margin: isMobile ? '0' : 'auto'
       }}>
         {/* Modern Header */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: `${theme.spacing.xl} ${theme.spacing.xl}`,
+          padding: isMobile ? '16px' : `${theme.spacing.xl} ${theme.spacing.xl}`,
           borderBottom: `1px solid ${theme.colors.surface.glassBorder}`,
           background: 'rgba(255, 255, 255, 0.05)'
         }}>
@@ -139,13 +143,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     }
                   }}
                   style={{
-                    fontSize: theme.typography.sizes['2xl'],
+                    fontSize: isMobile ? theme.typography.sizes.lg : theme.typography.sizes['2xl'],
                     fontWeight: theme.typography.weights.bold,
                     color: theme.colors.text.primary,
                     background: 'rgba(255, 255, 255, 0.9)',
                     border: `2px solid ${theme.colors.primary.dark}`,
                     borderRadius: theme.borderRadius.lg,
-                    padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                    padding: isMobile ? `${theme.spacing.sm} ${theme.spacing.md}` : `${theme.spacing.md} ${theme.spacing.lg}`,
                     outline: 'none',
                     flex: 1,
                     minWidth: 0
@@ -174,12 +178,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
                 <h2 style={{
-                  fontSize: theme.typography.sizes['2xl'],
+                  fontSize: isMobile ? theme.typography.sizes.lg : theme.typography.sizes['2xl'],
                   fontWeight: theme.typography.weights.bold,
                   color: theme.colors.text.primary,
                   margin: 0,
                   cursor: 'pointer',
-                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  padding: isMobile ? `${theme.spacing.xs} ${theme.spacing.sm}` : `${theme.spacing.sm} ${theme.spacing.md}`,
                   borderRadius: theme.borderRadius.md,
                   transition: 'all 0.2s ease',
                   flex: 1,
@@ -250,22 +254,24 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
 
         <div style={{ 
           display: 'flex', 
-          height: 'calc(90vh - 180px)',
-          minHeight: '500px'
+          flexDirection: isMobile ? 'column' : 'row',
+          height: isMobile ? 'auto' : 'calc(90vh - 180px)',
+          minHeight: isMobile ? 'auto' : '500px',
+          overflowY: isMobile ? 'auto' : 'visible'
         }}>
           {/* Main Content */}
           <div style={{ 
             flex: 1, 
             overflowY: 'auto', 
-            padding: theme.spacing.xl,
+            padding: isMobile ? '16px' : theme.spacing.xl,
             background: 'rgba(255, 255, 255, 0.02)'
           }}>
             {/* Status and Priority Row */}
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: theme.spacing.lg, 
-              marginBottom: theme.spacing.xl 
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: isMobile ? theme.spacing.md : theme.spacing.lg, 
+              marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl 
             }}>
               {/* Status Field */}
               <div>
@@ -820,7 +826,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             )}
 
             {/* Description Section */}
-            <div style={{ marginBottom: theme.spacing.xl }}>
+            <div style={{ marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
                 <label style={{
                   fontSize: theme.typography.sizes.sm,
@@ -1160,19 +1166,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
 
           {/* Modern Sidebar */}
           <div style={{
-            width: '400px',
-            borderLeft: `1px solid ${theme.colors.surface.glassBorder}`,
-            padding: theme.spacing.xl,
+            width: isMobile ? '100%' : '400px',
+            borderLeft: isMobile ? 'none' : `1px solid ${theme.colors.surface.glassBorder}`,
+            borderTop: isMobile ? `1px solid ${theme.colors.surface.glassBorder}` : 'none',
+            padding: isMobile ? '16px' : theme.spacing.xl,
             background: 'rgba(255, 255, 255, 0.05)',
             backdropFilter: 'blur(20px)',
             overflowY: 'auto'
           }}>
             {/* Recent Updates */}
-            <div style={{ marginBottom: theme.spacing.xl }}>
+            <div style={{ marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
                 <Activity className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
                 <h3 style={{
-                  fontSize: theme.typography.sizes.lg,
+                  fontSize: isMobile ? theme.typography.sizes.base : theme.typography.sizes.lg,
                   fontWeight: theme.typography.weights.bold,
                   color: theme.colors.text.primary,
                   margin: 0
@@ -1261,11 +1268,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             </div>
 
             {/* Attachments Section */}
-            <div style={{ marginBottom: theme.spacing.xl }}>
+            <div style={{ marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
                 <Paperclip className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
                 <h3 style={{
-                  fontSize: theme.typography.sizes.lg,
+                  fontSize: isMobile ? theme.typography.sizes.base : theme.typography.sizes.lg,
                   fontWeight: theme.typography.weights.bold,
                   color: theme.colors.text.primary,
                   margin: 0
@@ -1276,7 +1283,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
               
               <AttachmentList attachments={task.attachments || []} />
               
-              <div style={{ marginTop: theme.spacing.lg }}>
+              <div style={{ marginTop: isMobile ? theme.spacing.md : theme.spacing.lg }}>
                 <AttachmentUpload taskId={task.id} />
               </div>
             </div>
@@ -1298,11 +1305,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             </div>
 
             {/* Activity Timeline */}
-            <div style={{ marginTop: theme.spacing['2xl'] }}>
+            <div style={{ marginTop: isMobile ? theme.spacing.xl : theme.spacing['2xl'] }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.lg }}>
                 <Activity className="w-5 h-5" style={{ color: theme.colors.status.info.dark }} />
                 <h3 style={{
-                  fontSize: theme.typography.sizes.lg,
+                  fontSize: isMobile ? theme.typography.sizes.base : theme.typography.sizes.lg,
                   fontWeight: theme.typography.weights.bold,
                   color: theme.colors.text.primary,
                   margin: 0

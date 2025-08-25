@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText } from 'lucide-react';
+import { useResponsive } from '../hooks/useResponsive';
 // Import only specific functions to reduce bundle size
 import { startOfWeek } from 'date-fns/startOfWeek';
 import { endOfWeek } from 'date-fns/endOfWeek';
@@ -21,11 +22,12 @@ interface WeeklySummaryProps {
 export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber, onTaskClick }) => {
   // Determine initial slide based on urgent tasks or today's deadlines
   const shouldShowDeadlineView = useMemo(() => checkShouldShowDeadlineView(tasks), [tasks]);
+  const { isMobile, isSmallMobile } = useResponsive();
   
   const [currentSlide, setCurrentSlide] = useState(shouldShowDeadlineView ? 1 : 0);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasUserNavigated, setHasUserNavigated] = useState(false);
-  const CARDS_PER_PAGE = 3;
+  const CARDS_PER_PAGE = isMobile ? 2 : 3;
   
   // Auto-switch to deadline view only on initial load and if user hasn't manually navigated
   useEffect(() => {
@@ -121,11 +123,11 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
       backdropFilter: 'blur(10px)',
       borderRadius: '20px',
       border: '1px solid rgba(255, 255, 255, 0.3)',
-      padding: '32px',
+      padding: isMobile ? '20px 16px' : '32px',
       boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
       position: 'relative',
       overflow: 'hidden',
-      minHeight: '500px'
+      minHeight: isMobile ? '400px' : '500px'
     }}>
       {/* Background gradient */}
       <div style={{
@@ -154,10 +156,17 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           <div style={{
             minWidth: '100%'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: isMobile ? 'flex-start' : 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: isMobile ? '24px' : '32px',
+              flexDirection: isSmallMobile ? 'column' : 'row',
+              gap: isSmallMobile ? '16px' : '0'
+            }}>
               <div>
                 <h2 style={{ 
-                  fontSize: '24px', 
+                  fontSize: isMobile ? '20px' : '24px', 
                   fontWeight: 'bold', 
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   WebkitBackgroundClip: 'text',
@@ -186,7 +195,14 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile 
+                ? 'repeat(2, 1fr)' 
+                : 'repeat(4, 1fr)', 
+              gap: isMobile ? '16px' : '24px', 
+              marginBottom: isMobile ? '24px' : '32px' 
+            }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ 
                   display: 'flex', 
@@ -300,7 +316,15 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
               </div>
             )}
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isSmallMobile 
+                ? '1fr' 
+                : isMobile 
+                  ? 'repeat(2, 1fr)' 
+                  : 'repeat(3, 1fr)', 
+              gap: '16px' 
+            }}>
               <div style={{
                 padding: '16px',
                 background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%)',
@@ -349,7 +373,11 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
             paddingLeft: currentSlide === 1 ? '0' : '32px',
             position: 'relative'
           }}>
-            <div style={{ marginBottom: '24px', paddingLeft: '80px', paddingRight: '80px' }}>
+            <div style={{ 
+              marginBottom: '24px', 
+              paddingLeft: isMobile ? '16px' : '80px', 
+              paddingRight: isMobile ? '16px' : '80px' 
+            }}>
               <h2 style={{ 
                 fontSize: '24px', 
                 fontWeight: 'bold', 
@@ -376,13 +404,19 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                 <p style={{ fontSize: '14px', marginTop: '8px' }}>All tasks are completed!</p>
               </div>
             ) : (
-              <div style={{ position: 'relative', height: '270px', marginBottom: '30px', paddingLeft: '60px', paddingRight: '60px' }}>
+              <div style={{ 
+                position: 'relative', 
+                height: isMobile ? 'auto' : '270px', 
+                marginBottom: '30px', 
+                paddingLeft: isMobile ? '16px' : '60px', 
+                paddingRight: isMobile ? '16px' : '60px' 
+              }}>
                 {/* Task Cards Container */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                   gap: '12px',
-                  height: '100%'
+                  height: isMobile ? 'auto' : '100%'
                 }}>
                   {currentPageTasks.map((task) => {
                     const urgencyStyle = getUrgencyStyle(task.dueDate);
@@ -670,8 +704,9 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: '20px',
-        marginTop: '32px'
+        gap: isMobile ? '8px' : '20px',
+        marginTop: isMobile ? '24px' : '32px',
+        flexWrap: 'nowrap'
       }}>
         <button
           onClick={() => {
@@ -681,8 +716,8 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           }}
           disabled={currentSlide === 0}
           style={{
-            width: '56px',
-            height: '56px',
+            width: isMobile ? '40px' : '56px',
+            height: isMobile ? '40px' : '56px',
             borderRadius: '50%',
             background: currentSlide === 0 
               ? 'rgba(0, 0, 0, 0.05)' 
@@ -718,17 +753,21 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         </button>
 
         <div style={{
-          padding: '8px 20px',
+          padding: isMobile ? '6px 12px' : '8px 20px',
           background: 'rgba(102, 126, 234, 0.1)',
           borderRadius: '30px',
-          fontSize: '14px',
+          fontSize: isMobile ? '12px' : '14px',
           fontWeight: '600',
           color: theme.colors.primary.dark,
-          minWidth: '200px',
+          minWidth: isMobile ? '120px' : '200px',
           textAlign: 'center',
-          border: '2px solid rgba(102, 126, 234, 0.2)'
+          border: '2px solid rgba(102, 126, 234, 0.2)',
+          whiteSpace: 'nowrap'
         }}>
-          {currentSlide === 0 ? 'Week Overview' : 'Deadline Priority View'}
+          {currentSlide === 0 
+            ? (isMobile ? 'Overview' : 'Week Overview') 
+            : (isMobile ? 'Deadlines' : 'Deadline Priority View')
+          }
         </div>
 
         <button
@@ -739,8 +778,8 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           }}
           disabled={currentSlide === 1}
           style={{
-            width: '56px',
-            height: '56px',
+            width: isMobile ? '40px' : '56px',
+            height: isMobile ? '40px' : '56px',
             borderRadius: '50%',
             background: currentSlide === 1 
               ? 'rgba(0, 0, 0, 0.05)' 

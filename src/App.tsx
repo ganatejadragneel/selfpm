@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useTaskStore } from './store/taskStore';
 import { useTaskActions } from './hooks/useTaskActions';
+import { useResponsive } from './hooks/useResponsive';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
@@ -39,6 +40,7 @@ function AppContent() {
   } = useTaskStore();
 
   const { handleStatusToggle, handleDelete } = useTaskActions();
+  const { isMobile, isSmallMobile } = useResponsive();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [quickAddCategory, setQuickAddCategory] = useState<TaskCategory>('life_admin');
@@ -180,29 +182,41 @@ function AppContent() {
         <div style={{ 
           maxWidth: '1280px', 
           margin: '0 auto', 
-          padding: '16px 24px',
+          padding: '12px 16px',
           position: 'relative'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: isMobile ? '12px' : '24px',
+              minWidth: '0',
+              flex: '1 1 auto'
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
-                  width: '40px',
-                  height: '40px',
+                  width: isMobile ? '32px' : '40px',
+                  height: isMobile ? '32px' : '40px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  fontSize: '18px',
+                  fontSize: isMobile ? '14px' : '18px',
                   fontWeight: 'bold',
                   boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
                 }}>
                   S
                 </div>
                 <h1 style={{ 
-                  fontSize: '28px', 
+                  fontSize: isMobile ? '20px' : '28px', 
                   fontWeight: 'bold', 
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   WebkitBackgroundClip: 'text',
@@ -213,11 +227,19 @@ function AppContent() {
                 </h1>
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: isMobile ? '4px' : '8px',
+                flex: isMobile ? '1 1 100%' : '0 0 auto',
+                order: isMobile ? 1 : 0,
+                justifyContent: isMobile ? 'center' : 'flex-start',
+                paddingRight: isMobile ? '20px' : '0'
+              }}>
                 <button
                   onClick={() => handleWeekChange('prev')}
                   style={{
-                    padding: '10px',
+                    padding: isMobile ? '5px' : '10px',
                     border: 'none',
                     background: 'rgba(102, 126, 234, 0.1)',
                     borderRadius: '10px',
@@ -237,36 +259,40 @@ function AppContent() {
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className={isMobile ? "w-3 h-3" : "w-5 h-5"} />
                 </button>
                 
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '8px', 
-                  padding: '12px 20px',
+                  padding: isMobile ? '6px 10px' : '12px 20px',
                   background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
                   borderRadius: '12px',
                   border: '1px solid rgba(102, 126, 234, 0.2)',
-                  minWidth: '200px',
+                  minWidth: isMobile ? '120px' : '200px',
                   justifyContent: 'center'
                 }}>
-                  <Calendar className="w-4 h-4" style={{ color: '#667eea' }} />
+                  <Calendar className={isMobile ? "w-3 h-3" : "w-4 h-4"} style={{ color: '#667eea' }} />
                   <span style={{ 
                     fontWeight: '600', 
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '11px' : '14px',
+                    textAlign: 'center'
                   }}>
-                    Week {currentWeek} - {format(weekStart, 'MMM d, yyyy')}
+                    {isSmallMobile 
+                      ? `W${currentWeek} - ${format(weekStart, 'MMM d')}`
+                      : `Week ${currentWeek} - ${format(weekStart, 'MMM d, yyyy')}`
+                    }
                   </span>
                 </div>
                 
                 <button
                   onClick={() => handleWeekChange('next')}
                   style={{
-                    padding: '10px',
+                    padding: isMobile ? '5px' : '10px',
                     border: 'none',
                     background: 'rgba(102, 126, 234, 0.1)',
                     borderRadius: '10px',
@@ -286,12 +312,18 @@ function AppContent() {
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className={isMobile ? "w-3 h-3" : "w-5 h-5"} />
                 </button>
               </div>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: isMobile ? '8px' : '16px',
+              flex: '0 0 auto',
+              flexWrap: 'wrap'
+            }}>
               <button
                 onClick={() => {
                   setShowQuickAdd(true);
@@ -300,13 +332,13 @@ function AppContent() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  padding: '12px 20px',
+                  padding: isMobile ? '8px 12px' : '12px 20px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '12px',
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   fontWeight: '600',
                   boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
                   transition: 'all 0.2s ease'
@@ -324,8 +356,8 @@ function AppContent() {
                 Add Task
               </button>
               
-              {/* Bulk Upload Button */}
-              <button
+              {/* Bulk Upload Button - Hide on mobile */}
+              {!isMobile && <button
                 onClick={() => setShowBulkUpload(true)}
                 style={{
                   display: 'flex',
@@ -353,10 +385,10 @@ function AppContent() {
               >
                 <Upload className="w-4 h-4" />
                 Bulk Upload
-              </button>
+              </button>}
               
-              {/* Activity Tracker Button */}
-              <button
+              {/* Activity Tracker Button - Hide on mobile */}
+              {!isMobile && <button
                 onClick={() => setShowActivityTracker(true)}
                 style={{
                   display: 'flex',
@@ -384,7 +416,7 @@ function AppContent() {
               >
                 <Activity className="w-4 h-4" />
                 Activity
-              </button>
+              </button>}
               
               {/* Analytics Button */}
               <button
@@ -427,7 +459,11 @@ function AppContent() {
       </div>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px' }}>
+      <div style={{ 
+        maxWidth: '1280px', 
+        margin: '0 auto', 
+        padding: isMobile ? '16px 12px' : '24px' 
+      }}>
         {/* Analytics Dashboard - Collapsible */}
         {showAnalytics && (
           <div style={{ marginBottom: '32px' }}>
@@ -475,8 +511,10 @@ function AppContent() {
           >
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-              gap: '24px',
+              gridTemplateColumns: isMobile 
+                ? '1fr' 
+                : 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: isMobile ? '16px' : '24px',
               minHeight: 'calc(100vh - 400px)'
             }}>
               <ModernCategoryColumn
