@@ -361,6 +361,69 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 />
               </div>
               
+              {/* Recurrence Weeks Field for Weekly Recurring Tasks */}
+              {task.category === 'weekly_recurring' && (
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: theme.typography.sizes.sm,
+                    fontWeight: theme.typography.weights.semibold,
+                    color: theme.colors.text.primary,
+                    marginBottom: theme.spacing.sm
+                  }}>
+                    Number of Weeks <span style={{ color: theme.colors.status.error.dark }}>*</span>
+                  </label>
+                  <select
+                    value={task.recurrenceWeeks || 1}
+                    onChange={(e) => {
+                      const weeks = parseInt(e.target.value);
+                      updateTask(task.id, { 
+                        recurrenceWeeks: weeks
+                      });
+                    }}
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      border: `1px solid ${theme.colors.surface.glassBorder}`,
+                      borderRadius: theme.borderRadius.lg,
+                      padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                      fontSize: theme.typography.sizes.base,
+                      fontWeight: theme.typography.weights.medium,
+                      background: theme.colors.surface.glass,
+                      backdropFilter: theme.effects.blur,
+                      color: theme.colors.text.primary,
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.primary.dark;
+                      e.currentTarget.style.boxShadow = `0 0 0 3px rgba(102, 126, 234, 0.1)`;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = theme.colors.surface.glassBorder;
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    {Array.from({ length: 15 }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? 'week' : 'weeks'}
+                      </option>
+                    ))}
+                  </select>
+                  <p style={{
+                    fontSize: theme.typography.sizes.xs,
+                    color: theme.colors.text.muted,
+                    marginTop: theme.spacing.xs,
+                    margin: 0,
+                    paddingTop: theme.spacing.xs
+                  }}>
+                    This task will appear for {task.recurrenceWeeks || 1} consecutive week(s)
+                  </p>
+                </div>
+              )}
+              
               {/* Priority Field */}
               <div>
                 <label style={{

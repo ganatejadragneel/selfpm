@@ -95,15 +95,38 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     
     try {
       // Fetch tasks for the current week and user
-      const { data: tasks, error: tasksError } = await supabase
+      // For regular tasks, fetch only tasks with week_number = current week
+      // For weekly_recurring tasks, fetch if the task spans this week
+      const { data: regularTasks, error: regularError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', userId)
         .eq('week_number', week)
+        .neq('category', 'weekly_recurring')
         .order('category')
         .order('order', { ascending: true });
       
-      if (tasksError) throw tasksError;
+      // Fetch weekly recurring tasks that should appear in this week
+      const { data: recurringTasks, error: recurringError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('category', 'weekly_recurring')
+        .lte('original_week_number', week)
+        .gte('original_week_number', week - 14) // Look back max 14 weeks
+        .order('order', { ascending: true });
+      
+      if (regularError) throw regularError;
+      if (recurringError) throw recurringError;
+      
+      // Filter recurring tasks to only show those that span the current week
+      const filteredRecurringTasks = (recurringTasks || []).filter(task => {
+        const originalWeek = task.original_week_number || task.week_number;
+        const weeks = task.recurrence_weeks || 1;
+        return week >= originalWeek && week < originalWeek + weeks;
+      });
+      
+      const tasks = [...(regularTasks || []), ...filteredRecurringTasks];
       
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
@@ -129,6 +152,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
             dueDate: task.due_date,
             isRecurring: task.is_recurring,
             recurrencePattern: task.recurrence_pattern,
+            recurrenceWeeks: task.recurrence_weeks,
+            originalWeekNumber: task.original_week_number,
             progressCurrent: task.progress_current,
             progressTotal: task.progress_total,
             weekNumber: task.week_number,
@@ -240,6 +265,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       due_date: taskData.dueDate,
       is_recurring: taskData.isRecurring || false,
       recurrence_pattern: taskData.recurrencePattern,
+      recurrence_weeks: taskData.category === 'weekly_recurring' ? (taskData.recurrenceWeeks || 1) : null,
+      original_week_number: taskData.category === 'weekly_recurring' ? week : null,
       progress_current: taskData.progressCurrent || 0,
       progress_total: taskData.progressTotal,
       week_number: week,
@@ -269,6 +296,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         dueDate: data.due_date,
         isRecurring: data.is_recurring,
         recurrencePattern: data.recurrence_pattern,
+        recurrenceWeeks: data.recurrence_weeks,
+        originalWeekNumber: data.original_week_number,
         progressCurrent: data.progress_current,
         progressTotal: data.progress_total,
         weekNumber: data.week_number,
@@ -304,6 +333,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       if (updates.progressTotal !== undefined) dbUpdates.progress_total = updates.progressTotal;
       if (updates.weekNumber !== undefined) dbUpdates.week_number = updates.weekNumber;
       if (updates.recurrencePattern !== undefined) dbUpdates.recurrence_pattern = updates.recurrencePattern;
+      if (updates.recurrenceWeeks !== undefined) {
+        dbUpdates.recurrence_weeks = updates.recurrenceWeeks;
+        // When recurrence weeks changes, update the original week to current week
+        // so the task spans from current week to next N weeks
+        dbUpdates.original_week_number = get().currentWeek;
+      }
+      if (updates.originalWeekNumber !== undefined) dbUpdates.original_week_number = updates.originalWeekNumber;
       
       // Direct mappings (same names)
       if (updates.title !== undefined) dbUpdates.title = updates.title;

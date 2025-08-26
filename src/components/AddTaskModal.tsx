@@ -24,7 +24,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
   const [dueDate, setDueDate] = useState('');
   const [progressTotal, setProgressTotal] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState(1);
 
   if (!isOpen) return null;
 
@@ -38,8 +38,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
         category,
         dueDate: dueDate || undefined,
         progressTotal: progressTotal ? parseInt(progressTotal) : undefined,
-        isRecurring,
-        priority
+        priority,
+        recurrenceWeeks: category === 'weekly_recurring' ? recurrenceWeeks : undefined
       });
       
       // Reset form
@@ -48,7 +48,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
       setDueDate('');
       setProgressTotal('');
       setPriority('medium');
-      setIsRecurring(false);
+      setRecurrenceWeeks(1);
       onClose();
     } catch (error) {
       console.error('Error creating task:', error);
@@ -351,24 +351,51 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
             </div>
           </div>
 
-          {/* Recurring Toggle */}
+          {/* Number of Weeks for Weekly Tasks */}
           {category === 'weekly_recurring' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-              <input
-                type="checkbox"
-                id="recurring"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                style={{ 
-                  width: '18px', 
-                  height: '18px', 
-                  accentColor: '#667eea',
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
+                Number of Weeks <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <select
+                value={recurrenceWeeks}
+                onChange={(e) => setRecurrenceWeeks(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: 'white',
                   cursor: 'pointer'
                 }}
-              />
-              <label htmlFor="recurring" style={{ fontSize: '14px', color: '#374151', fontWeight: '500', cursor: 'pointer' }}>
-                This task repeats weekly
-              </label>
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#667eea';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                {Array.from({ length: 15 }, (_, i) => i + 1).map(num => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? 'week' : 'weeks'}
+                  </option>
+                ))}
+              </select>
+              <p style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                marginTop: '6px',
+                margin: 0,
+                paddingTop: '6px'
+              }}>
+                This task will appear for {recurrenceWeeks} consecutive week(s)
+              </p>
             </div>
           )}
 

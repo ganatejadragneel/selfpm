@@ -12,6 +12,8 @@ export interface Task {
   dueDate?: string;
   isRecurring: boolean;
   recurrencePattern?: 'daily' | 'weekly' | 'monthly';
+  recurrenceWeeks?: number; // Number of weeks this task should span (1-15)
+  originalWeekNumber?: number; // The week when this task was originally created
   progressCurrent?: number;
   progressTotal?: number;
   weekNumber: number;

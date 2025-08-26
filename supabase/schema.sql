@@ -12,6 +12,8 @@ CREATE TABLE tasks (
   due_date DATE,
   is_recurring BOOLEAN DEFAULT FALSE,
   recurrence_pattern TEXT CHECK (recurrence_pattern IN ('daily', 'weekly', 'monthly')),
+  recurrence_weeks INTEGER DEFAULT 1 CHECK (recurrence_weeks >= 1 AND recurrence_weeks <= 15),
+  original_week_number INTEGER,
   progress_current INTEGER DEFAULT 0,
   progress_total INTEGER,
   week_number INTEGER NOT NULL,
