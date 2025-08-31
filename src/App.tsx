@@ -141,7 +141,7 @@ function AppContent() {
               )
             );
           } catch (error) {
-            console.log('Order column may not exist yet. Tasks reordered in UI only.');
+            // Order column may not exist yet. Tasks reordered in UI only.
           }
         }
       } else {
