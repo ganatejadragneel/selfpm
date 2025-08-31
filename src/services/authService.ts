@@ -244,6 +244,54 @@ class AuthService {
       errors,
     };
   }
+
+  // Change user password
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<{ message: string }> {
+    try {
+      // Get user's current password hash
+      const { data: user, error: fetchError } = await supabase
+        .from('users')
+        .select('password_hash')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError || !user) {
+        throw new Error('User not found');
+      }
+
+      // Verify old password
+      const isValidOldPassword = await this.verifyPassword(oldPassword, user.password_hash);
+      if (!isValidOldPassword) {
+        throw new Error('Invalid current password');
+      }
+
+      // Validate new password
+      const { isValid, errors } = this.isStrongPassword(newPassword);
+      if (!isValid) {
+        throw new Error(errors.join(', '));
+      }
+
+      // Hash new password
+      const newPasswordHash = await this.hashPassword(newPassword);
+
+      // Update password in the database
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw new Error('Failed to update password');
+      }
+
+      return { message: 'Password updated successfully' };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unexpected error occurred');
+    }
+  }
 }
 
 export const authService = new AuthService();

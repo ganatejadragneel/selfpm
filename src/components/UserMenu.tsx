@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../styles/theme';
 import { User, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { SettingsModal } from './settings/SettingsModal';
 
 export const UserMenu: React.FC = () => {
   const { user, logout } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [buttonRect, setButtonRect] = useState<DOMRect | null>(null);
 
@@ -26,6 +28,11 @@ export const UserMenu: React.FC = () => {
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
+  };
+
+  const openSettings = () => {
+    setIsSettingsOpen(true);
+    setIsOpen(false);
   };
 
   const DropdownPortal = () => {
@@ -106,8 +113,9 @@ export const UserMenu: React.FC = () => {
 
           {/* Menu Items */}
           <div style={{ padding: theme.spacing.sm }}>
-            {/* Settings (Future feature) */}
+            {/* Settings */}
             <button
+              onClick={openSettings}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -117,25 +125,21 @@ export const UserMenu: React.FC = () => {
                 background: 'none',
                 border: 'none',
                 borderRadius: theme.borderRadius.sm,
-                cursor: 'not-allowed',
+                cursor: 'pointer',
                 fontSize: theme.typography.sizes.sm,
-                color: theme.colors.text.secondary,
+                color: theme.colors.text.primary,
                 transition: 'all 0.2s ease',
-                opacity: 0.5,
                 textAlign: 'left',
               }}
-              disabled
-              title="Coming soon"
+               onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'none';
+              }}
             >
               <Settings className="w-4 h-4" style={{ flexShrink: 0 }} />
               <span style={{ flex: 1 }}>Settings</span>
-              <span style={{ 
-                fontSize: theme.typography.sizes.xs,
-                color: theme.colors.text.muted,
-                flexShrink: 0,
-              }}>
-                Soon
-              </span>
             </button>
 
             {/* Logout */}
@@ -255,6 +259,11 @@ export const UserMenu: React.FC = () => {
 
       {/* Portal-rendered dropdown */}
       <DropdownPortal />
+
+      <SettingsModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </>
   );
 };
