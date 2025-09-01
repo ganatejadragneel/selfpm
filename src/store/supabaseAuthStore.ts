@@ -249,17 +249,11 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
         throw new Error('Please enter a valid email address');
       }
 
-      // Use production URL for password reset redirect
-      // Check multiple ways to detect production
-      const isProduction = process.env.NODE_ENV === 'production' || 
-                          window.location.hostname !== 'localhost' ||
-                          window.location.hostname.includes('vercel.app');
-                          
-      const redirectUrl = isProduction
-        ? `https://selfpm.vercel.app?type=recovery`
-        : `${window.location.origin}?type=recovery`;
+      // Always use production URL for password reset emails
+      // This ensures reset links work regardless of where the request originates
+      const redirectUrl = `https://selfpm.vercel.app?type=recovery`;
         
-      console.log('Password reset redirect URL:', redirectUrl, 'isProduction:', isProduction);
+      console.log('Password reset redirect URL:', redirectUrl);
         
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
