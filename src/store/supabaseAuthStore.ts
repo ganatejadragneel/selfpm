@@ -249,9 +249,9 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
         throw new Error('Please enter a valid email address');
       }
 
-      // Always use production URL for password reset emails with cache-busting
-      // This ensures reset links work and forces Supabase to use new URL
-      const redirectUrl = `https://selfpm.vercel.app?type=recovery&v=${Date.now()}`;
+      // Use current domain for password reset redirect (works regardless of hosting)
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}?type=recovery&v=${Date.now()}`;
         
       console.log('Password reset redirect URL:', redirectUrl);
         
