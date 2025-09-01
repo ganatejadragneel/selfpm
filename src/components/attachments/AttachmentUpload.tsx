@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload, Loader } from 'lucide-react';
 import { theme } from '../../styles/theme';
-import { useTaskStore } from '../../store/taskStore';
+import { useMigratedTaskStore } from '../../store/migratedTaskStore';
 
 interface AttachmentUploadProps {
   taskId: string;
@@ -12,7 +12,7 @@ export const AttachmentUpload: React.FC<AttachmentUploadProps> = ({ taskId }) =>
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { uploadAttachment } = useTaskStore();
+  const { uploadAttachment } = useMigratedTaskStore();
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

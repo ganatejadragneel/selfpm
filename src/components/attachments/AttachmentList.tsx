@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { File, Image, FileText, Download, Trash2, Eye, X, FileCode, FileJson, Table, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import { theme } from '../../styles/theme';
-import { useTaskStore } from '../../store/taskStore';
+import { useMigratedTaskStore } from '../../store/migratedTaskStore';
 import type { Attachment } from '../../types';
 
 interface AttachmentListProps {
@@ -10,7 +10,7 @@ interface AttachmentListProps {
 }
 
 export const AttachmentList: React.FC<AttachmentListProps> = ({ attachments }) => {
-  const { deleteAttachment } = useTaskStore();
+  const { deleteAttachment } = useMigratedTaskStore();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 

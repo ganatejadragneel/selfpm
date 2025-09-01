@@ -1,10 +1,10 @@
-import { useTaskStore } from '../store/taskStore';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import type { Task } from '../types';
 
 // Custom hook following Single Responsibility Principle
 // Handles all task-related actions, separating business logic from UI
 export const useTaskActions = () => {
-  const { updateTask, deleteTask } = useTaskStore();
+  const { updateTask, deleteTask } = useMigratedTaskStore();
   
   const handleStatusToggle = (task: Task) => {
     const statusFlow = {

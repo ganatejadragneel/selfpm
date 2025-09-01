@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { authService } from '../../services/authService';
+import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
+import { isValidEmail, isStrongPassword } from '../../utils/validation';
 import { theme, styleUtils } from '../../styles/theme';
 import { Mail, Lock, User, Eye, EyeOff, UserPlus, CheckCircle } from 'lucide-react';
 import type { RegisterCredentials } from '../../types/auth';
@@ -10,7 +10,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const { register, loading, error, clearError } = useAuthStore();
+  const { signUp, loading, error, clearError, checkUsernameExists, checkEmailExists } = useSupabaseAuthStore();
   const [credentials, setCredentials] = useState<RegisterCredentials>({
     username: '',
     email: '',
@@ -20,6 +20,48 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+
+  // Debounced username checking
+  const checkUsername = async (username: string) => {
+    if (username.length < 2) {
+      setUsernameAvailable(null);
+      return;
+    }
+    
+    setUsernameChecking(true);
+    try {
+      const exists = await checkUsernameExists(username);
+      setUsernameAvailable(!exists);
+    } catch (error) {
+      console.error('Username check failed:', error);
+      setUsernameAvailable(null);
+    } finally {
+      setUsernameChecking(false);
+    }
+  };
+
+  // Debounced email checking
+  const checkEmail = async (email: string) => {
+    if (!isValidEmail(email)) {
+      setEmailAvailable(null);
+      return;
+    }
+    
+    setEmailChecking(true);
+    try {
+      const exists = await checkEmailExists(email);
+      setEmailAvailable(!exists);
+    } catch (error) {
+      console.error('Email check failed:', error);
+      setEmailAvailable(null);
+    } finally {
+      setEmailChecking(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +73,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       return;
     }
 
-    if (!authService.isValidEmail(credentials.email)) {
+    if (!isValidEmail(credentials.email)) {
       return;
     }
 
-    const passwordCheck = authService.isStrongPassword(credentials.password);
+    const passwordCheck = isStrongPassword(credentials.password);
     if (!passwordCheck.isValid) {
       return;
     }
@@ -45,7 +87,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
 
     try {
-      await register(credentials);
+      await signUp(credentials.email, credentials.password, credentials.username);
       setRegistrationSuccess(true);
       
       // Clear form
@@ -70,11 +112,22 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     setCredentials(prev => ({ ...prev, [field]: value }));
     if (error) clearError();
     if (registrationSuccess) setRegistrationSuccess(false);
+    
+    // Real-time availability checking with debounce
+    if (field === 'username') {
+      setUsernameAvailable(null);
+      // Debounce the username check
+      setTimeout(() => checkUsername(value), 500);
+    } else if (field === 'email') {
+      setEmailAvailable(null);
+      // Debounce the email check
+      setTimeout(() => checkEmail(value), 500);
+    }
   };
 
   // Validation checks
-  const isEmailValid = authService.isValidEmail(credentials.email);
-  const passwordStrength = authService.isStrongPassword(credentials.password);
+  const isEmailValid = isValidEmail(credentials.email);
+  const passwordStrength = isStrongPassword(credentials.password);
   const passwordsMatch = credentials.password === credentials.confirmPassword;
 
   if (registrationSuccess) {
@@ -227,7 +280,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               style={{
                 ...styleUtils.input(),
                 paddingLeft: '48px',
-                borderColor: credentials.username.length >= 2 ? theme.colors.status.success.dark : theme.colors.border.light,
+                paddingRight: '48px',
+                borderColor: usernameAvailable === true ? theme.colors.status.success.dark : 
+                           usernameAvailable === false ? theme.colors.status.error.dark :
+                           credentials.username.length >= 2 ? theme.colors.border.light : theme.colors.border.light,
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.primary.dark;
@@ -238,10 +294,46 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
+            {/* Username availability indicator */}
+            <div style={{
+              position: 'absolute',
+              right: theme.spacing.md,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+            }}>
+              {usernameChecking && (
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: `2px solid ${theme.colors.primary.light}`,
+                  borderTop: `2px solid ${theme.colors.primary.dark}`,
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }} />
+              )}
+              {usernameAvailable === true && (
+                <span style={{ color: theme.colors.status.success.dark, fontSize: '16px' }}>✓</span>
+              )}
+              {usernameAvailable === false && (
+                <span style={{ color: theme.colors.status.error.dark, fontSize: '16px' }}>✗</span>
+              )}
+            </div>
           </div>
           {credentials.username.length > 0 && credentials.username.length < 2 && (
             <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.error.dark, margin: '4px 0 0 0' }}>
               Username must be at least 2 characters long
+            </p>
+          )}
+          {usernameAvailable === false && credentials.username.length >= 2 && (
+            <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.error.dark, margin: '4px 0 0 0' }}>
+              Username is already taken
+            </p>
+          )}
+          {usernameAvailable === true && (
+            <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.success.dark, margin: '4px 0 0 0' }}>
+              Username is available
             </p>
           )}
         </div>
@@ -278,7 +370,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               style={{
                 ...styleUtils.input(),
                 paddingLeft: '48px',
-                borderColor: isEmailValid && credentials.email ? theme.colors.status.success.dark : theme.colors.border.light,
+                paddingRight: '48px',
+                borderColor: emailAvailable === true ? theme.colors.status.success.dark : 
+                           emailAvailable === false ? theme.colors.status.error.dark :
+                           isEmailValid && credentials.email ? theme.colors.status.success.dark : theme.colors.border.light,
               }}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = theme.colors.primary.dark;
@@ -289,10 +384,46 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
+            {/* Email availability indicator */}
+            <div style={{
+              position: 'absolute',
+              right: theme.spacing.md,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+            }}>
+              {emailChecking && (
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: `2px solid ${theme.colors.primary.light}`,
+                  borderTop: `2px solid ${theme.colors.primary.dark}`,
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }} />
+              )}
+              {emailAvailable === true && (
+                <span style={{ color: theme.colors.status.success.dark, fontSize: '16px' }}>✓</span>
+              )}
+              {emailAvailable === false && (
+                <span style={{ color: theme.colors.status.error.dark, fontSize: '16px' }}>✗</span>
+              )}
+            </div>
           </div>
           {credentials.email && !isEmailValid && (
             <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.error.dark, margin: '4px 0 0 0' }}>
               Please enter a valid email address
+            </p>
+          )}
+          {emailAvailable === false && isEmailValid && (
+            <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.error.dark, margin: '4px 0 0 0' }}>
+              Email is already registered
+            </p>
+          )}
+          {emailAvailable === true && (
+            <p style={{ fontSize: theme.typography.sizes.xs, color: theme.colors.status.success.dark, margin: '4px 0 0 0' }}>
+              Email is available
             </p>
           )}
         </div>
@@ -448,15 +579,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch}
+          disabled={loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch || usernameAvailable === false || emailAvailable === false || usernameChecking || emailChecking}
           style={{
             width: '100%',
             padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
             ...styleUtils.button.primary(),
             fontSize: theme.typography.sizes.base,
             fontWeight: theme.typography.weights.semibold,
-            opacity: (loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch) ? 0.6 : 1,
-            cursor: (loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch) ? 'not-allowed' : 'pointer',
+            opacity: (loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch || usernameAvailable === false || emailAvailable === false || usernameChecking || emailChecking) ? 0.6 : 1,
+            cursor: (loading || !credentials.username.trim() || !isEmailValid || !passwordStrength.isValid || !passwordsMatch || usernameAvailable === false || emailAvailable === false || usernameChecking || emailChecking) ? 'not-allowed' : 'pointer',
             marginBottom: theme.spacing.xl,
           }}
         >

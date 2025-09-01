@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types';
-import { useTaskStore } from '../store/taskStore';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { useResponsive } from '../hooks/useResponsive';
 import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -28,7 +28,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     updateSubtaskWeight,
     addDependency,
     removeDependency,
-  } = useTaskStore();
+  } = useMigratedTaskStore();
   const { isMobile } = useResponsive();
   
   const [editingTitle, setEditingTitle] = useState(false);

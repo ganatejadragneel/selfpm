@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import type { Task, TaskCategory } from './types';
-import { useTaskStore } from './store/taskStore';
+import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
 import { useResponsive } from './hooks/useResponsive';
 import { AuthGuard } from './components/auth/AuthGuard';
@@ -37,7 +37,7 @@ function AppContent() {
     fetchTasks,
     setCurrentWeek,
     moveTaskToCategory
-  } = useTaskStore();
+  } = useMigratedTaskStore();
 
   const { handleStatusToggle, handleDelete } = useTaskActions();
   const { isMobile, isSmallMobile } = useResponsive();
@@ -129,13 +129,13 @@ function AppContent() {
           });
           
           // Sort tasks by order for display
-          useTaskStore.setState({ tasks: updatedTasks });
+          useMigratedTaskStore.setState({ tasks: updatedTasks });
           
           // Then update in database (will work when order column exists)
           try {
             await Promise.all(
               newTaskOrder.map((task, index) => 
-                useTaskStore.getState().updateTask(task.id, { 
+                useMigratedTaskStore.getState().updateTask(task.id, { 
                   order: index 
                 })
               )

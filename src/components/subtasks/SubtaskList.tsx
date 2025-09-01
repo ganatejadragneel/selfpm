@@ -3,7 +3,7 @@ import { theme } from '../../styles/theme';
 import { Plus, ListTodo } from 'lucide-react';
 import type { Subtask } from '../../types';
 import { SubtaskItem } from './SubtaskItem';
-import { useTaskStore } from '../../store/taskStore';
+import { useMigratedTaskStore } from '../../store/migratedTaskStore';
 import {
   DndContext,
   closestCenter,
@@ -28,7 +28,7 @@ interface SubtaskListProps {
 export const SubtaskList: React.FC<SubtaskListProps> = ({ taskId, subtasks }) => {
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const { addSubtask, updateSubtask, toggleSubtask, deleteSubtask, reorderSubtasks } = useTaskStore();
+  const { addSubtask, updateSubtask, toggleSubtask, deleteSubtask, reorderSubtasks } = useMigratedTaskStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),

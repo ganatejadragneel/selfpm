@@ -129,7 +129,8 @@ const getLinkStyle = (isActive: boolean): React.CSSProperties => ({
   cursor: 'pointer',
   fontSize: theme.typography.sizes.base,
   color: isActive ? theme.colors.primary.dark : theme.colors.text.secondary,
-  fontWeight: isActive ? theme.typography.weights.semibold : theme.typography.weights.regular,
+  fontWeight: isActive ? theme.typography.weights.semibold : theme.typography.weights.normal,
   textAlign: 'left',
   transition: 'all 0.2s ease',
 });
+

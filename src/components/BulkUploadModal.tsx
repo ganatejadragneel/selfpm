@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { Upload, FileText, AlertCircle, CheckCircle, X, Download, Eye, EyeOff } from 'lucide-react';
-import { useTaskStore } from '../store/taskStore';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { theme } from '../styles/theme';
 import type { TaskCategory } from '../types';
 
@@ -34,7 +34,7 @@ Doctor appointment,Annual checkup,,life
 Project deadline,Submit final deliverables,2024-02-01,work`;
 
 export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClose }) => {
-  const { createTask } = useTaskStore();
+  const { createTask } = useMigratedTaskStore();
   const [file, setFile] = useState<File | null>(null);
   const [parsedTasks, setParsedTasks] = useState<ParsedTask[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);

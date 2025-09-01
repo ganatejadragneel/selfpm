@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../store/authStore';
+import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import { theme, styleUtils } from '../../styles/theme';
 import { Plus, Trash2 } from 'lucide-react';
 
 type TaskType = 'yes_no' | 'dropdown';
 
 export const AddCustomTaskForm: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user } = useSupabaseAuthStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<TaskType>('yes_no');
@@ -54,7 +54,8 @@ export const AddCustomTaskForm: React.FC = () => {
     setLoading(true);
     try {
       const taskData = {
-        user_id: user.id,
+        user_id: null, // Legacy field, set to null for Supabase Auth users
+        new_user_id: user.id, // Use new_user_id for Supabase Auth
         name,
         description,
         type,
@@ -161,7 +162,7 @@ export const AddCustomTaskForm: React.FC = () => {
         {error && <p style={{ color: theme.colors.status.error.dark, marginBottom: theme.spacing.md }}>{error}</p>}
         {success && <p style={{ color: theme.colors.status.success.dark, marginBottom: theme.spacing.md }}>{success}</p>}
         
-        <button type="submit" style={styleUtils.button.primary()} disabled={loading}>
+        <button type="submit" style={submitButtonStyle} disabled={loading}>
           {loading ? 'Adding...' : 'Add Task'}
         </button>
       </form>
@@ -201,4 +202,17 @@ const removeButtonStyle: React.CSSProperties = {
   color: theme.colors.text.muted,
   cursor: 'pointer',
   padding: theme.spacing.sm,
+};
+
+const submitButtonStyle: React.CSSProperties = {
+  ...styleUtils.button.primary(),
+  padding: `${theme.spacing.lg} ${theme.spacing['2xl']}`,
+  fontSize: theme.typography.sizes.lg,
+  fontWeight: theme.typography.weights.bold,
+  borderRadius: theme.borderRadius.lg,
+  minWidth: '160px',
+  boxShadow: theme.effects.shadow.md,
+  border: `2px solid ${theme.colors.primary.light}`,
+  transition: 'all 0.3s ease',
+  background: theme.colors.primary.dark,
 };

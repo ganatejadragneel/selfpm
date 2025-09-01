@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAuthStore } from '../../store/authStore';
+import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import { AuthPage } from './AuthPage';
 import { theme } from '../../styles/theme';
 
@@ -8,7 +8,7 @@ interface AuthGuardProps {
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { isAuthenticated, loading, checkAuth } = useAuthStore();
+  const { isAuthenticated, loading, checkAuth } = useSupabaseAuthStore();
 
   useEffect(() => {
     checkAuth();

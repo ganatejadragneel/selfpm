@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuthStore } from '../store/authStore';
+import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { theme } from '../styles/theme';
 import { User, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { SettingsModal } from './settings/SettingsModal';
 
 export const UserMenu: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, signOut } = useSupabaseAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -22,7 +22,7 @@ export const UserMenu: React.FC = () => {
   if (!user) return null;
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setIsOpen(false);
   };
 
@@ -97,7 +97,7 @@ export const UserMenu: React.FC = () => {
                   margin: '0 0 4px 0',
                   wordBreak: 'break-word',
                 }}>
-                  {user.username}
+                  {user.user_metadata?.username || user.email?.split('@')[0] || 'User'}
                 </p>
                 <p style={{
                   fontSize: theme.typography.sizes.sm,
@@ -244,7 +244,7 @@ export const UserMenu: React.FC = () => {
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {user.username}
+          {user.user_metadata?.username || user.email?.split('@')[0] || 'User'}
         </span>
         <ChevronDown 
           className="w-4 h-4" 

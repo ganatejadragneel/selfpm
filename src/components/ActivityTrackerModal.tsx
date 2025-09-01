@@ -4,7 +4,7 @@ import { X, Clock, Filter, Search, ChevronLeft, ChevronRight,
          Paperclip, MessageSquare, TrendingUp, Calendar,
          AlertCircle, Zap, FileText } from 'lucide-react';
 import { theme } from '../styles/theme';
-import { useTaskStore } from '../store/taskStore';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import type { TaskActivity, ActivityType } from '../types';
 import { format, formatDistanceToNow, startOfWeek, endOfWeek, addWeeks, getWeek } from 'date-fns';
 
@@ -33,7 +33,7 @@ const activityConfig: Record<ActivityType, { icon: React.ElementType; color: str
 };
 
 export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOpen, onClose, currentWeek }) => {
-  const { tasks, fetchActivities } = useTaskStore();
+  const { tasks, fetchActivities } = useMigratedTaskStore();
   const [activities, setActivities] = useState<TaskActivity[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<TaskActivity[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<Set<ActivityType>>(new Set());

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Send, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { theme } from '../../styles/theme';
-import { useTaskStore } from '../../store/taskStore';
-import { useAuthStore } from '../../store/authStore';
+import { useMigratedTaskStore } from '../../store/migratedTaskStore';
+import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import type { TaskComment } from '../../types';
 
 interface CommentSectionProps {
@@ -12,8 +12,8 @@ interface CommentSectionProps {
 }
 
 export const CommentSection: React.FC<CommentSectionProps> = ({ taskId, comments }) => {
-  const { addComment, editComment, deleteComment } = useTaskStore();
-  const { user } = useAuthStore();
+  const { addComment, editComment, deleteComment } = useMigratedTaskStore();
+  const { user } = useSupabaseAuthStore();
   const [newComment, setNewComment] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -21,8 +21,12 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId, comments
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
-      await addComment(taskId, newComment.trim());
-      setNewComment('');
+      try {
+        await addComment(taskId, newComment.trim());
+        setNewComment('');
+      } catch (error) {
+        console.error('Failed to add comment:', error);
+      }
     }
   };
 
@@ -75,7 +79,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId, comments
           fontSize: theme.typography.sizes.sm,
           fontWeight: theme.typography.weights.bold
         }}>
-          {user?.username?.charAt(0).toUpperCase() || 'U'}
+          {user?.user_metadata?.username?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
         </div>
 
         <div style={{ flex: 1 }}>
@@ -180,7 +184,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId, comments
               fontWeight: theme.typography.weights.bold,
               border: `2px solid rgba(102, 126, 234, 0.2)`
             }}>
-              {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
+{comment.userId === user?.id 
+                ? (user?.user_metadata?.username?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U')
+                : 'U'}
             </div>
 
             <div style={{ flex: 1 }}>
@@ -203,7 +209,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId, comments
                       fontWeight: theme.typography.weights.semibold,
                       color: theme.colors.text.primary
                     }}>
-                      {comment.user?.username || 'Unknown User'}
+{comment.userId === user?.id 
+                        ? (user?.user_metadata?.username || user?.email?.split('@')[0] || 'You')
+                        : 'User'}
                     </span>
                     <span style={{
                       fontSize: theme.typography.sizes.xs,

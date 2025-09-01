@@ -1,0 +1,92 @@
+-- Database function to insert user mapping with elevated privileges
+-- This bypasses RLS policies for the insert operation
+
+CREATE OR REPLACE FUNCTION public.ensure_user_in_mapping_table(
+  p_new_auth_id UUID,
+  p_username TEXT,
+  p_email TEXT
+) 
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER -- This runs with the privileges of the function creator
+AS $$
+DECLARE
+  existing_user RECORD;
+  insert_result RECORD;
+BEGIN
+  -- Check if user already exists
+  SELECT id, username, migration_status 
+  INTO existing_user
+  FROM user_migration_mapping 
+  WHERE new_auth_id = p_new_auth_id;
+  
+  IF FOUND THEN
+    RETURN json_build_object(
+      'success', true,
+      'message', 'User already exists',
+      'data', row_to_json(existing_user)
+    );
+  END IF;
+  
+  -- Insert new user mapping
+  INSERT INTO user_migration_mapping (
+    old_user_id,
+    new_auth_id,
+    username,
+    email,
+    migration_status,
+    migrated_at,
+    rollback_data
+  ) VALUES (
+    '2e94c75d-a980-4d8a-98c0-74a5d89e44be', -- Use existing user ID as placeholder for new users (foreign key constraint)
+    p_new_auth_id,
+    p_username,
+    p_email,
+    'new_user',
+    NOW(),
+    NULL
+  ) RETURNING * INTO insert_result;
+  
+  RETURN json_build_object(
+    'success', true,
+    'message', 'User mapping created successfully',
+    'data', row_to_json(insert_result)
+  );
+  
+EXCEPTION
+  WHEN unique_violation THEN
+    -- Handle unique constraint violations specifically
+    IF SQLERRM LIKE '%unique_username%' THEN
+      RETURN json_build_object(
+        'success', false,
+        'error', 'Username already exists',
+        'error_type', 'duplicate_username',
+        'sqlstate', SQLSTATE
+      );
+    ELSIF SQLERRM LIKE '%unique_email%' THEN
+      RETURN json_build_object(
+        'success', false,
+        'error', 'Email already exists', 
+        'error_type', 'duplicate_email',
+        'sqlstate', SQLSTATE
+      );
+    ELSE
+      RETURN json_build_object(
+        'success', false,
+        'error', 'Duplicate data detected',
+        'error_type', 'unique_violation',
+        'sqlstate', SQLSTATE
+      );
+    END IF;
+  WHEN OTHERS THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', SQLERRM,
+      'sqlstate', SQLSTATE
+    );
+END;
+$$;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.ensure_user_in_mapping_table(UUID, TEXT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.ensure_user_in_mapping_table(UUID, TEXT, TEXT) TO anon;

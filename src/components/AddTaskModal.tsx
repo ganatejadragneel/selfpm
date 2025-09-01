@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { TaskCategory, TaskPriority } from '../types';
-import { useTaskStore } from '../store/taskStore';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { theme, priorityConfigs } from '../styles/theme';
 
 interface AddTaskModalProps {
@@ -16,7 +16,7 @@ const categoryDisplayConfig = {
 };
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCategory, onClose }) => {
-  const { createTask } = useTaskStore();
+  const { createTask } = useMigratedTaskStore();
   const [category, setCategory] = useState<TaskCategory>(initialCategory);
   
   const [title, setTitle] = useState('');
