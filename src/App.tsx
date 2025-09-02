@@ -7,12 +7,14 @@ import { AuthGuard } from './components/auth/AuthGuard';
 import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
+import { DailyTaskTracker } from './components/DailyTaskTracker';
 // Lazy load large modal components
 const TaskModal = lazy(() => import('./components/TaskModal').then(module => ({ default: module.TaskModal })));
 const AddTaskModal = lazy(() => import('./components/AddTaskModal').then(module => ({ default: module.AddTaskModal })));
 const BulkUploadModal = lazy(() => import('./components/BulkUploadModal').then(module => ({ default: module.BulkUploadModal })));
 const ActivityTrackerModal = lazy(() => import('./components/ActivityTrackerModal').then(module => ({ default: module.ActivityTrackerModal })));
 const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
+const DailyTaskAnalyticsModal = lazy(() => import('./components/DailyTaskAnalyticsModal').then(module => ({ default: module.DailyTaskAnalyticsModal })));
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { theme } from './styles/theme';
@@ -48,6 +50,7 @@ function AppContent() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showActivityTracker, setShowActivityTracker] = useState(false);
+  const [showDailyTaskAnalytics, setShowDailyTaskAnalytics] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -170,6 +173,9 @@ function AppContent() {
 
   return (
     <div style={{ minHeight: '100vh', background: theme.colors.primary.gradient }}>
+      {/* Daily Task Tracker */}
+      <DailyTaskTracker />
+      
       {/* Header */}
       <div style={{ 
         background: theme.colors.surface.glass,
@@ -452,6 +458,36 @@ function AppContent() {
                 <BarChart3 className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
               </button>
               
+              {/* Daily Task Analytics Button */}
+              <button
+                onClick={() => setShowDailyTaskAnalytics(true)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  background: theme.colors.surface.glass,
+                  backdropFilter: theme.effects.blur,
+                  borderRadius: theme.borderRadius.full,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  marginRight: theme.spacing.sm
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = theme.colors.surface.glass;
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                title="Daily Task Analytics"
+              >
+                <Calendar className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
+              </button>
+              
               <UserMenu />
             </div>
           </div>
@@ -631,6 +667,16 @@ function AppContent() {
             isOpen={showActivityTracker}
             onClose={() => setShowActivityTracker(false)}
             currentWeek={currentWeek}
+          />
+        </Suspense>
+      )}
+      
+      {/* Daily Task Analytics Modal */}
+      {showDailyTaskAnalytics && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <DailyTaskAnalyticsModal
+            isOpen={showDailyTaskAnalytics}
+            onClose={() => setShowDailyTaskAnalytics(false)}
           />
         </Suspense>
       )}

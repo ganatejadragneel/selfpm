@@ -7,27 +7,72 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
           // React ecosystem
-          'react-vendor': ['react', 'react-dom'],
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-vendor';
+          }
           
-          // UI/Animation libraries
-          'ui-vendor': [
-            'lucide-react',
-            '@dnd-kit/core',
-            '@dnd-kit/sortable',
-            '@dnd-kit/utilities'
-          ],
+          // Supabase
+          if (id.includes('@supabase/supabase-js')) {
+            return 'supabase-vendor';
+          }
           
-          // Date/Time utilities
-          'date-vendor': ['date-fns'],
+          // Date utilities
+          if (id.includes('date-fns')) {
+            return 'date-vendor';
+          }
           
-          // Database/Storage
-          'supabase-vendor': ['@supabase/supabase-js']
+          // DnD Kit
+          if (id.includes('@dnd-kit')) {
+            return 'dnd-vendor';
+          }
+          
+          // Lucide icons - split from other UI
+          if (id.includes('lucide-react')) {
+            return 'icons-vendor';
+          }
+          
+          // CSV parsing
+          if (id.includes('papaparse')) {
+            return 'csv-vendor';
+          }
+          
+          // State management
+          if (id.includes('zustand')) {
+            return 'state-vendor';
+          }
+          
+          // Large modals/components - separate chunks
+          if (id.includes('/TaskModal') || id.includes('TaskModal.tsx')) {
+            return 'task-modal';
+          }
+          
+          if (id.includes('/BulkUploadModal') || id.includes('BulkUploadModal.tsx')) {
+            return 'bulk-modal';
+          }
+          
+          if (id.includes('/ActivityTrackerModal') || id.includes('ActivityTrackerModal.tsx')) {
+            return 'activity-modal';
+          }
+          
+          if (id.includes('/ProgressAnalyticsDashboard') || id.includes('ProgressAnalyticsDashboard.tsx')) {
+            return 'analytics';
+          }
+          
+          // Node modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     },
-    // Enable chunk size warnings for bundles larger than 500kb
-    chunkSizeWarningLimit: 500
+    // Optimize chunk size warnings
+    chunkSizeWarningLimit: 400,
+    // Enable minification optimizations (using default esbuild)
+    minify: true,
+    // Additional build optimizations
+    sourcemap: false,
+    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
   }
 })

@@ -199,3 +199,40 @@ export interface TaskAnalytics {
   metadata?: Record<string, any>;
   createdAt: string;
 }
+
+// Daily Task related types (shared across components)
+export type DailyTaskType = 'yes_no' | 'dropdown';
+
+export interface CustomDailyTask {
+  id: string;
+  name: string;
+  description?: string;
+  type: DailyTaskType;
+  options?: string[] | null;
+  currentValue?: string;
+  completedToday?: boolean;
+  noteText?: string;
+}
+
+export interface DailyTaskCompletion {
+  id: string;
+  custom_task_id: string;
+  completion_date: string;
+  value: string | boolean;
+  created_at: string;
+}
+
+export interface DailyTaskNote {
+  id: string;
+  custom_task_id: string;
+  note_date: string;
+  note_text: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Modal props interfaces (shared pattern)
+export interface BaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}

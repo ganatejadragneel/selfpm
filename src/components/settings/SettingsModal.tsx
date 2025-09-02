@@ -58,12 +58,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           position: 'absolute',
           top: '16px',
           right: '16px',
-          background: 'none',
-          border: 'none',
+          background: theme.colors.surface.white,
+          border: `2px solid ${theme.colors.border.light}`,
+          borderRadius: theme.borderRadius.full,
           cursor: 'pointer',
           color: theme.colors.text.secondary,
+          width: '40px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.2s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = theme.colors.status.error.light;
+          e.currentTarget.style.color = theme.colors.status.error.dark;
+          e.currentTarget.style.borderColor = theme.colors.status.error.medium;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = theme.colors.surface.white;
+          e.currentTarget.style.color = theme.colors.text.secondary;
+          e.currentTarget.style.borderColor = theme.colors.border.light;
         }}>
-          <X size={24} />
+          <X size={20} />
         </button>
 
         {/* Sidebar */}

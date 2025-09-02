@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import { theme } from '../../styles/theme';
-import { Eye, EyeOff } from 'lucide-react';
+import { formStyles, getInputStyle, getButtonState, formIcons } from '../../styles/formStyles';
+import { isStrongPassword } from '../../utils/validation';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export const ChangePasswordForm: React.FC = () => {
   const { user, updatePassword } = useSupabaseAuthStore();
@@ -13,24 +15,10 @@ export const ChangePasswordForm: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Password strength validation
+  // Use existing validation utility (DRY principle)
   const validatePassword = (password: string) => {
-    const errors: string[] = [];
-    
-    if (password.length < 6) {
-      errors.push('Password must be at least 6 characters long');
-    }
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
-    }
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
-    }
-    if (!/\d/.test(password)) {
-      errors.push('Password must contain at least one number');
-    }
-    
-    return errors;
+    const validation = isStrongPassword(password);
+    return validation.errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,67 +94,68 @@ export const ChangePasswordForm: React.FC = () => {
       <form onSubmit={handleSubmit}>
 
         {/* New Password */}
-        <div style={{ marginBottom: theme.spacing.md }}>
-          <label htmlFor="newPassword" style={labelStyle}>New Password</label>
+        <div style={formStyles.fieldContainer}>
+          <label htmlFor="newPassword" style={formStyles.label}>New Password</label>
           <div style={{ position: 'relative' }}>
             <input
               id="newPassword"
               type={showNewPassword ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              style={{...inputStyle, paddingRight: '40px'}}
+              style={{...getInputStyle(!!newPassword), paddingRight: '40px'}}
               required
             />
             <button
               type="button"
               onClick={() => setShowNewPassword(!showNewPassword)}
-              style={eyeButtonStyle}
+              style={formStyles.eyeButton}
             >
               {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <p style={passwordHintStyle}>
+          <p style={formStyles.passwordHint}>
             Password must contain at least 6 characters with uppercase, lowercase, and numbers
           </p>
         </div>
 
         {/* Confirm Password */}
-        <div style={{ marginBottom: theme.spacing.lg }}>
-          <label htmlFor="confirmPassword" style={labelStyle}>Confirm New Password</label>
+        <div style={formStyles.fieldContainer}>
+          <label htmlFor="confirmPassword" style={formStyles.label}>Confirm New Password</label>
           <div style={{ position: 'relative' }}>
             <input
               id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{...inputStyle, paddingRight: '40px'}}
+              style={{...getInputStyle(!!confirmPassword), paddingRight: '40px'}}
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={eyeButtonStyle}
+              style={formStyles.eyeButton}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
         </div>
         {error && (
-          <div style={errorStyle}>
-            {error}
+          <div style={formStyles.errorMessage}>
+            <div style={formIcons.errorIcon}>!</div>
+            <span>{error}</span>
           </div>
         )}
         {success && (
-          <div style={successStyle}>
-            {success}
+          <div style={formStyles.successMessage}>
+            <CheckCircle2 size={20} color={theme.colors.status.success.dark} />
+            <span>{success}</span>
           </div>
         )}
         <button 
           type="submit" 
           style={{
-            ...buttonStyle,
-            opacity: (loading || !newPassword || !confirmPassword) ? 0.6 : 1,
-            cursor: (loading || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer',
+            ...formStyles.primaryButton,
+            ...getButtonState(loading, !newPassword || !confirmPassword),
           }} 
           disabled={loading || !newPassword || !confirmPassword}
         >
@@ -177,74 +166,4 @@ export const ChangePasswordForm: React.FC = () => {
   );
 };
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  marginBottom: theme.spacing.sm,
-  color: theme.colors.text.secondary,
-  fontWeight: theme.typography.weights.medium,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: theme.spacing.md,
-  borderRadius: theme.borderRadius.md,
-  border: `1px solid ${theme.colors.surface.glassBorder}`,
-  background: theme.colors.surface.white,
-  color: theme.colors.text.primary,
-  fontSize: theme.typography.sizes.base,
-};
-
-const buttonStyle: React.CSSProperties = {
-  padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
-  borderRadius: theme.borderRadius.lg,
-  border: `2px solid ${theme.colors.primary.light}`,
-  background: theme.colors.primary.dark,
-  color: 'white',
-  cursor: 'pointer',
-  fontWeight: theme.typography.weights.bold,
-  fontSize: theme.typography.sizes.lg,
-  transition: 'all 0.3s ease',
-  boxShadow: theme.effects.shadow.md,
-};
-
-const eyeButtonStyle: React.CSSProperties = {
-  position: 'absolute',
-  right: theme.spacing.md,
-  top: '50%',
-  transform: 'translateY(-50%)',
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  color: theme.colors.text.muted,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '4px',
-};
-
-const passwordHintStyle: React.CSSProperties = {
-  fontSize: theme.typography.sizes.xs,
-  color: theme.colors.text.muted,
-  margin: `${theme.spacing.xs} 0 0 0`,
-  fontStyle: 'italic',
-};
-
-const errorStyle: React.CSSProperties = {
-  background: theme.colors.status.error.light,
-  color: theme.colors.status.error.dark,
-  padding: theme.spacing.md,
-  borderRadius: theme.borderRadius.md,
-  marginBottom: theme.spacing.md,
-  fontSize: theme.typography.sizes.sm,
-  border: `1px solid ${theme.colors.status.error.dark}`,
-};
-
-const successStyle: React.CSSProperties = {
-  background: theme.colors.status.success.light,
-  color: theme.colors.status.success.dark,
-  padding: theme.spacing.md,
-  borderRadius: theme.borderRadius.md,
-  marginBottom: theme.spacing.md,
-  fontSize: theme.typography.sizes.sm,
-  border: `1px solid ${theme.colors.status.success.dark}`,
-};
+// All styles now imported from shared formStyles utility (DRY principle)

@@ -238,13 +238,11 @@ export const UserMenu: React.FC = () => {
           <User className="w-4 h-4" style={{ color: 'white' }} />
         </div>
         <span style={{ 
-          color: 'white', 
-          maxWidth: '100px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
+          color: 'white',
+          fontSize: theme.typography.sizes.lg,
+          fontWeight: theme.typography.weights.bold,
         }}>
-          {user.user_metadata?.username || user.email?.split('@')[0] || 'User'}
+          {(user.user_metadata?.username || user.email?.split('@')[0] || 'User')[0]?.toUpperCase()}
         </span>
         <ChevronDown 
           className="w-4 h-4" 
