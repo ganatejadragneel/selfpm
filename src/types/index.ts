@@ -160,28 +160,6 @@ export interface RecurringTaskTemplate {
   updatedAt: string;
 }
 
-export type NotificationType = 
-  | 'due_soon'
-  | 'overdue'
-  | 'stale'
-  | 'dependency_completed'
-  | 'milestone_reached'
-  | 'weekly_summary'
-  | 'recurring_created';
-
-export interface Notification {
-  id: string;
-  userId: string;
-  taskId?: string;
-  notificationType: NotificationType;
-  title: string;
-  message: string;
-  isRead: boolean;
-  readAt?: string;
-  actionUrl?: string;
-  metadata?: Record<string, any>;
-  createdAt: string;
-}
 
 export interface TaskAnalytics {
   id: string;
