@@ -9,6 +9,7 @@ import { subDays } from 'date-fns/subDays';
 import { addDays } from 'date-fns/addDays';
 import { startOfDay } from 'date-fns/startOfDay';
 import { endOfDay } from 'date-fns/endOfDay';
+import { formatLocalDateString } from '../utils/dateUtils';
 import type { BaseModalProps, CustomDailyTask, DailyTaskCompletion, DailyTaskNote } from '../types';
 import { getDisplayValue, getDropdownColor } from '../constants/dailyTasks';
 
@@ -194,8 +195,8 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
 
       if (tasksData && tasksData.length > 0) {
         // Fetch completions for the date range
-        const startDate = format(currentDateRange.start, 'yyyy-MM-dd');
-        const endDate = format(currentDateRange.end, 'yyyy-MM-dd');
+        const startDate = formatLocalDateString(currentDateRange.start);
+        const endDate = formatLocalDateString(currentDateRange.end);
         
         const { data: completionsData, error: completionsError } = await supabase
           .from('daily_task_completions')
@@ -567,7 +568,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                           const taskCompletions = completions.filter(c => c.custom_task_id === task.id);
                           const totalDays = dateRange.length;
                           const completedDays = dateRange.filter(date => {
-                            const dateStr = format(date, 'yyyy-MM-dd');
+                            const dateStr = formatLocalDateString(date);
                             const completion = taskCompletions.find(c => c.completion_date === dateStr);
                             if (!completion) return false;
                             
@@ -847,7 +848,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                 
                                 {/* Day blocks */}
                                 {barChartDateRange.map((date) => {
-                                  const dateStr = format(date, 'yyyy-MM-dd');
+                                  const dateStr = formatLocalDateString(date);
                                   const completion = completions.find(
                                     c => c.custom_task_id === task.id && c.completion_date === dateStr
                                   );
@@ -1057,7 +1058,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                 
                                 {/* Date cells */}
                                 {heatMapDateRange.map((date) => {
-                                  const dateStr = format(date, 'yyyy-MM-dd');
+                                  const dateStr = formatLocalDateString(date);
                                   const completion = completions.find(
                                     c => c.custom_task_id === task.id && c.completion_date === dateStr
                                   );

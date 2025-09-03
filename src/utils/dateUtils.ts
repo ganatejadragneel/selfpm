@@ -82,3 +82,43 @@ export const getDateUrgency = (dueDate: string | undefined): 'overdue' | 'today'
   if (daysUntil <= 7) return 'soon';
   return 'normal';
 };
+
+/**
+ * Get current date in local timezone as YYYY-MM-DD string
+ * This replaces new Date().toISOString().split('T')[0] to avoid UTC conversion
+ * @returns Date string in YYYY-MM-DD format using local timezone
+ */
+export const getLocalDateString = (date: Date = new Date()): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Get today's date as YYYY-MM-DD string in local timezone
+ * @returns Today's date string in local timezone
+ */
+export const getTodayLocalString = (): string => {
+  return getLocalDateString(new Date());
+};
+
+/**
+ * Check if two date strings represent the same local date
+ * @param dateStr1 - First date string (YYYY-MM-DD)
+ * @param dateStr2 - Second date string (YYYY-MM-DD)
+ * @returns true if dates are the same
+ */
+export const isSameLocalDate = (dateStr1: string, dateStr2: string): boolean => {
+  return dateStr1 === dateStr2;
+};
+
+/**
+ * Convert a Date object to YYYY-MM-DD string in local timezone
+ * Useful for date-fns operations that return Date objects
+ * @param date - Date object
+ * @returns Date string in YYYY-MM-DD format
+ */
+export const formatLocalDateString = (date: Date): string => {
+  return getLocalDateString(date);
+};

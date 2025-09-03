@@ -5,6 +5,7 @@ import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { theme } from '../styles/theme';
 import { X, Save, Trash2, StickyNote } from 'lucide-react';
 import { format } from 'date-fns/format';
+import { formatLocalDateString } from '../utils/dateUtils';
 import type { BaseModalProps } from '../types';
 
 interface TaskNoteModalProps extends BaseModalProps {
@@ -41,7 +42,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
     setError(null);
     
     try {
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = formatLocalDateString(date);
       
       if (noteText.trim()) {
         // Save or update note
@@ -79,7 +80,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
     setError(null);
     
     try {
-      const dateStr = format(date, 'yyyy-MM-dd');
+      const dateStr = formatLocalDateString(date);
       
       const { error: deleteError } = await supabase
         .from('daily_task_notes')

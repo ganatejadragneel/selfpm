@@ -4,6 +4,7 @@ import { theme } from '../styles/theme';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { supabase } from '../lib/supabase';
 import { TaskNoteModal } from './TaskNoteModal';
+import { getTodayLocalString, isSameLocalDate } from '../utils/dateUtils';
 import type { CustomDailyTask } from '../types';
 
 
@@ -40,13 +41,13 @@ export const DailyTaskTracker: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    let lastKnownDate = new Date().toISOString().split('T')[0];
+    let lastKnownDate = getTodayLocalString();
     
     // Check every minute if the date has changed
     const dateCheckInterval = setInterval(() => {
-      const currentDate = new Date().toISOString().split('T')[0];
+      const currentDate = getTodayLocalString();
       
-      if (currentDate !== lastKnownDate) {
+      if (!isSameLocalDate(currentDate, lastKnownDate)) {
         console.log('New day detected, refreshing daily tasks...');
         lastKnownDate = currentDate;
         fetchCustomTasksAndCompletions(); // This will fetch today's completions (which will be empty for new day)
@@ -61,8 +62,8 @@ export const DailyTaskTracker: React.FC = () => {
     
     setLoading(true);
     try {
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
+      // Get today's date in local timezone
+      const today = getTodayLocalString();
       
       // Fetch custom daily tasks
       const { data: customTasksData, error: tasksError } = await supabase
@@ -130,7 +131,7 @@ export const DailyTaskTracker: React.FC = () => {
     if (!user) return;
     
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayLocalString();
       
       // Update or insert completion record
       const { error } = await supabase
