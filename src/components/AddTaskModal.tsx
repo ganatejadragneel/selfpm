@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { TaskCategory, TaskPriority } from '../types';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
+import { SpeechToTextButton } from './SpeechToTextButton';
 import { theme, priorityConfigs } from '../styles/theme';
 
 interface AddTaskModalProps {
@@ -181,32 +182,44 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
               Task Title *
             </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What needs to be done?"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                border: '2px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'all 0.2s ease',
-                backgroundColor: 'white'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#667eea';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-              autoFocus
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="What needs to be done?"
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 50px 12px 16px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: 'white'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#667eea';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                right: '8px',
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}>
+                <SpeechToTextButton
+                  onTranscription={(text) => setTitle(text)}
+                  size="sm"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Description */}
@@ -214,32 +227,44 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
               Description
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add more details..."
-              rows={3}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                border: '2px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                resize: 'none',
-                outline: 'none',
-                transition: 'all 0.2s ease',
-                backgroundColor: 'white'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#667eea';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Add more details..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  border: '2px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '12px 50px 12px 16px',
+                  fontSize: '14px',
+                  resize: 'none',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  backgroundColor: 'white'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#667eea';
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                right: '8px',
+                top: '8px'
+              }}>
+                <SpeechToTextButton
+                  onTranscription={(text) => setDescription(prev => prev ? `${prev} ${text}` : text)}
+                  size="sm"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Priority Selection */}

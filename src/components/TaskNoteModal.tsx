@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
+import { SpeechToTextButton } from './SpeechToTextButton';
 import { theme } from '../styles/theme';
 import { X, Save, Trash2, StickyNote } from 'lucide-react';
 import { format } from 'date-fns/format';
@@ -211,31 +212,47 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
             }}>
               Your note for this task
             </label>
-            <textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value.slice(0, 200))}
-              placeholder="Add your thoughts, reasons, or reflections about this task..."
-              style={{
-                width: '100%',
-                minHeight: '120px',
-                padding: '16px',
-                border: `2px solid ${theme.colors.border.light}`,
-                borderRadius: theme.borderRadius.md,
-                fontSize: theme.typography.sizes.base,
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                outline: 'none',
-                transition: 'border-color 0.2s ease',
-                background: 'rgba(248, 250, 252, 0.5)',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = theme.colors.primary.light;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = theme.colors.border.light;
-              }}
-              autoFocus
-            />
+            <div style={{ position: 'relative' }}>
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value.slice(0, 200))}
+                placeholder="Add your thoughts, reasons, or reflections about this task..."
+                style={{
+                  width: '100%',
+                  minHeight: '120px',
+                  padding: '16px 50px 16px 16px',
+                  border: `2px solid ${theme.colors.border.light}`,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.sizes.base,
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease',
+                  background: 'rgba(248, 250, 252, 0.5)',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = theme.colors.primary.light;
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = theme.colors.border.light;
+                }}
+                autoFocus
+              />
+              <div style={{
+                position: 'absolute',
+                right: '12px',
+                top: '12px'
+              }}>
+                <SpeechToTextButton
+                  onTranscription={(text) => setNoteText(prev => {
+                    const combined = prev ? `${prev} ${text}` : text;
+                    return combined.slice(0, 200); // Respect the character limit
+                  })}
+                  size="sm"
+                />
+              </div>
+            </div>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',

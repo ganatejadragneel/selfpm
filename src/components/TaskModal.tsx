@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Task, TaskStatus, TaskPriority } from '../types';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { useResponsive } from '../hooks/useResponsive';
+import { SpeechToTextButton } from './SpeechToTextButton';
 import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SubtaskList } from './subtasks/SubtaskList';
@@ -1086,27 +1087,28 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 boxSizing: 'border-box',
                 overflow: 'hidden'
               }}>
-                <textarea
-                  value={newUpdate}
-                  onChange={(e) => setNewUpdate(e.target.value)}
-                  placeholder="What progress did you make? Share updates, blockers, or achievements..."
-                  style={{
-                    width: '100%',
-                    maxWidth: '100%',
-                    minHeight: '80px',
-                    border: `2px solid rgba(0, 0, 0, 0.1)`,
-                    borderRadius: theme.borderRadius.md,
-                    padding: theme.spacing.md,
-                    fontSize: theme.typography.sizes.base,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    color: theme.colors.text.primary,
-                    outline: 'none',
-                    resize: 'vertical',
-                    lineHeight: '1.5',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                    boxSizing: 'border-box'
-                  }}
+                <div style={{ position: 'relative' }}>
+                  <textarea
+                    value={newUpdate}
+                    onChange={(e) => setNewUpdate(e.target.value)}
+                    placeholder="What progress did you make? Share updates, blockers, or achievements..."
+                    style={{
+                      width: '100%',
+                      maxWidth: '100%',
+                      minHeight: '80px',
+                      border: `2px solid rgba(0, 0, 0, 0.1)`,
+                      borderRadius: theme.borderRadius.md,
+                      padding: `${theme.spacing.md} 50px ${theme.spacing.md} ${theme.spacing.md}`,
+                      fontSize: theme.typography.sizes.base,
+                      background: 'rgba(255, 255, 255, 0.95)',
+                      backdropFilter: 'blur(10px)',
+                      color: theme.colors.text.primary,
+                      outline: 'none',
+                      resize: 'vertical',
+                      lineHeight: '1.5',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                      boxSizing: 'border-box'
+                    }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = theme.colors.primary.dark;
                     e.currentTarget.style.boxShadow = `0 0 0 3px rgba(102, 126, 234, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)`;
@@ -1115,7 +1117,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                     e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.1)';
                     e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
                   }}
-                />
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '8px'
+                  }}>
+                    <SpeechToTextButton
+                      onTranscription={(text) => setNewUpdate(prev => prev ? `${prev} ${text}` : text)}
+                      size="sm"
+                    />
+                  </div>
+                </div>
                 
                 <div style={{ position: 'relative' }}>
                   <label style={{

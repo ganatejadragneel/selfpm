@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Lock, PlusSquare, Eye } from 'lucide-react';
+import { X, Lock, PlusSquare, Eye, Mic } from 'lucide-react';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { AddCustomTaskForm } from './AddCustomTaskForm';
 import { DailyTasksView } from './DailyTasksView';
+import { SpeechToTextSettings } from './SpeechToTextSettings';
 import { theme, styleUtils } from '../../styles/theme';
 
 interface SettingsModalProps {
@@ -12,7 +13,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type ActiveView = 'changePassword' | 'addCustomTask' | 'dailyTasks';
+type ActiveView = 'changePassword' | 'addCustomTask' | 'dailyTasks' | 'speechToText';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [activeView, setActiveView] = useState<ActiveView>('dailyTasks');
@@ -27,6 +28,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         return <AddCustomTaskForm />;
       case 'dailyTasks':
         return <DailyTasksView />;
+      case 'speechToText':
+        return <SpeechToTextSettings />;
       default:
         return <DailyTasksView />;
     }
@@ -110,6 +113,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <button onClick={() => setActiveView('addCustomTask')} style={getLinkStyle(activeView === 'addCustomTask')}>
                   <PlusSquare size={18} />
                   <span>Add Custom Task</span>
+                </button>
+              </li>
+              <li style={{ marginBottom: theme.spacing.md }}>
+                <button onClick={() => setActiveView('speechToText')} style={getLinkStyle(activeView === 'speechToText')}>
+                  <Mic size={18} />
+                  <span>Speech to Text</span>
                 </button>
               </li>
               <li style={{ marginBottom: theme.spacing.md }}>
