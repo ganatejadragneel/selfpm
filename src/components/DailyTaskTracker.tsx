@@ -35,6 +35,9 @@ export const DailyTaskTracker: React.FC = () => {
     
     setLoading(true);
     try {
+      // Reset alt_task_done for new day
+      await supabase.rpc('reset_alt_task_daily');
+      
       // Get today's date in local timezone
       const today = getTodayLocalString();
       
@@ -88,7 +91,9 @@ export const DailyTaskTracker: React.FC = () => {
           options: task.options || [],
           currentValue: completion?.value || (task.type === 'yes_no' ? 'Not Done' : ''),
           completedToday: !!completion,
-          noteText: note?.note_text || ''
+          noteText: note?.note_text || '',
+          alt_task: task.alt_task || undefined,
+          alt_task_done: task.alt_task_done || false
         };
       });
       
@@ -164,6 +169,35 @@ export const DailyTaskTracker: React.FC = () => {
       );
     } catch (error) {
       console.error('Failed to update task value:', error);
+    }
+  };
+
+  const handleAltTaskChange = async (taskId: string, isDone: boolean) => {
+    if (!user) return;
+    
+    try {
+      // Update alt_task_done in the custom_tasks table
+      const { error } = await supabase
+        .from('custom_tasks')
+        .update({ alt_task_done: isDone })
+        .eq('id', taskId)
+        .eq('new_user_id', user.id);
+      
+      if (error) {
+        console.error('Error updating alt task status:', error);
+        return;
+      }
+      
+      // Update local state immediately (optimistic update)
+      setCustomTasks(prev => 
+        prev.map(task => 
+          task.id === taskId 
+            ? { ...task, alt_task_done: isDone }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update alt task status:', error);
     }
   };
 
@@ -614,6 +648,23 @@ export const DailyTaskTracker: React.FC = () => {
                             borderRadius: '2px'
                           }} />
                           {task.name}
+                          {task.alt_task && task.alt_task_done && (
+                            <div style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '2px 8px',
+                              background: theme.colors.status.purple.gradient,
+                              borderRadius: theme.borderRadius.full,
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              color: 'white',
+                              marginLeft: theme.spacing.sm,
+                              boxShadow: '0 2px 6px rgba(139, 92, 246, 0.3)'
+                            }}>
+                              ALT ✓
+                            </div>
+                          )}
                           {task.noteText && (
                             <div style={{
                               width: '8px',
@@ -666,6 +717,89 @@ export const DailyTaskTracker: React.FC = () => {
                           opacity: 0.8
                         }}>
                           {task.description}
+                        </div>
+                      )}
+
+                      {/* Alternative Task Section */}
+                      {task.alt_task && (
+                        <div style={{
+                          marginBottom: theme.spacing.md,
+                          padding: theme.spacing.md,
+                          background: task.alt_task_done
+                            ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
+                            : 'linear-gradient(135deg, rgba(241, 245, 249, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+                          borderRadius: theme.borderRadius.md,
+                          border: task.alt_task_done 
+                            ? `2px solid ${theme.colors.status.purple.light}`
+                            : `1px solid ${theme.colors.border.light}`,
+                          transition: 'all 0.3s ease'
+                        }}>
+                          <div style={{
+                            fontSize: theme.typography.sizes.sm,
+                            color: theme.colors.text.secondary,
+                            marginBottom: theme.spacing.sm,
+                            fontWeight: 500
+                          }}>
+                            Alt:
+                          </div>
+                          <div style={{
+                            fontSize: theme.typography.sizes.base,
+                            color: task.alt_task_done ? theme.colors.status.purple.dark : theme.colors.text.primary,
+                            marginBottom: theme.spacing.sm,
+                            fontWeight: 500
+                          }}>
+                            {task.alt_task}
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            gap: theme.spacing.lg,
+                            alignItems: 'center'
+                          }}>
+                            <label style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: theme.spacing.sm,
+                              cursor: 'pointer',
+                              fontSize: theme.typography.sizes.sm,
+                              color: theme.colors.text.primary
+                            }}>
+                              <input
+                                type="radio"
+                                name={`alt-task-${task.id}`}
+                                checked={task.alt_task_done === true}
+                                onChange={() => handleAltTaskChange(task.id, true)}
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  cursor: 'pointer',
+                                  accentColor: theme.colors.status.purple.dark
+                                }}
+                              />
+                              Done
+                            </label>
+                            <label style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: theme.spacing.sm,
+                              cursor: 'pointer',
+                              fontSize: theme.typography.sizes.sm,
+                              color: theme.colors.text.primary
+                            }}>
+                              <input
+                                type="radio"
+                                name={`alt-task-${task.id}`}
+                                checked={task.alt_task_done === false}
+                                onChange={() => handleAltTaskChange(task.id, false)}
+                                style={{
+                                  width: '18px',
+                                  height: '18px',
+                                  cursor: 'pointer',
+                                  accentColor: theme.colors.border.medium
+                                }}
+                              />
+                              Not Done
+                            </label>
+                          </div>
                         </div>
                       )}
 

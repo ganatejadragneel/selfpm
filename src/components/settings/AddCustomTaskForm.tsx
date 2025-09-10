@@ -14,6 +14,7 @@ export const AddCustomTaskForm: React.FC = () => {
   const [description, setDescription] = useState('');
   const [type, setType] = useState<TaskType>('yes_no');
   const [options, setOptions] = useState<string[]>(['']);
+  const [altTask, setAltTask] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,6 +70,8 @@ export const AddCustomTaskForm: React.FC = () => {
         description,
         type,
         options: type === 'dropdown' ? options.filter(opt => opt.trim()) : null,
+        alt_task: altTask.trim() || null,
+        alt_task_done: false
       };
 
       const { error: insertError } = await supabase.from('custom_tasks').insert(taskData);
@@ -82,6 +85,7 @@ export const AddCustomTaskForm: React.FC = () => {
       setDescription('');
       setType('yes_no');
       setOptions(['']);
+      setAltTask('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -191,6 +195,42 @@ export const AddCustomTaskForm: React.FC = () => {
             }}
             placeholder="Add details about what this task involves (optional)"
           />
+        </div>
+        <div style={{
+          marginBottom: theme.spacing.lg,
+          position: 'relative'
+        }}>
+          <label htmlFor="altTask" style={{
+            ...formStyles.label,
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing.xs,
+            fontWeight: theme.typography.weights.semibold
+          }}>
+            <div style={{
+              width: '4px',
+              height: '16px',
+              background: theme.colors.status.purple.gradient,
+              borderRadius: '2px'
+            }} />
+            Alternative Task (Optional)
+          </label>
+          <input
+            id="altTask"
+            type="text"
+            value={altTask}
+            onChange={(e) => setAltTask(e.target.value)}
+            style={getInputStyle(!!altTask.trim())}
+            placeholder="e.g., Practice coding, Read documentation"
+          />
+          <div style={{
+            fontSize: theme.typography.sizes.xs,
+            color: theme.colors.text.muted,
+            marginTop: theme.spacing.xs,
+            fontStyle: 'italic'
+          }}>
+            An alternative task that can be done instead of the main task
+          </div>
         </div>
         <div style={{
           marginBottom: theme.spacing.xl,

@@ -12,7 +12,13 @@ export const DailyTasksView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', description: '', type: 'yes_no' as 'yes_no' | 'dropdown', options: [''] });
+  const [editForm, setEditForm] = useState({ 
+    name: '', 
+    description: '', 
+    type: 'yes_no' as 'yes_no' | 'dropdown', 
+    options: [''],
+    alt_task: ''
+  });
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async () => {
@@ -46,13 +52,14 @@ export const DailyTasksView: React.FC = () => {
       name: task.name,
       description: task.description || '',
       type: task.type,
-      options: task.type === 'dropdown' && task.options ? [...task.options] : ['']
+      options: task.type === 'dropdown' && task.options ? [...task.options] : [''],
+      alt_task: task.alt_task || ''
     });
   };
 
   const cancelEdit = () => {
     setEditingTask(null);
-    setEditForm({ name: '', description: '', type: 'yes_no', options: [''] });
+    setEditForm({ name: '', description: '', type: 'yes_no', options: [''], alt_task: '' });
   };
 
   const saveEdit = async () => {
@@ -64,6 +71,7 @@ export const DailyTasksView: React.FC = () => {
         description: editForm.description,
         type: editForm.type,
         options: editForm.type === 'dropdown' ? editForm.options.filter(opt => opt.trim()) : null,
+        alt_task: editForm.alt_task.trim() || null,
       };
 
       const { error: updateError } = await supabase
@@ -75,7 +83,13 @@ export const DailyTasksView: React.FC = () => {
 
       // Update local state
       setTasks(tasks.map(task => 
-        task.id === editingTask ? { ...task, ...updatedTask } : task
+        task.id === editingTask 
+          ? { 
+              ...task, 
+              ...updatedTask,
+              alt_task: updatedTask.alt_task || undefined 
+            } 
+          : task
       ));
 
       cancelEdit();
@@ -360,6 +374,38 @@ export const DailyTasksView: React.FC = () => {
                       }}
                       placeholder="Enter task description"
                     />
+                  </div>
+
+                  <div style={{ marginBottom: theme.spacing.lg }}>
+                    <label style={{
+                      ...formStyles.label,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: theme.spacing.xs
+                    }}>
+                      <div style={{
+                        width: '4px',
+                        height: '16px',
+                        background: theme.colors.status.purple.gradient,
+                        borderRadius: '2px'
+                      }} />
+                      Alternative Task (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.alt_task}
+                      onChange={(e) => setEditForm({ ...editForm, alt_task: e.target.value })}
+                      style={formStyles.enhancedInput}
+                      placeholder="e.g., Practice coding, Read documentation"
+                    />
+                    <div style={{
+                      fontSize: theme.typography.sizes.xs,
+                      color: theme.colors.text.muted,
+                      marginTop: theme.spacing.xs,
+                      fontStyle: 'italic'
+                    }}>
+                      An alternative task that can be done instead of the main task
+                    </div>
                   </div>
 
                   <div style={{ marginBottom: theme.spacing.md }}>

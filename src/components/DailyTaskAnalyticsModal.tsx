@@ -878,10 +878,16 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                         position: 'relative',
                                       }}
                                       title={tooltipText}
-                                      onClick={() => {
+                                      onClick={async () => {
                                         if (completion || note) {
-                                          // Show detailed popup - we'll implement this next
-                                          alert(`${task.name} - ${format(date, 'dd/MM/yyyy')}\n\nTask: ${getDisplayValue(value, task.type)}${note ? `\n\nNote: ${note.note_text}` : ''}`);
+                                          // Fetch alt_task information if it exists
+                                          let altTaskInfo = '';
+                                          if (task.alt_task && task.alt_task_done) {
+                                            altTaskInfo = `\n\nAlternate task: ${task.alt_task}: Done`;
+                                          }
+                                          
+                                          // Show detailed popup
+                                          alert(`${task.name} - ${format(date, 'dd/MM/yyyy')}\n\nTask: ${getDisplayValue(value, task.type)}${note ? `\n\nNote: ${note.note_text}` : ''}${altTaskInfo}`);
                                         }
                                       }}
                                       onMouseEnter={(e) => {

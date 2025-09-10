@@ -206,6 +206,8 @@ export interface CustomDailyTask {
   currentValue?: string;
   completedToday?: boolean;
   noteText?: string;
+  alt_task?: string;
+  alt_task_done?: boolean;
 }
 
 export interface DailyTaskCompletion {
