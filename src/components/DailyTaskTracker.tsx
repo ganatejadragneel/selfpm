@@ -89,7 +89,7 @@ export const DailyTaskTracker: React.FC = () => {
           description: task.description,
           type: task.type as 'yes_no' | 'dropdown',
           options: task.options || [],
-          currentValue: completion?.value || (task.type === 'yes_no' ? 'Not Done' : ''),
+          currentValue: completion?.value || '',
           completedToday: !!completion,
           noteText: note?.note_text || '',
           alt_task: task.alt_task || undefined,
@@ -138,35 +138,63 @@ export const DailyTaskTracker: React.FC = () => {
     try {
       const today = getTodayLocalString();
       
-      // Update or insert completion record
-      const { error } = await supabase
-        .from('daily_task_completions')
-        .upsert({
-          custom_task_id: taskId,
-          new_user_id: user.id,
-          value: newValue,
-          completion_date: today
-        }, {
-          onConflict: 'custom_task_id,new_user_id,completion_date'
-        });
-      
-      if (error) {
-        console.error('Error updating task completion:', error);
-        return;
+      // If the value is empty (no selection), delete the completion record
+      if (newValue === '') {
+        const { error } = await supabase
+          .from('daily_task_completions')
+          .delete()
+          .eq('custom_task_id', taskId)
+          .eq('new_user_id', user.id)
+          .eq('completion_date', today);
+        
+        if (error) {
+          console.error('Error deleting task completion:', error);
+          return;
+        }
+        
+        // Update local state to reflect no selection
+        setCustomTasks(prev => 
+          prev.map(task => 
+            task.id === taskId 
+              ? { 
+                  ...task, 
+                  currentValue: '',
+                  completedToday: false
+                }
+              : task
+          )
+        );
+      } else {
+        // Update or insert completion record
+        const { error } = await supabase
+          .from('daily_task_completions')
+          .upsert({
+            custom_task_id: taskId,
+            new_user_id: user.id,
+            value: newValue,
+            completion_date: today
+          }, {
+            onConflict: 'custom_task_id,new_user_id,completion_date'
+          });
+        
+        if (error) {
+          console.error('Error updating task completion:', error);
+          return;
+        }
+        
+        // Update local state immediately (optimistic update)
+        setCustomTasks(prev => 
+          prev.map(task => 
+            task.id === taskId 
+              ? { 
+                  ...task, 
+                  currentValue: newValue,
+                  completedToday: true
+                }
+              : task
+          )
+        );
       }
-      
-      // Update local state immediately (optimistic update)
-      setCustomTasks(prev => 
-        prev.map(task => 
-          task.id === taskId 
-            ? { 
-                ...task, 
-                currentValue: newValue,
-                completedToday: true
-              }
-            : task
-        )
-      );
     } catch (error) {
       console.error('Failed to update task value:', error);
     }
@@ -584,6 +612,8 @@ export const DailyTaskTracker: React.FC = () => {
                     ? task.currentValue === 'Done'
                     : task.currentValue && task.currentValue !== '';
                   
+                  const isExplicitlyNotDone = task.type === 'yes_no' && task.currentValue === 'Not Done';
+                  
                   return (
                     <div
                       key={task.id}
@@ -592,14 +622,20 @@ export const DailyTaskTracker: React.FC = () => {
                         padding: theme.spacing.md,
                         background: isCompleted
                           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
-                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+                          : isExplicitlyNotDone
+                            ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)'
+                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
                         borderRadius: theme.borderRadius.lg,
                         border: isCompleted 
                           ? `2px solid ${theme.colors.status.success.light}`
-                          : `1px solid ${theme.colors.border.light}`,
+                          : isExplicitlyNotDone
+                            ? `2px solid ${theme.colors.status.error.light}`
+                            : `1px solid ${theme.colors.border.light}`,
                         boxShadow: isCompleted
                           ? '0 4px 12px rgba(16, 185, 129, 0.15)'
-                          : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                          : isExplicitlyNotDone
+                            ? '0 4px 12px rgba(239, 68, 68, 0.15)'
+                            : '0 2px 8px rgba(0, 0, 0, 0.08)',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         position: 'relative',
                         overflow: 'hidden'
@@ -625,7 +661,11 @@ export const DailyTaskTracker: React.FC = () => {
                       <div style={{
                         fontSize: theme.typography.sizes.base,
                         fontWeight: 600,
-                        color: isCompleted ? theme.colors.status.success.dark : theme.colors.text.primary,
+                        color: isCompleted 
+                          ? theme.colors.status.success.dark 
+                          : isExplicitlyNotDone 
+                            ? theme.colors.status.error.dark
+                            : theme.colors.text.primary,
                         marginBottom: theme.spacing.sm,
                         paddingRight: isCompleted ? '40px' : '0',
                         display: 'flex',
@@ -644,7 +684,9 @@ export const DailyTaskTracker: React.FC = () => {
                             height: '20px',
                             background: isCompleted 
                               ? theme.colors.status.success.gradient
-                              : theme.colors.primary.gradient,
+                              : isExplicitlyNotDone
+                                ? theme.colors.status.error.gradient
+                                : theme.colors.primary.gradient,
                             borderRadius: '2px'
                           }} />
                           {task.name}
@@ -805,17 +847,27 @@ export const DailyTaskTracker: React.FC = () => {
 
                       {task.type === 'yes_no' && (
                         <select
-                          value={task.currentValue || 'Not Done'}
+                          value={task.currentValue || ''}
                           onChange={(e) => handleTaskValueChange(task.id, e.target.value)}
                           style={{
                             width: '100%',
                             padding: '12px 16px',
                             borderRadius: theme.borderRadius.md,
-                            border: `2px solid ${isCompleted ? theme.colors.status.success.light : theme.colors.border.light}`,
+                            border: `2px solid ${
+                              isCompleted 
+                                ? theme.colors.status.success.light 
+                                : isExplicitlyNotDone 
+                                  ? theme.colors.status.error.light
+                                  : theme.colors.border.light
+                            }`,
                             backgroundColor: theme.colors.surface.white,
                             fontSize: theme.typography.sizes.sm,
                             fontWeight: 500,
-                            color: theme.colors.text.primary,
+                            color: isCompleted 
+                              ? theme.colors.status.success.dark
+                              : isExplicitlyNotDone
+                                ? theme.colors.status.error.dark
+                                : theme.colors.text.primary,
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
@@ -825,7 +877,8 @@ export const DailyTaskTracker: React.FC = () => {
                             backgroundRepeat: 'no-repeat'
                           }}
                         >
-                          <option value="Not Done">Not Done</option>
+                          <option value="">Choose an option...</option>
+                          <option value="Not Done">❌ Not Done</option>
                           <option value="Done">✅ Done</option>
                         </select>
                       )}

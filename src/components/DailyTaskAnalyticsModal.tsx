@@ -859,6 +859,12 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                   const value = completion ? String(completion.value) : '';
                                   const blockColor = completion ? getValueColor(value) : '#f3f4f6';
                                   const opacity = completion ? 1 : 0.3;
+                                  
+                                  // Check if alt task was done (we need to check the task's alt_task_done status)
+                                  // Since alt_task_done resets daily, we'd need to track it historically
+                                  // For now, we'll use the current alt_task_done status for today only
+                                  const isToday = formatLocalDateString(new Date()) === dateStr;
+                                  const altTaskDone = isToday && task.alt_task && task.alt_task_done;
 
                                   // Create tooltip text with note if available
                                   const tooltipText = `${task.name} - ${format(date, 'dd/MM/yyyy')}\nTask: ${getDisplayValue(value, task.type)}${note ? `\nNote: ${note.note_text}` : ''}${completion || note ? '\n\nClick for details' : ''}`;
@@ -920,6 +926,42 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                         }}>
                                           N
                                         </div>
+                                      )}
+                                      {altTaskDone && (
+                                        <svg
+                                          style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            pointerEvents: 'none'
+                                          }}
+                                          viewBox="0 0 22 22"
+                                        >
+                                          {/* First diagonal line (top-left to bottom-right) */}
+                                          <line
+                                            x1="3"
+                                            y1="3"
+                                            x2="19"
+                                            y2="19"
+                                            stroke="white"
+                                            strokeWidth="1.5"
+                                            strokeDasharray="2,2"
+                                            opacity="0.9"
+                                          />
+                                          {/* Second diagonal line (top-right to bottom-left) */}
+                                          <line
+                                            x1="19"
+                                            y1="3"
+                                            x2="3"
+                                            y2="19"
+                                            stroke="white"
+                                            strokeWidth="1.5"
+                                            strokeDasharray="2,2"
+                                            opacity="0.9"
+                                          />
+                                        </svg>
                                       )}
                                     </div>
                                   );
