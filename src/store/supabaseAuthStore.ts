@@ -227,9 +227,15 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
 
   signOut: async () => {
     try {
+      // Try to sign out, but don't fail if session is missing
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
       
+      // Only log error if it's not a session missing error
+      if (error && error.message !== 'Auth session missing!') {
+        console.warn('Sign out error (non-critical):', error);
+      }
+      
+      // Always clear local state regardless of signOut result
       set({ 
         user: null, 
         loading: false, 
@@ -237,9 +243,35 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
         isAuthenticated: false,
         failedAttempts: 0 // Reset failed attempts on logout
       });
+      
+      // Clear any Supabase local storage items
+      const keysToRemove = Object.keys(localStorage).filter(key => 
+        key.startsWith('sb-') || key.includes('supabase')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Force reload to clear any cached state
+      window.location.href = '/';
     } catch (error: any) {
-      set({ error: error.message || 'Sign out failed' });
-      throw error;
+      // Even if signOut fails, clear the local state
+      console.error('Sign out error:', error);
+      
+      set({ 
+        user: null, 
+        loading: false, 
+        error: null,
+        isAuthenticated: false,
+        failedAttempts: 0
+      });
+      
+      // Clear any Supabase local storage items
+      const keysToRemove = Object.keys(localStorage).filter(key => 
+        key.startsWith('sb-') || key.includes('supabase')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Force reload to clear everything
+      window.location.href = '/';
     }
   },
 
