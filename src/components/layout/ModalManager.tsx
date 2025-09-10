@@ -7,14 +7,12 @@ const TaskModal = lazy(() => import('../TaskModal').then(module => ({ default: m
 const AddTaskModal = lazy(() => import('../AddTaskModal').then(module => ({ default: module.AddTaskModal })));
 const BulkUploadModal = lazy(() => import('../BulkUploadModal').then(module => ({ default: module.BulkUploadModal })));
 const ActivityTrackerModal = lazy(() => import('../ActivityTrackerModal').then(module => ({ default: module.ActivityTrackerModal })));
-const ProgressAnalyticsDashboard = lazy(() => import('../analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
 const DailyTaskAnalyticsModal = lazy(() => import('../DailyTaskAnalyticsModal').then(module => ({ default: module.DailyTaskAnalyticsModal })));
 
 interface ModalState {
   selectedTask: Task | null;
   showQuickAdd: boolean;
   quickAddCategory: TaskCategory;
-  showAnalytics: boolean;
   showBulkUpload: boolean;
   showActivityTracker: boolean;
   showDailyTaskAnalytics: boolean;
@@ -26,7 +24,6 @@ interface ModalManagerProps {
   currentWeek: number;
   onCloseTask: () => void;
   onCloseQuickAdd: () => void;
-  onCloseAnalytics: () => void;
   onCloseBulkUpload: () => void;
   onCloseActivityTracker: () => void;
   onCloseDailyTaskAnalytics: () => void;
@@ -68,7 +65,6 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
   currentWeek,
   onCloseTask,
   onCloseQuickAdd,
-  onCloseAnalytics,
   onCloseBulkUpload,
   onCloseActivityTracker,
   onCloseDailyTaskAnalytics,
@@ -95,30 +91,6 @@ export const ModalManager: React.FC<ModalManagerProps> = ({
         </Suspense>
       )}
 
-      {modalState.showAnalytics && (
-        <Suspense fallback={<LoadingSpinner />}>
-          {/* ProgressAnalyticsDashboard doesn't have isOpen/onClose props, need to wrap in modal */}
-          <div style={{
-            position: 'fixed' as const,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }} onClick={onCloseAnalytics}>
-            <div onClick={(e) => e.stopPropagation()}>
-              <ProgressAnalyticsDashboard
-                tasks={tasks}
-                currentWeek={currentWeek}
-              />
-            </div>
-          </div>
-        </Suspense>
-      )}
 
       {modalState.showBulkUpload && (
         <Suspense fallback={<LoadingSpinner />}>

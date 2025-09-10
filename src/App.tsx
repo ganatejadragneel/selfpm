@@ -75,7 +75,6 @@ function AppContent() {
         currentWeek={currentWeek}
         onWeekChange={handleWeekChange}
         onShowQuickAdd={actions.openQuickAdd}
-        onShowAnalytics={actions.openAnalytics}
         onShowBulkUpload={actions.openBulkUpload}
         onShowActivityTracker={actions.openActivityTracker}
         onShowDailyTaskAnalytics={actions.openDailyTaskAnalytics}
@@ -86,17 +85,15 @@ function AppContent() {
         maxWidth: '1280px', 
         margin: '0 auto'
       }}>
-        {modalState.showAnalytics && (
-          <div style={{ 
-            marginBottom: '24px',
-            background: theme.colors.surface.glass,
-            borderRadius: theme.borderRadius.lg,
-            border: `1px solid ${theme.colors.surface.glassBorder}`,
-            overflow: 'hidden'
-          }}>
-            <WeeklySummary tasks={tasks} weekNumber={currentWeek} />
-          </div>
-        )}
+        <div style={{ 
+          marginBottom: '24px',
+          background: theme.colors.surface.glass,
+          borderRadius: theme.borderRadius.lg,
+          border: `1px solid ${theme.colors.surface.glassBorder}`,
+          overflow: 'hidden'
+        }}>
+          <WeeklySummary tasks={tasks} weekNumber={currentWeek} />
+        </div>
         
         <TaskBoard
           tasks={tasks}
@@ -158,7 +155,6 @@ function AppContent() {
         currentWeek={currentWeek}
         onCloseTask={actions.closeTask}
         onCloseQuickAdd={actions.closeQuickAdd}
-        onCloseAnalytics={actions.closeAnalytics}
         onCloseBulkUpload={actions.closeBulkUpload}
         onCloseActivityTracker={actions.closeActivityTracker}
         onCloseDailyTaskAnalytics={actions.closeDailyTaskAnalytics}

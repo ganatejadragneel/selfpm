@@ -359,7 +359,10 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         tasks: [...state.tasks, transformedTask]
       }));
     } catch (error) {
-      set({ error: (error as Error).message });
+      console.error('Error creating task:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
+      set({ error: errorMessage });
+      throw new Error(errorMessage);
     }
   },
 

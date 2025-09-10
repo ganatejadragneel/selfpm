@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, TrendingUp } from 'lucide-react';
 import { format, addWeeks, getWeek } from 'date-fns';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useCommonStyles } from '../../styles/commonStyles';
@@ -10,7 +10,6 @@ interface WeekNavigationHeaderProps {
   currentWeek: number;
   onWeekChange: (direction: 'prev' | 'next') => void;
   onShowQuickAdd: () => void;
-  onShowAnalytics: () => void;
   onShowBulkUpload: () => void;
   onShowActivityTracker: () => void;
   onShowDailyTaskAnalytics: () => void;
@@ -20,7 +19,6 @@ export const WeekNavigationHeader: React.FC<WeekNavigationHeaderProps> = ({
   currentWeek,
   onWeekChange,
   onShowQuickAdd,
-  onShowAnalytics,
   onShowBulkUpload,
   onShowActivityTracker,
   onShowDailyTaskAnalytics,
@@ -196,17 +194,6 @@ export const WeekNavigationHeader: React.FC<WeekNavigationHeaderProps> = ({
                 </Button>
 
                 <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={onShowAnalytics}
-                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </Button>
-
-                <Button
-                  variant="secondary"
                   size="sm"
                   onClick={onShowBulkUpload}
                   style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -215,8 +202,8 @@ export const WeekNavigationHeader: React.FC<WeekNavigationHeaderProps> = ({
                   Bulk
                 </Button>
 
+
                 <Button
-                  variant="secondary"
                   size="sm"
                   onClick={onShowActivityTracker}
                   style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -226,12 +213,12 @@ export const WeekNavigationHeader: React.FC<WeekNavigationHeaderProps> = ({
                 </Button>
 
                 <Button
-                  variant="secondary"
                   size="sm"
                   onClick={onShowDailyTaskAnalytics}
                   style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
-                  Daily Analytics
+                  <TrendingUp className="w-4 h-4" />
+                  Daily
                 </Button>
               </>
             )}

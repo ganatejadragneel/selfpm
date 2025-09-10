@@ -66,27 +66,43 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
 
   if (!isOpen) return null;
 
-  const handleSaveTitle = () => {
+  const handleSaveTitle = async () => {
     if (tempTitle.trim() && tempTitle !== task.title) {
-      updateTask(task.id, { title: tempTitle.trim() });
+      try {
+        await updateTask(task.id, { title: tempTitle.trim() });
+      } catch (error) {
+        console.error('Error updating task title:', error);
+        alert('Failed to update task title');
+        return;
+      }
     }
     setEditingTitle(false);
   };
 
-  const handleSaveDescription = () => {
+  const handleSaveDescription = async () => {
     if (tempDescription !== task.description) {
-      updateTask(task.id, { description: tempDescription });
+      try {
+        await updateTask(task.id, { description: tempDescription });
+      } catch (error) {
+        console.error('Error updating task description:', error);
+        alert('Failed to update task description');
+        return;
+      }
     }
     setEditingDescription(false);
   };
 
-
-  const handleAddUpdate = () => {
+  const handleAddUpdate = async () => {
     if (newUpdate.trim()) {
-      const progressValue = progressUpdate ? parseInt(progressUpdate) : undefined;
-      addTaskUpdate(task.id, newUpdate.trim(), progressValue);
-      setNewUpdate('');
-      setProgressUpdate('');
+      try {
+        const progressValue = progressUpdate ? parseInt(progressUpdate) : undefined;
+        await addTaskUpdate(task.id, newUpdate.trim(), progressValue);
+        setNewUpdate('');
+        setProgressUpdate('');
+      } catch (error) {
+        console.error('Error adding task update:', error);
+        alert('Failed to add task update');
+      }
     }
   };
 
@@ -294,13 +310,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 </label>
                 <select
                   value={task.status}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const newStatus = e.target.value as TaskStatus;
-                    // Use specialized method for weekly recurring tasks
-                    if (task.category === 'weekly_recurring') {
-                      updateWeeklyRecurringTaskStatus(task.id, { status: newStatus });
-                    } else {
-                      updateTask(task.id, { status: newStatus });
+                    try {
+                      // Use specialized method for weekly recurring tasks
+                      if (task.category === 'weekly_recurring') {
+                        await updateWeeklyRecurringTaskStatus(task.id, { status: newStatus });
+                      } else {
+                        await updateTask(task.id, { status: newStatus });
+                      }
+                    } catch (error) {
+                      console.error('Error updating status:', error);
                     }
                   }}
                   style={{
@@ -350,7 +370,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 <input
                   type="date"
                   value={task.dueDate || ''}
-                  onChange={(e) => updateTask(task.id, { dueDate: e.target.value || undefined })}
+                  onChange={async (e) => {
+                    try {
+                      await updateTask(task.id, { dueDate: e.target.value || undefined });
+                    } catch (error) {
+                      console.error('Error updating due date:', error);
+                    }
+                  }}
                   style={{
                     width: '100%',
                     maxWidth: '100%',
@@ -455,7 +481,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                   {(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => (
                     <button
                       key={prio}
-                      onClick={() => updateTask(task.id, { priority: prio })}
+                      onClick={async () => {
+                        try {
+                          await updateTask(task.id, { priority: prio });
+                        } catch (error) {
+                          console.error('Error updating priority:', error);
+                        }
+                      }}
                       style={{
                         padding: '8px 12px',
                         borderRadius: theme.borderRadius.md,
@@ -802,7 +834,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                       <input
                         type="number"
                         value={task.progressCurrent || 0}
-                        onChange={(e) => updateTask(task.id, { progressCurrent: parseInt(e.target.value) || 0 })}
+                        onChange={async (e) => {
+                          try {
+                            await updateTask(task.id, { progressCurrent: parseInt(e.target.value) || 0 });
+                          } catch (error) {
+                            console.error('Error updating progress:', error);
+                          }
+                        }}
                         min="0"
                         max={task.progressTotal}
                         style={{

@@ -5,7 +5,6 @@ export interface ModalState {
   selectedTask: Task | null;
   showQuickAdd: boolean;
   quickAddCategory: TaskCategory;
-  showAnalytics: boolean;
   showBulkUpload: boolean;
   showActivityTracker: boolean;
   showDailyTaskAnalytics: boolean;
@@ -16,7 +15,6 @@ export const useModalState = () => {
     selectedTask: null,
     showQuickAdd: false,
     quickAddCategory: 'life_admin',
-    showAnalytics: false,
     showBulkUpload: false,
     showActivityTracker: false,
     showDailyTaskAnalytics: false,
@@ -42,13 +40,6 @@ export const useModalState = () => {
     setModalState(prev => ({ ...prev, showQuickAdd: false }));
   }, []);
 
-  const openAnalytics = useCallback(() => {
-    setModalState(prev => ({ ...prev, showAnalytics: true }));
-  }, []);
-
-  const closeAnalytics = useCallback(() => {
-    setModalState(prev => ({ ...prev, showAnalytics: false }));
-  }, []);
 
   const openBulkUpload = useCallback(() => {
     setModalState(prev => ({ ...prev, showBulkUpload: true }));
@@ -81,8 +72,6 @@ export const useModalState = () => {
       closeTask,
       openQuickAdd,
       closeQuickAdd,
-      openAnalytics,
-      closeAnalytics,
       openBulkUpload,
       closeBulkUpload,
       openActivityTracker,

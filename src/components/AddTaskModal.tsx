@@ -56,6 +56,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
       onClose();
     } catch (error) {
       console.error('Error creating task:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
+      alert(`Error creating task: ${errorMessage}`);
     }
   };
 

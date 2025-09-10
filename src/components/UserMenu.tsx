@@ -26,9 +26,16 @@ export const UserMenu: React.FC = () => {
 
   if (!user) return null;
 
-  const handleLogout = () => {
-    signOut();
-    setIsOpen(false);
+  const handleLogout = async () => {
+    console.log('UserMenu: handleLogout called');
+    try {
+      await signOut();
+      console.log('UserMenu: signOut completed successfully');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('UserMenu: signOut failed:', error);
+      setIsOpen(false);
+    }
   };
 
   const toggleDropdown = () => {
