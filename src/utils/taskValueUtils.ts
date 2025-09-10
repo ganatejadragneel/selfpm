@@ -46,34 +46,3 @@ export function createTaskValue(mainStatus: string, altStatus: string): string {
   return `${mainStatus}|${altStatus}`;
 }
 
-/**
- * Check if the main task is completed
- */
-export function isMainTaskDone(value: string | undefined | null): boolean {
-  const { main } = parseTaskValue(value);
-  return main === 'Done';
-}
-
-/**
- * Check if the alt task is completed
- */
-export function isAltTaskDone(value: string | undefined | null): boolean {
-  const { alt } = parseTaskValue(value);
-  return alt === 'Done';
-}
-
-/**
- * Get display value for UI
- */
-export function getMainTaskDisplay(value: string | undefined | null): string {
-  const { main } = parseTaskValue(value);
-  return main || '';
-}
-
-/**
- * Get alt task display value for UI
- */
-export function getAltTaskDisplay(value: string | undefined | null): string {
-  const { alt } = parseTaskValue(value);
-  return alt || '';
-}
