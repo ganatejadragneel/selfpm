@@ -69,10 +69,48 @@ export default defineConfig({
     },
     // Optimize chunk size warnings
     chunkSizeWarningLimit: 400,
-    // Enable minification optimizations (using default esbuild)
-    minify: true,
+    // Enable minification optimizations with terser for better compression
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+        passes: 2,
+      },
+      mangle: true,
+      format: {
+        comments: false,
+      },
+    },
     // Additional build optimizations
     sourcemap: false,
-    target: ['es2020', 'chrome58', 'firefox57', 'safari11'],
-  }
+    target: ['es2020', 'chrome87', 'firefox78', 'safari14'],
+    // Optimize CSS
+    cssCodeSplit: true,
+    cssMinify: true,
+    // Increase asset inline limit
+    assetsInlineLimit: 4096,
+    // Enable brotli compression size reporting
+    reportCompressedSize: true,
+  },
+  // Optimize dependencies pre-bundling
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'date-fns',
+      '@supabase/supabase-js',
+      'zustand',
+      'lucide-react',
+    ],
+    exclude: [],
+  },
+  // Server optimizations for development
+  server: {
+    open: false,
+    cors: true,
+    // Enable compression in dev
+    middlewareMode: false,
+  },
 })
