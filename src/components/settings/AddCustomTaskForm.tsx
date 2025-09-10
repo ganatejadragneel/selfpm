@@ -63,6 +63,13 @@ export const AddCustomTaskForm: React.FC = () => {
 
     setLoading(true);
     try {
+      // Log user info for debugging
+      console.log('Current user:', {
+        id: user.id,
+        email: user.email,
+        metadata: user.user_metadata
+      });
+
       const taskData = {
         user_id: null, // Legacy field, set to null for Supabase Auth users
         new_user_id: user.id, // Use new_user_id for Supabase Auth
@@ -70,15 +77,39 @@ export const AddCustomTaskForm: React.FC = () => {
         description,
         type,
         options: type === 'dropdown' ? options.filter(opt => opt.trim()) : null,
-        alt_task: altTask.trim() || null,
-        alt_task_done: false
+        alt_task: altTask.trim() || null
+        // Removed alt_task_done - this field doesn't exist in the database
       };
 
-      const { error: insertError } = await supabase.from('custom_tasks').insert(taskData);
+      console.log('Attempting to insert task data:', taskData);
+
+      const { data: insertedData, error: insertError } = await supabase
+        .from('custom_tasks')
+        .insert(taskData)
+        .select();
 
       if (insertError) {
+        console.error('Custom task insert error details:', {
+          error: insertError,
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        
+        // Provide more specific error messages based on error code
+        if (insertError.code === '23503') {
+          throw new Error('Unable to create custom task. This appears to be a database constraint issue. Please contact support.');
+        } else if (insertError.code === '42501') {
+          throw new Error('Permission denied. Please check your account permissions.');
+        } else if (insertError.message?.includes('new_user_id')) {
+          throw new Error('User authentication issue. Please try logging out and logging back in.');
+        }
+        
         throw insertError;
       }
+
+      console.log('Task created successfully:', insertedData);
 
       setSuccess('Custom task added successfully!');
       setName('');
