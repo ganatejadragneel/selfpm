@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, Calendar, CheckCircle2, X, StickyNote } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
@@ -30,34 +30,7 @@ export const DailyTaskTracker: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch custom daily tasks and today's completion status
-  useEffect(() => {
-    if (!user) return;
-    
-    fetchCustomTasksAndCompletions();
-  }, [user]);
-
-  // Check for day change and refresh data accordingly
-  useEffect(() => {
-    if (!user) return;
-
-    let lastKnownDate = getTodayLocalString();
-    
-    // Check every minute if the date has changed
-    const dateCheckInterval = setInterval(() => {
-      const currentDate = getTodayLocalString();
-      
-      if (!isSameLocalDate(currentDate, lastKnownDate)) {
-        console.log('New day detected, refreshing daily tasks...');
-        lastKnownDate = currentDate;
-        fetchCustomTasksAndCompletions(); // This will fetch today's completions (which will be empty for new day)
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(dateCheckInterval);
-  }, [user]);
-
-  const fetchCustomTasksAndCompletions = async () => {
+  const fetchCustomTasksAndCompletions = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -125,7 +98,34 @@ export const DailyTaskTracker: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Fetch custom daily tasks and today's completion status
+  useEffect(() => {
+    if (!user) return;
+    
+    fetchCustomTasksAndCompletions();
+  }, [user, fetchCustomTasksAndCompletions]);
+
+  // Check for day change and refresh data accordingly
+  useEffect(() => {
+    if (!user) return;
+
+    let lastKnownDate = getTodayLocalString();
+    
+    // Check every minute if the date has changed
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = getTodayLocalString();
+      
+      if (!isSameLocalDate(currentDate, lastKnownDate)) {
+        console.log('New day detected, refreshing daily tasks...');
+        lastKnownDate = currentDate;
+        fetchCustomTasksAndCompletions(); // This will fetch today's completions (which will be empty for new day)
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(dateCheckInterval);
+  }, [user, fetchCustomTasksAndCompletions]);
 
   const handleTaskValueChange = async (taskId: string, newValue: string) => {
     if (!user) return;

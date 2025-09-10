@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TrendingUp, Calendar, CheckCircle2, Clock, Target, Award, Activity } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, getWeek } from 'date-fns';
 import { theme } from '../../styles/theme';
@@ -37,11 +37,7 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
     streakDays: 0
   });
 
-  useEffect(() => {
-    calculateStats();
-  }, [tasks, currentWeek]);
-
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     // Overall stats
     const total = tasks.length;
     const completed = tasks.filter(t => t.status === 'done').length;
@@ -181,14 +177,18 @@ export const ProgressAnalyticsDashboard: React.FC<ProgressAnalyticsDashboardProp
     });
 
     setWeeklyStats(dailyStats);
-  };
+  }, [tasks, currentWeek]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [tasks, currentWeek, calculateStats]);
 
   const calculateStreak = () => {
     // Calculate the current streak of days with completed tasks
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     let streak = 0;
-    let currentDate = new Date(today);
+    const currentDate = new Date(today);
     
     // Group tasks by the date they were completed
     const completedTasksByDate = new Map<string, number>();
