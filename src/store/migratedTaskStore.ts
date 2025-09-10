@@ -356,6 +356,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       if (updates.progressTotal !== undefined) dbUpdates.progress_total = updates.progressTotal;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
       if (updates.order !== undefined) dbUpdates.order = updates.order;
+      if (updates.weekNumber !== undefined) dbUpdates.week_number = updates.weekNumber;
       if (updates.isRecurring !== undefined) dbUpdates.is_recurring = updates.isRecurring;
       if (updates.recurrencePattern !== undefined) dbUpdates.recurrence_pattern = updates.recurrencePattern;
       if (updates.recurrenceWeeks !== undefined) dbUpdates.recurrence_weeks = updates.recurrenceWeeks;
@@ -379,6 +380,9 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       }
       if (updates.progressCurrent !== undefined) {
         await get().logActivity(id, 'progress_updated', currentTask.progressCurrent?.toString(), updates.progressCurrent.toString());
+      }
+      if (updates.weekNumber !== undefined) {
+        await get().logActivity(id, 'moved_week', currentTask.weekNumber?.toString(), updates.weekNumber.toString());
       }
 
       // Update local state

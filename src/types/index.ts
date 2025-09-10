@@ -80,6 +80,7 @@ export type ActivityType =
   | 'comment_added' 
   | 'progress_updated'
   | 'moved_category' 
+  | 'moved_week'
   | 'reordered';
 
 export interface TaskActivity {

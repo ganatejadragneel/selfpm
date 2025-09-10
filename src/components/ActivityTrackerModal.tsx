@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Clock, Filter, Search, ChevronLeft, ChevronRight, 
          Plus, Edit, Trash2, CheckCircle, ArrowRight, 
          Paperclip, MessageSquare, TrendingUp, Calendar,
@@ -29,6 +29,7 @@ const activityConfig: Record<ActivityType, { icon: React.ElementType; color: str
   comment_added: { icon: MessageSquare, color: theme.colors.status.purple.dark, label: 'Comment Added' },
   progress_updated: { icon: TrendingUp, color: theme.colors.status.success.dark, label: 'Progress Updated' },
   moved_category: { icon: ArrowRight, color: theme.colors.status.info.dark, label: 'Moved Category' },
+  moved_week: { icon: Calendar, color: theme.colors.status.warning.dark, label: 'Moved to Week' },
   reordered: { icon: Zap, color: theme.colors.text.secondary, label: 'Reordered' }
 };
 
@@ -49,17 +50,7 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
   const weekStart = startOfWeek(weekStartDate);
   const weekEnd = endOfWeek(weekStart);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadActivities();
-    }
-  }, [isOpen, viewingWeek]);
-
-  useEffect(() => {
-    filterActivities();
-  }, [activities, selectedTypes, searchQuery]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     setLoading(true);
     try {
       const fetchedActivities = await fetchActivities(weekStart, weekEnd);
@@ -73,9 +64,9 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchActivities, weekStart, weekEnd]);
 
-  const filterActivities = () => {
+  const filterActivities = useCallback(() => {
     let filtered = [...activities];
 
     // Filter by selected activity types
@@ -101,7 +92,17 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     }
 
     setFilteredActivities(filtered);
-  };
+  }, [activities, selectedTypes, searchQuery, tasks]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadActivities();
+    }
+  }, [isOpen, viewingWeek, loadActivities]);
+
+  useEffect(() => {
+    filterActivities();
+  }, [activities, selectedTypes, searchQuery, filterActivities]);
 
   const toggleActivityType = (type: ActivityType) => {
     const newTypes = new Set(selectedTypes);
