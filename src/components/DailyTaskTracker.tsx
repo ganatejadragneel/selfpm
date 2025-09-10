@@ -389,9 +389,7 @@ export const DailyTaskTracker: React.FC = () => {
           left: 0,
           height: '100vh',
           width: stripWidth,
-          background: isExpanded 
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)'
-            : theme.colors.surface.white,
+          backgroundColor: !isExpanded ? theme.colors.surface.white : 'transparent',
           borderRight: isExpanded 
             ? `3px solid transparent`
             : `2px solid ${theme.colors.border.light}`,
