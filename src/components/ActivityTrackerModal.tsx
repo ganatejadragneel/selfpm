@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X, Clock, Filter, Search, ChevronLeft, ChevronRight, 
          Plus, Edit, Trash2, CheckCircle, ArrowRight, 
          Paperclip, MessageSquare, TrendingUp, Calendar,
@@ -43,12 +43,16 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const currentDate = new Date();
-  const viewingWeek = currentWeek + weekOffset;
-  // Use the same calculation as App.tsx for consistency
-  const weekStartDate = addWeeks(currentDate, viewingWeek - getWeek(currentDate));
-  const weekStart = startOfWeek(weekStartDate);
-  const weekEnd = endOfWeek(weekStart);
+  // Memoize date calculations to prevent recreation on every render
+  const { weekStart, weekEnd, viewingWeek } = useMemo(() => {
+    const currentDate = new Date();
+    const viewingWeek = currentWeek + weekOffset;
+    // Use the same calculation as App.tsx for consistency
+    const weekStartDate = addWeeks(currentDate, viewingWeek - getWeek(currentDate));
+    const weekStart = startOfWeek(weekStartDate);
+    const weekEnd = endOfWeek(weekStart);
+    return { weekStart, weekEnd, viewingWeek };
+  }, [currentWeek, weekOffset]);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
@@ -66,6 +70,11 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     }
   }, [fetchActivities, weekStart, weekEnd]);
 
+  // Memoize tasks map for performance
+  const tasksMap = useMemo(() => {
+    return new Map(tasks.map(task => [task.id, task]));
+  }, [tasks]);
+
   const filterActivities = useCallback(() => {
     let filtered = [...activities];
 
@@ -78,7 +87,7 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(activity => {
-        const task = tasks.find(t => t.id === activity.taskId);
+        const task = tasksMap.get(activity.taskId);
         const taskTitle = task?.title.toLowerCase() || '';
         const activityLabel = activityConfig[activity.activityType].label.toLowerCase();
         const newValue = activity.newValue?.toLowerCase() || '';
@@ -92,13 +101,13 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     }
 
     setFilteredActivities(filtered);
-  }, [activities, selectedTypes, searchQuery, tasks]);
+  }, [activities, selectedTypes, searchQuery, tasksMap]);
 
   useEffect(() => {
     if (isOpen) {
       loadActivities();
     }
-  }, [isOpen, viewingWeek, loadActivities]);
+  }, [isOpen, loadActivities]);
 
   useEffect(() => {
     filterActivities();
@@ -119,8 +128,8 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
     setSearchQuery('');
   };
 
-  const formatActivityDescription = (activity: TaskActivity): string => {
-    const task = tasks.find(t => t.id === activity.taskId);
+  const formatActivityDescription = useCallback((activity: TaskActivity): string => {
+    const task = tasksMap.get(activity.taskId);
     const taskTitle = task?.title || 'Unknown Task';
 
     switch (activity.activityType as string) {
@@ -155,7 +164,7 @@ export const ActivityTrackerModal: React.FC<ActivityTrackerModalProps> = ({ isOp
       default:
         return `Activity on "${taskTitle}"`;
     }
-  };
+  }, [tasksMap]);
 
   if (!isOpen) return null;
 
