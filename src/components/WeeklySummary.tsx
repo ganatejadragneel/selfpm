@@ -13,6 +13,7 @@ import { parseLocalDate, getDaysUntilDate, getDateUrgency } from '../utils/dateU
 import { filterPendingTasks, sortTasksByDeadlinePriority, shouldShowDeadlineView as checkShouldShowDeadlineView } from '../utils/taskFilters';
 import { calculateTaskStatistics, calculateSubtaskStats } from '../utils/taskStatistics';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
+import { formatDuration, calculateTimeRemaining } from '../utils/timeUtils';
 
 interface WeeklySummaryProps {
   tasks: Task[];
@@ -539,20 +540,60 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                           e.currentTarget.style.transform = 'translateY(0) scale(1)';
                         }}
                       >
-                        {/* Category Badge */}
+                        {/* Time Remaining and Category Badge */}
                         <div style={{
                           position: 'absolute',
                           top: '12px',
                           right: '12px',
-                          padding: '4px 8px',
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          borderRadius: theme.borderRadius.sm,
-                          fontSize: '10px',
-                          fontWeight: '600',
-                          color: urgencyStyle.textColor,
-                          backdropFilter: 'blur(10px)'
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
                         }}>
-                          {task.category.replace('_', ' ').toUpperCase()}
+                          {/* Time Remaining */}
+                          {task.estimatedDuration !== undefined && (
+                            <div style={{
+                              padding: '4px 8px',
+                              background: task.status === 'done' 
+                                ? 'rgba(16, 185, 129, 0.2)'
+                                : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                                  ? 'rgba(239, 68, 68, 0.2)'
+                                  : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status)! <= task.estimatedDuration * 0.3
+                                    ? 'rgba(245, 158, 11, 0.2)'
+                                    : 'rgba(255, 255, 255, 0.2)',
+                              borderRadius: theme.borderRadius.sm,
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              color: task.status === 'done'
+                                ? '#10b981'
+                                : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                                  ? '#ef4444'
+                                  : urgencyStyle.textColor,
+                              backdropFilter: 'blur(10px)',
+                              border: `1px solid ${
+                                task.status === 'done'
+                                  ? 'rgba(16, 185, 129, 0.3)'
+                                  : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                                    ? 'rgba(239, 68, 68, 0.3)'
+                                    : 'rgba(255, 255, 255, 0.1)'
+                              }`,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {formatDuration(calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status))} left
+                            </div>
+                          )}
+                          
+                          {/* Category Badge */}
+                          <div style={{
+                            padding: '4px 8px',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            borderRadius: theme.borderRadius.sm,
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            color: urgencyStyle.textColor,
+                            backdropFilter: 'blur(10px)'
+                          }}>
+                            {task.category.replace('_', ' ').toUpperCase()}
+                          </div>
                         </div>
 
                         {/* Task Title */}

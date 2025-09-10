@@ -26,6 +26,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
   const [progressTotal, setProgressTotal] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [recurrenceWeeks, setRecurrenceWeeks] = useState(1);
+  const [estimatedDuration, setEstimatedDuration] = useState<number | undefined>(5); // Default to 5 minutes
 
   if (!isOpen) return null;
 
@@ -40,7 +41,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
         dueDate: dueDate || undefined,
         progressTotal: progressTotal ? parseInt(progressTotal) : undefined,
         priority,
-        recurrenceWeeks: category === 'weekly_recurring' ? recurrenceWeeks : undefined
+        recurrenceWeeks: category === 'weekly_recurring' ? recurrenceWeeks : undefined,
+        estimatedDuration
       });
       
       // Reset form
@@ -50,6 +52,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
       setProgressTotal('');
       setPriority('medium');
       setRecurrenceWeeks(1);
+      setEstimatedDuration(5); // Reset to default 5 minutes
       onClose();
     } catch (error) {
       console.error('Error creating task:', error);
@@ -374,6 +377,57 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
                 }}
               />
             </div>
+          </div>
+
+          {/* Estimated Duration */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
+              Estimated Duration
+            </label>
+            <select
+              value={estimatedDuration || 5}
+              onChange={(e) => setEstimatedDuration(e.target.value ? parseInt(e.target.value) : undefined)}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'all 0.2s ease',
+                backgroundColor: 'white',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#667eea';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <option value="5">5 min</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="20">20 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">1 hour</option>
+              <option value="90">1.5 hours</option>
+              <option value="120">2 hours</option>
+              <option value="180">3 hours</option>
+              <option value="240">4 hours</option>
+              <option value="300">5 hours</option>
+              <option value="360">6 hours</option>
+              <option value="480">8 hours</option>
+              <option value="600">10 hours</option>
+              <option value="720">12 hours</option>
+              <option value="960">16 hours</option>
+              <option value="1200">20 hours</option>
+              <option value="1440">24 hours</option>
+            </select>
           </div>
 
           {/* Number of Weeks for Weekly Tasks */}

@@ -8,6 +8,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { parseLocalDate } from '../utils/dateUtils';
 import { calculateSubtaskStats } from '../utils/taskStatistics';
+import { formatDuration, calculateTimeRemaining, getTimeRemainingColor } from '../utils/timeUtils';
 
 interface ModernTaskCardProps {
   task: Task;
@@ -288,6 +289,36 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs, alignItems: 'center' }}>
+          {/* Time Remaining Display */}
+          {task.estimatedDuration !== undefined && (
+            <div style={{
+              padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+              borderRadius: theme.borderRadius.sm,
+              fontSize: '11px',
+              fontWeight: theme.typography.weights.semibold,
+              color: getTimeRemainingColor(
+                calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status),
+                task.estimatedDuration,
+                task.status
+              ),
+              background: task.status === 'done' 
+                ? 'rgba(16, 185, 129, 0.1)' 
+                : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                  ? 'rgba(239, 68, 68, 0.1)'
+                  : 'rgba(107, 114, 128, 0.05)',
+              border: `1px solid ${
+                task.status === 'done' 
+                  ? 'rgba(16, 185, 129, 0.2)' 
+                  : calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                    ? 'rgba(239, 68, 68, 0.2)'
+                    : 'rgba(107, 114, 128, 0.1)'
+              }`,
+              whiteSpace: 'nowrap'
+            }}>
+              {formatDuration(calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status))} left
+            </div>
+          )}
+          
           <button
             onClick={handleDeleteClick}
             style={{

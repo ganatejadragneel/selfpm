@@ -32,6 +32,8 @@ export interface Task {
   completionVelocity?: number;
   estimatedCompletionDate?: string;
   recurringTemplateId?: string;
+  estimatedDuration?: number; // in minutes
+  timeSpent?: number; // in minutes
 }
 
 export interface Subtask {
@@ -187,6 +189,7 @@ export interface WeeklyTaskCompletion {
   weekNumber: number;
   status: TaskStatus;
   progressCurrent: number;
+  timeSpent?: number; // in minutes, for weekly recurring tasks
   createdAt: string;
   updatedAt: string;
 }

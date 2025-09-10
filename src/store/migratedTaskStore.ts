@@ -147,18 +147,20 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       const recurringTasksWithWeeklyStatus = filteredRecurringTasks.map(task => {
         const weeklyCompletion = (weeklyCompletions || []).find(wc => wc.task_id === task.id);
         if (weeklyCompletion) {
-          // Override status and progress with weekly-specific values
+          // Override status, progress, and time spent with weekly-specific values
           return {
             ...task,
             status: weeklyCompletion.status,
-            progress_current: weeklyCompletion.progress_current
+            progress_current: weeklyCompletion.progress_current,
+            time_spent: weeklyCompletion.time_spent || 0
           };
         }
         // No weekly completion found, use default 'todo' status for new week
         return {
           ...task,
           status: 'todo',
-          progress_current: 0
+          progress_current: 0,
+          time_spent: 0
         };
       });
       
@@ -264,7 +266,9 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
             weightedProgress: task.weighted_progress,
             completionVelocity: task.completion_velocity,
             estimatedCompletionDate: task.estimated_completion_date,
-            recurringTemplateId: task.recurring_template_id
+            recurringTemplateId: task.recurring_template_id,
+            estimatedDuration: task.estimated_duration,
+            timeSpent: task.time_spent || 0
           };
         })
       );
@@ -306,7 +310,9 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       progress_current: taskData.progressCurrent || 0,
       progress_total: taskData.progressTotal,
       week_number: week,
-      order: taskData.order || 999
+      order: taskData.order || 999,
+      estimated_duration: taskData.estimatedDuration || 5, // Default to 5 minutes
+      time_spent: 0
     };
     
     try {
@@ -344,7 +350,9 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         updates: [],
         attachments: [],
         activities: [],
-        comments: []
+        comments: [],
+        estimatedDuration: data.estimated_duration,
+        timeSpent: data.time_spent || 0
       };
       
       set(state => ({
@@ -398,6 +406,8 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       if (updates.recurrenceWeeks !== undefined) dbUpdates.recurrence_weeks = updates.recurrenceWeeks;
       if (updates.autoProgress !== undefined) dbUpdates.auto_progress = updates.autoProgress;
       if (updates.weightedProgress !== undefined) dbUpdates.weighted_progress = updates.weightedProgress;
+      if (updates.estimatedDuration !== undefined) dbUpdates.estimated_duration = updates.estimatedDuration;
+      if (updates.timeSpent !== undefined) dbUpdates.time_spent = updates.timeSpent;
 
       const { error } = await supabase
         .from('tasks')
@@ -419,6 +429,12 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       }
       if (updates.weekNumber !== undefined) {
         await get().logActivity(id, 'moved_week', currentTask.weekNumber?.toString(), updates.weekNumber.toString());
+      }
+      if (updates.estimatedDuration !== undefined) {
+        await get().logActivity(id, 'duration_changed', currentTask.estimatedDuration?.toString(), updates.estimatedDuration.toString());
+      }
+      if (updates.timeSpent !== undefined) {
+        await get().logActivity(id, 'time_logged', currentTask.timeSpent?.toString(), updates.timeSpent.toString());
       }
 
       // Update local state
@@ -1580,13 +1596,35 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       
       // For weekly recurring tasks, update the weekly completion table
       if (task.category === 'weekly_recurring') {
-        if (updates.status !== undefined) {
-          await get().setWeeklyTaskCompletion(
-            taskId, 
-            currentWeek, 
-            updates.status, 
-            updates.progressCurrent || task.progressCurrent || 0
-          );
+        if (updates.status !== undefined || updates.timeSpent !== undefined) {
+          const authStore = useSupabaseAuthStore.getState();
+          const userId = authStore.user?.id;
+          
+          if (!userId) {
+            set({ error: 'User not authenticated' });
+            return;
+          }
+          
+          // Update weekly completion with time tracking
+          const { error } = await supabase
+            .from('weekly_task_completions')
+            .upsert({
+              task_id: taskId,
+              new_user_id: userId,
+              week_number: currentWeek,
+              status: updates.status || task.status,
+              progress_current: updates.progressCurrent || task.progressCurrent || 0,
+              time_spent: updates.timeSpent !== undefined ? updates.timeSpent : task.timeSpent
+            }, {
+              onConflict: 'task_id,new_user_id,week_number'
+            });
+          
+          if (error) throw error;
+          
+          // Log activity for time changes
+          if (updates.timeSpent !== undefined) {
+            await get().logActivity(taskId, 'time_logged', task.timeSpent?.toString(), updates.timeSpent.toString());
+          }
         }
         
         // Update local state immediately for UI responsiveness
@@ -1670,7 +1708,9 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
           week_number: actualCurrentWeek,
           order: 0, // Add at beginning of category
           auto_progress: task.autoProgress,
-          weighted_progress: task.weightedProgress
+          weighted_progress: task.weightedProgress,
+          estimated_duration: task.estimatedDuration,
+          time_spent: task.timeSpent || 0
         };
 
         const { data: newTask, error: taskError } = await supabase

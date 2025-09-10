@@ -13,6 +13,7 @@ import { CommentSection } from './activity/CommentSection';
 import { SmartProgressManager } from './progress/SmartProgressManager';
 import { TaskDependencyManager } from './dependencies/TaskDependencyManager';
 import { theme, priorityConfigs } from '../styles/theme';
+import { formatDuration, calculateTimeRemaining, getTimeRemainingColor } from '../utils/timeUtils';
 
 interface TaskModalProps {
   task: Task;
@@ -44,6 +45,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
   const [tempProgressTotal, setTempProgressTotal] = useState('');
   const [editingProgressTotal, setEditingProgressTotal] = useState(false);
   const [tempEditProgressTotal, setTempEditProgressTotal] = useState('');
+  
+  // Time tracking state
+  const [editingEstimatedDuration, setEditingEstimatedDuration] = useState(false);
+  const [tempEstimatedDuration, setTempEstimatedDuration] = useState(task.estimatedDuration);
+  const [timeSpentInput, setTimeSpentInput] = useState('');
 
   // Sync local state with task prop changes when not editing
   useEffect(() => {
@@ -1259,6 +1265,324 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
             backdropFilter: 'blur(20px)',
             overflowY: 'auto'
           }}>
+            {/* Time Tracking */}
+            <div style={{ marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
+                <Clock className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
+                <h3 style={{
+                  fontSize: isMobile ? theme.typography.sizes.base : theme.typography.sizes.lg,
+                  fontWeight: theme.typography.weights.bold,
+                  color: theme.colors.text.primary,
+                  margin: 0
+                }}>
+                  Time Tracking
+                </h3>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: theme.spacing.md,
+                padding: theme.spacing.md,
+                background: theme.colors.surface.glass,
+                backdropFilter: theme.effects.blur,
+                borderRadius: theme.borderRadius.md,
+                border: `1px solid ${theme.colors.surface.glassBorder}`
+              }}>
+                {/* Time Summary Row */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr',
+                  gap: theme.spacing.sm
+                }}>
+                  {/* Estimated */}
+                  <div>
+                    <div style={{
+                      fontSize: '10px',
+                      color: theme.colors.text.muted,
+                      marginBottom: '4px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Estimated
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.sizes.base,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: theme.colors.text.primary
+                    }}>
+                      {task.estimatedDuration ? formatDuration(task.estimatedDuration) : '-'}
+                    </div>
+                  </div>
+
+                  {/* Spent */}
+                  <div>
+                    <div style={{
+                      fontSize: '10px',
+                      color: theme.colors.text.muted,
+                      marginBottom: '4px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Spent
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.sizes.base,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: theme.colors.text.primary
+                    }}>
+                      {formatDuration(task.timeSpent || 0)}
+                    </div>
+                  </div>
+
+                  {/* Remaining */}
+                  <div>
+                    <div style={{
+                      fontSize: '10px',
+                      color: theme.colors.text.muted,
+                      marginBottom: '4px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Remaining
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.sizes.base,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: getTimeRemainingColor(
+                        calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status),
+                        task.estimatedDuration,
+                        task.status
+                      )
+                    }}>
+                      {task.estimatedDuration 
+                        ? formatDuration(calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status))
+                        : '-'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Edit Estimated Duration */}
+                <div>
+                  <label style={{
+                    fontSize: theme.typography.sizes.xs,
+                    fontWeight: theme.typography.weights.medium,
+                    color: theme.colors.text.secondary,
+                    display: 'block',
+                    marginBottom: theme.spacing.xs
+                  }}>
+                    Update Estimate
+                  </label>
+                  {editingEstimatedDuration ? (
+                    <div style={{ display: 'flex', gap: theme.spacing.xs }}>
+                      <select
+                        value={tempEstimatedDuration || ''}
+                        onChange={(e) => setTempEstimatedDuration(e.target.value ? parseInt(e.target.value) : undefined)}
+                        style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          borderRadius: theme.borderRadius.sm,
+                          border: `1px solid ${theme.colors.border.light}`,
+                          fontSize: theme.typography.sizes.sm,
+                          background: 'white'
+                        }}
+                      >
+                        <option value="">No estimate</option>
+                        <option value="5">5 min</option>
+                        <option value="10">10 min</option>
+                        <option value="15">15 min</option>
+                        <option value="20">20 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                        <option value="180">3 hours</option>
+                        <option value="240">4 hours</option>
+                        <option value="300">5 hours</option>
+                        <option value="360">6 hours</option>
+                        <option value="480">8 hours</option>
+                        <option value="600">10 hours</option>
+                        <option value="720">12 hours</option>
+                        <option value="960">16 hours</option>
+                        <option value="1200">20 hours</option>
+                        <option value="1440">24 hours</option>
+                      </select>
+                      <button
+                        onClick={async () => {
+                          if (task.category === 'weekly_recurring') {
+                            await updateWeeklyRecurringTaskStatus(task.id, { estimatedDuration: tempEstimatedDuration });
+                          } else {
+                            await updateTask(task.id, { estimatedDuration: tempEstimatedDuration });
+                          }
+                          setEditingEstimatedDuration(false);
+                        }}
+                        style={{
+                          padding: '6px 10px',
+                          background: theme.colors.primary.medium,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: theme.borderRadius.sm,
+                          cursor: 'pointer',
+                          fontSize: theme.typography.sizes.sm
+                        }}
+                      >
+                        <Save className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingEstimatedDuration(true);
+                        setTempEstimatedDuration(task.estimatedDuration);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        background: 'white',
+                        borderRadius: theme.borderRadius.sm,
+                        border: `1px solid ${theme.colors.border.light}`,
+                        cursor: 'pointer',
+                        fontSize: theme.typography.sizes.sm,
+                        fontWeight: theme.typography.weights.medium,
+                        color: task.estimatedDuration ? theme.colors.text.primary : theme.colors.text.muted,
+                        textAlign: 'left'
+                      }}
+                    >
+                      {task.estimatedDuration ? formatDuration(task.estimatedDuration) : 'Set estimate'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Update Time Spent */}
+                <div>
+                  <label style={{
+                    fontSize: theme.typography.sizes.xs,
+                    fontWeight: theme.typography.weights.medium,
+                    color: theme.colors.text.secondary,
+                    display: 'block',
+                    marginBottom: theme.spacing.xs
+                  }}>
+                    Log Time
+                  </label>
+                  
+                  {/* Quick buttons */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '6px',
+                    marginBottom: theme.spacing.sm
+                  }}>
+                    {[5, 10, 15, 20, 30, 60].map(minutes => (
+                      <button
+                        key={minutes}
+                        onClick={async () => {
+                          const newTimeSpent = (task.timeSpent || 0) + minutes;
+                          if (task.estimatedDuration && newTimeSpent > task.estimatedDuration) {
+                            if (!confirm(`This will exceed the estimated duration of ${formatDuration(task.estimatedDuration)}. Continue?`)) {
+                              return;
+                            }
+                          }
+                          if (task.category === 'weekly_recurring') {
+                            await updateWeeklyRecurringTaskStatus(task.id, { timeSpent: newTimeSpent });
+                          } else {
+                            await updateTask(task.id, { timeSpent: newTimeSpent });
+                          }
+                        }}
+                        disabled={task.estimatedDuration !== undefined && 
+                                  calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0}
+                        style={{
+                          padding: '6px',
+                          background: 'white',
+                          color: theme.colors.primary.dark,
+                          border: `1px solid ${theme.colors.border.light}`,
+                          borderRadius: theme.borderRadius.sm,
+                          cursor: task.estimatedDuration !== undefined && 
+                                  calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                                  ? 'not-allowed' : 'pointer',
+                          fontSize: '11px',
+                          fontWeight: theme.typography.weights.medium,
+                          opacity: task.estimatedDuration !== undefined && 
+                                   calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0
+                                   ? 0.5 : 1,
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!(task.estimatedDuration !== undefined && 
+                                calculateTimeRemaining(task.estimatedDuration, task.timeSpent, task.status) === 0)) {
+                            e.currentTarget.style.background = theme.colors.primary.light;
+                            e.currentTarget.style.color = 'white';
+                            e.currentTarget.style.borderColor = theme.colors.primary.light;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'white';
+                          e.currentTarget.style.color = theme.colors.primary.dark;
+                          e.currentTarget.style.borderColor = theme.colors.border.light;
+                        }}
+                      >
+                        +{minutes < 60 ? `${minutes}m` : '1h'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Manual input */}
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <input
+                      type="number"
+                      placeholder="Minutes"
+                      value={timeSpentInput}
+                      onChange={(e) => setTimeSpentInput(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: '6px 8px',
+                        borderRadius: theme.borderRadius.sm,
+                        border: `1px solid ${theme.colors.border.light}`,
+                        fontSize: theme.typography.sizes.sm
+                      }}
+                    />
+                    <button
+                      onClick={async () => {
+                        const minutes = parseInt(timeSpentInput);
+                        if (!isNaN(minutes) && minutes >= 0) {
+                          if (task.estimatedDuration && minutes > task.estimatedDuration) {
+                            if (!confirm(`This exceeds the estimated duration of ${formatDuration(task.estimatedDuration)}. Continue?`)) {
+                              return;
+                            }
+                          }
+                          if (task.category === 'weekly_recurring') {
+                            await updateWeeklyRecurringTaskStatus(task.id, { timeSpent: minutes });
+                          } else {
+                            await updateTask(task.id, { timeSpent: minutes });
+                          }
+                          setTimeSpentInput('');
+                        }
+                      }}
+                      disabled={!timeSpentInput || isNaN(parseInt(timeSpentInput))}
+                      style={{
+                        padding: '6px 12px',
+                        background: !timeSpentInput || isNaN(parseInt(timeSpentInput))
+                          ? theme.colors.surface.glass
+                          : theme.colors.primary.medium,
+                        color: !timeSpentInput || isNaN(parseInt(timeSpentInput))
+                          ? theme.colors.text.muted
+                          : 'white',
+                        border: 'none',
+                        borderRadius: theme.borderRadius.sm,
+                        cursor: !timeSpentInput || isNaN(parseInt(timeSpentInput))
+                          ? 'not-allowed'
+                          : 'pointer',
+                        fontSize: theme.typography.sizes.sm,
+                        fontWeight: theme.typography.weights.medium
+                      }}
+                    >
+                      Set
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Recent Updates */}
             <div style={{ marginBottom: isMobile ? theme.spacing.lg : theme.spacing.xl }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}>
