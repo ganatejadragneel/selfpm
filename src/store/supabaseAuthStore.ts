@@ -234,7 +234,8 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
         user: null, 
         loading: false, 
         error: null,
-        isAuthenticated: false 
+        isAuthenticated: false,
+        failedAttempts: 0 // Reset failed attempts on logout
       });
     } catch (error: any) {
       set({ error: error.message || 'Sign out failed' });
