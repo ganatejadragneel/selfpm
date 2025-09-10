@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
-import { theme } from '../styles/theme';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useTheme } from '../contexts/ThemeContext';
 import { User, LogOut, ChevronDown, Settings } from 'lucide-react';
 import { SettingsModal } from './settings/SettingsModal';
+import { ThemeToggle } from './ui/ThemeToggle';
 
 export const UserMenu: React.FC = () => {
   const { user, signOut } = useSupabaseAuthStore();
+  const theme = useThemeColors();
+  const { theme: currentTheme } = useTheme();
+  const isDark = currentTheme === 'dark';
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -60,9 +65,9 @@ export const UserMenu: React.FC = () => {
             position: 'fixed',
             top: buttonRect.bottom + 8,
             left: buttonRect.right - 240, // Align to right edge of button
-            background: 'rgba(255, 255, 255, 0.98)',
+            background: isDark ? 'rgba(10, 10, 10, 0.98)' : 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(0, 0, 0, 0.1)',
+            border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
             borderRadius: theme.borderRadius.md,
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
             minWidth: '240px',
@@ -74,7 +79,7 @@ export const UserMenu: React.FC = () => {
           {/* User Info */}
           <div style={{
             padding: theme.spacing.lg,
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
               <div style={{
@@ -113,6 +118,25 @@ export const UserMenu: React.FC = () => {
 
           {/* Menu Items */}
           <div style={{ padding: theme.spacing.sm }}>
+            {/* Theme Toggle */}
+            <div style={{
+              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+              borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+              marginBottom: theme.spacing.sm,
+            }}>
+              <div style={{
+                fontSize: theme.typography.sizes.xs,
+                color: theme.colors.text.secondary,
+                marginBottom: theme.spacing.sm,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                fontWeight: theme.typography.weights.semibold,
+              }}>
+                Theme
+              </div>
+              <ThemeToggle />
+            </div>
+
             {/* Settings */}
             <button
               onClick={openSettings}
@@ -132,7 +156,7 @@ export const UserMenu: React.FC = () => {
                 textAlign: 'left',
               }}
                onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.background = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'none';

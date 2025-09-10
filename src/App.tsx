@@ -3,6 +3,8 @@ import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
 import { useResponsive } from './hooks/useResponsive';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { useThemeColors } from './hooks/useThemeColors';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
@@ -17,20 +19,22 @@ const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/Pro
 const DailyTaskAnalyticsModal = lazy(() => import('./components/DailyTaskAnalyticsModal').then(module => ({ default: module.DailyTaskAnalyticsModal })));
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
-import { theme } from './styles/theme';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
 function App() {
   return (
-    <AuthGuard>
-      <AppContent />
-    </AuthGuard>
+    <ThemeProvider>
+      <AuthGuard>
+        <AppContent />
+      </AuthGuard>
+    </ThemeProvider>
   );
 }
 
 function AppContent() {
+  const theme = useThemeColors();
   const {
     tasks,
     loading,
@@ -172,7 +176,13 @@ function AppContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.primary.gradient }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: theme.currentTheme === 'dark' 
+        ? theme.colors.background.primary 
+        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: theme.colors.text.primary
+    }}>
       {/* Daily Task Tracker */}
       <DailyTaskTracker />
       

@@ -1,6 +1,11 @@
 // Design System - Centralized theme following DRY principles
 export const theme = {
   colors: {
+    background: {
+      primary: '#ffffff',
+      secondary: '#f8fafc',
+      tertiary: '#f1f5f9',
+    },
     primary: {
       gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       light: 'rgba(102, 126, 234, 0.1)',
