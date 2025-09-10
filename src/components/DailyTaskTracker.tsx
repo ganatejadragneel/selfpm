@@ -5,6 +5,7 @@ import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { supabase } from '../lib/supabase';
 import { TaskNoteModal } from './TaskNoteModal';
 import { getTodayLocalString, isSameLocalDate } from '../utils/dateUtils';
+import { parseTaskValue, createTaskValue } from '../utils/taskValueUtils';
 import type { CustomDailyTask } from '../types';
 
 
@@ -35,9 +36,6 @@ export const DailyTaskTracker: React.FC = () => {
     
     setLoading(true);
     try {
-      // Reset alt_task_done for new day
-      await supabase.rpc('reset_alt_task_daily');
-      
       // Get today's date in local timezone
       const today = getTodayLocalString();
       
@@ -83,17 +81,20 @@ export const DailyTaskTracker: React.FC = () => {
           n => n.custom_task_id === task.id
         );
         
+        // Parse the completion value to get main and alt status
+        const parsedValue = parseTaskValue(completion?.value);
+        
         return {
           id: task.id,
           name: task.name,
           description: task.description,
           type: task.type as 'yes_no' | 'dropdown',
           options: task.options || [],
-          currentValue: completion?.value || '',
+          currentValue: parsedValue.main,
           completedToday: !!completion,
           noteText: note?.note_text || '',
           alt_task: task.alt_task || undefined,
-          alt_task_done: task.alt_task_done || false
+          alt_task_done: parsedValue.alt === 'Done'
         };
       });
       
@@ -138,40 +139,68 @@ export const DailyTaskTracker: React.FC = () => {
     try {
       const today = getTodayLocalString();
       
-      // If the value is empty (no selection), delete the completion record
+      // Get current task to preserve alt status
+      const currentTask = customTasks.find(t => t.id === taskId);
+      const currentAltStatus = currentTask?.alt_task_done ? 'Done' : '';
+      
+      // If the value is empty (no selection), check if we need to keep alt status
       if (newValue === '') {
-        const { error } = await supabase
-          .from('daily_task_completions')
-          .delete()
-          .eq('custom_task_id', taskId)
-          .eq('new_user_id', user.id)
-          .eq('completion_date', today);
-        
-        if (error) {
-          console.error('Error deleting task completion:', error);
-          return;
+        if (currentAltStatus) {
+          // Keep alt status, just clear main
+          const combinedValue = createTaskValue('', currentAltStatus);
+          const { error } = await supabase
+            .from('daily_task_completions')
+            .upsert({
+              custom_task_id: taskId,
+              new_user_id: user.id,
+              value: combinedValue,
+              completion_date: today
+            }, {
+              onConflict: 'custom_task_id,new_user_id,completion_date'
+            });
+          
+          if (error) {
+            console.error('Error updating task completion:', error);
+            return;
+          }
+        } else {
+          // No alt status either, delete the record
+          const { error } = await supabase
+            .from('daily_task_completions')
+            .delete()
+            .eq('custom_task_id', taskId)
+            .eq('new_user_id', user.id)
+            .eq('completion_date', today);
+          
+          if (error) {
+            console.error('Error deleting task completion:', error);
+            return;
+          }
         }
         
-        // Update local state to reflect no selection
+        // Update local state
         setCustomTasks(prev => 
           prev.map(task => 
             task.id === taskId 
               ? { 
                   ...task, 
                   currentValue: '',
-                  completedToday: false
+                  completedToday: currentAltStatus !== ''
                 }
               : task
           )
         );
       } else {
+        // Create combined value with main and alt status
+        const combinedValue = createTaskValue(newValue, currentAltStatus);
+        
         // Update or insert completion record
         const { error } = await supabase
           .from('daily_task_completions')
           .upsert({
             custom_task_id: taskId,
             new_user_id: user.id,
-            value: newValue,
+            value: combinedValue,
             completion_date: today
           }, {
             onConflict: 'custom_task_id,new_user_id,completion_date'
@@ -204,12 +233,27 @@ export const DailyTaskTracker: React.FC = () => {
     if (!user) return;
     
     try {
-      // Update alt_task_done in the custom_tasks table
+      const today = getTodayLocalString();
+      
+      // Get current task to preserve main status
+      const currentTask = customTasks.find(t => t.id === taskId);
+      const currentMainStatus = currentTask?.currentValue || '';
+      const newAltStatus = isDone ? 'Done' : 'Not Done';
+      
+      // Create combined value
+      const combinedValue = createTaskValue(currentMainStatus, newAltStatus);
+      
+      // Update or insert completion record with combined value
       const { error } = await supabase
-        .from('custom_tasks')
-        .update({ alt_task_done: isDone })
-        .eq('id', taskId)
-        .eq('new_user_id', user.id);
+        .from('daily_task_completions')
+        .upsert({
+          custom_task_id: taskId,
+          new_user_id: user.id,
+          value: combinedValue,
+          completion_date: today
+        }, {
+          onConflict: 'custom_task_id,new_user_id,completion_date'
+        });
       
       if (error) {
         console.error('Error updating alt task status:', error);
@@ -220,7 +264,11 @@ export const DailyTaskTracker: React.FC = () => {
       setCustomTasks(prev => 
         prev.map(task => 
           task.id === taskId 
-            ? { ...task, alt_task_done: isDone }
+            ? { 
+                ...task, 
+                alt_task_done: isDone,
+                completedToday: true
+              }
             : task
         )
       );

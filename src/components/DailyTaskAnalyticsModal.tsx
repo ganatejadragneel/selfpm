@@ -10,6 +10,7 @@ import { addDays } from 'date-fns/addDays';
 import { startOfDay } from 'date-fns/startOfDay';
 import { endOfDay } from 'date-fns/endOfDay';
 import { formatLocalDateString } from '../utils/dateUtils';
+import { parseTaskValue } from '../utils/taskValueUtils';
 import type { BaseModalProps, CustomDailyTask, DailyTaskCompletion, DailyTaskNote } from '../types';
 import { getDisplayValue, getDropdownColor } from '../constants/dailyTasks';
 
@@ -856,18 +857,16 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                     n => n.custom_task_id === task.id && n.note_date === dateStr
                                   );
                                   
-                                  const value = completion ? String(completion.value) : '';
-                                  const blockColor = completion ? getValueColor(value) : '#f3f4f6';
-                                  const opacity = completion ? 1 : 0.3;
+                                  // Parse the value to get main and alt status
+                                  const parsedValue = parseTaskValue(completion ? String(completion.value) : undefined);
+                                  const mainValue = parsedValue.main;
+                                  const altTaskDone = task.alt_task && parsedValue.alt === 'Done';
                                   
-                                  // Check if alt task was done (we need to check the task's alt_task_done status)
-                                  // Since alt_task_done resets daily, we'd need to track it historically
-                                  // For now, we'll use the current alt_task_done status for today only
-                                  const isToday = formatLocalDateString(new Date()) === dateStr;
-                                  const altTaskDone = isToday && task.alt_task && task.alt_task_done;
+                                  const blockColor = completion ? getValueColor(mainValue) : '#f3f4f6';
+                                  const opacity = completion ? 1 : 0.3;
 
                                   // Create tooltip text with note if available
-                                  const tooltipText = `${task.name} - ${format(date, 'dd/MM/yyyy')}\nTask: ${getDisplayValue(value, task.type)}${note ? `\nNote: ${note.note_text}` : ''}${completion || note ? '\n\nClick for details' : ''}`;
+                                  const tooltipText = `${task.name} - ${format(date, 'dd/MM/yyyy')}\nTask: ${getDisplayValue(mainValue, task.type)}${note ? `\nNote: ${note.note_text}` : ''}${completion || note ? '\n\nClick for details' : ''}`;
                                   
                                   return (
                                     <div
@@ -886,14 +885,14 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                                       title={tooltipText}
                                       onClick={async () => {
                                         if (completion || note) {
-                                          // Fetch alt_task information if it exists
+                                          // Show alt task info if it was done on this specific date
                                           let altTaskInfo = '';
-                                          if (task.alt_task && task.alt_task_done) {
+                                          if (task.alt_task && altTaskDone) {
                                             altTaskInfo = `\n\nAlternate task: ${task.alt_task}: Done`;
                                           }
                                           
                                           // Show detailed popup
-                                          alert(`${task.name} - ${format(date, 'dd/MM/yyyy')}\n\nTask: ${getDisplayValue(value, task.type)}${note ? `\n\nNote: ${note.note_text}` : ''}${altTaskInfo}`);
+                                          alert(`${task.name} - ${format(date, 'dd/MM/yyyy')}\n\nTask: ${getDisplayValue(mainValue, task.type)}${note ? `\n\nNote: ${note.note_text}` : ''}${altTaskInfo}`);
                                         }
                                       }}
                                       onMouseEnter={(e) => {
