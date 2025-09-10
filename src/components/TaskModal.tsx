@@ -29,6 +29,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     updateSubtaskWeight,
     addDependency,
     removeDependency,
+    updateWeeklyRecurringTaskStatus,
   } = useMigratedTaskStore();
   const { isMobile } = useResponsive();
   
@@ -287,7 +288,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                 </label>
                 <select
                   value={task.status}
-                  onChange={(e) => updateTask(task.id, { status: e.target.value as TaskStatus })}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as TaskStatus;
+                    // Use specialized method for weekly recurring tasks
+                    if (task.category === 'weekly_recurring') {
+                      updateWeeklyRecurringTaskStatus(task.id, { status: newStatus });
+                    } else {
+                      updateTask(task.id, { status: newStatus });
+                    }
+                  }}
                   style={{
                     width: '100%',
                     maxWidth: '100%',

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, TaskActivity, Attachment } from '../types';
+import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, TaskActivity, Attachment, WeeklyTaskCompletion } from '../types';
 import { supabase } from '../lib/supabase';
 import { getWeek, getYear } from 'date-fns';
 import { useSupabaseAuthStore } from './supabaseAuthStore';
@@ -69,6 +69,11 @@ interface MigratedTaskStore {
   bulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => Promise<void>;
   bulkDeleteTasks: (taskIds: string[]) => Promise<void>;
   bulkMoveTasks: (taskIds: string[], category: string) => Promise<void>;
+  
+  // Weekly task completion management
+  getWeeklyTaskCompletion: (taskId: string, weekNumber: number) => Promise<WeeklyTaskCompletion | null>;
+  setWeeklyTaskCompletion: (taskId: string, weekNumber: number, status: string, progressCurrent?: number) => Promise<void>;
+  updateWeeklyRecurringTaskStatus: (taskId: string, updates: Partial<Task>) => Promise<void>;
 }
 
 export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
@@ -126,7 +131,35 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         return week >= originalWeek && week < originalWeek + weeks;
       });
       
-      const tasks = [...(regularTasks || []), ...filteredRecurringTasks];
+      // Fetch weekly completion data for recurring tasks
+      const recurringTaskIds = filteredRecurringTasks.map(task => task.id);
+      const { data: weeklyCompletions } = await supabase
+        .from('weekly_task_completions')
+        .select('*')
+        .eq('new_user_id', userId)
+        .eq('week_number', week)
+        .in('task_id', recurringTaskIds);
+      
+      // Apply weekly completion status to recurring tasks
+      const recurringTasksWithWeeklyStatus = filteredRecurringTasks.map(task => {
+        const weeklyCompletion = (weeklyCompletions || []).find(wc => wc.task_id === task.id);
+        if (weeklyCompletion) {
+          // Override status and progress with weekly-specific values
+          return {
+            ...task,
+            status: weeklyCompletion.status,
+            progress_current: weeklyCompletion.progress_current
+          };
+        }
+        // No weekly completion found, use default 'todo' status for new week
+        return {
+          ...task,
+          status: 'todo',
+          progress_current: 0
+        };
+      });
+      
+      const tasks = [...(regularTasks || []), ...recurringTasksWithWeeklyStatus];
       
       // Fetch related data for each task and convert snake_case to camelCase
       const tasksWithRelations = await Promise.all(
@@ -1457,6 +1490,114 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Failed to bulk move tasks:', error);
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  // Weekly task completion management
+  getWeeklyTaskCompletion: async (taskId, weekNumber) => {
+    try {
+      const authStore = useSupabaseAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .from('weekly_task_completions')
+        .select('*')
+        .eq('task_id', taskId)
+        .eq('new_user_id', userId)
+        .eq('week_number', weekNumber)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+      
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        taskId: data.task_id,
+        userId: data.new_user_id,
+        weekNumber: data.week_number,
+        status: data.status,
+        progressCurrent: data.progress_current,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+    } catch (error) {
+      console.error('Failed to get weekly task completion:', error);
+      return null;
+    }
+  },
+
+  setWeeklyTaskCompletion: async (taskId, weekNumber, status, progressCurrent = 0) => {
+    try {
+      const authStore = useSupabaseAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) {
+        set({ error: 'User not authenticated' });
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('weekly_task_completions')
+        .upsert({
+          task_id: taskId,
+          new_user_id: userId,
+          week_number: weekNumber,
+          status: status,
+          progress_current: progressCurrent
+        }, {
+          onConflict: 'task_id,new_user_id,week_number'
+        });
+      
+      if (error) throw error;
+      
+      // Log activity for the status change
+      await get().logActivity(taskId, 'status_changed', undefined, status, { weekNumber });
+      
+    } catch (error) {
+      console.error('Failed to set weekly task completion:', error);
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  updateWeeklyRecurringTaskStatus: async (taskId, updates) => {
+    try {
+      const currentWeek = get().currentWeek;
+      const task = get().tasks.find(t => t.id === taskId);
+      
+      if (!task) {
+        set({ error: 'Task not found' });
+        return;
+      }
+      
+      // For weekly recurring tasks, update the weekly completion table
+      if (task.category === 'weekly_recurring') {
+        if (updates.status !== undefined) {
+          await get().setWeeklyTaskCompletion(
+            taskId, 
+            currentWeek, 
+            updates.status, 
+            updates.progressCurrent || task.progressCurrent || 0
+          );
+        }
+        
+        // Update local state immediately for UI responsiveness
+        set(state => ({
+          tasks: state.tasks.map(t =>
+            t.id === taskId ? { ...t, ...updates } : t
+          )
+        }));
+      } else {
+        // For non-weekly recurring tasks, use the regular update method
+        await get().updateTask(taskId, updates);
+      }
+    } catch (error) {
+      console.error('Failed to update weekly recurring task status:', error);
       set({ error: (error as Error).message });
       throw error;
     }

@@ -179,6 +179,18 @@ export interface TaskAnalytics {
   createdAt: string;
 }
 
+// Weekly task completion status for recurring tasks
+export interface WeeklyTaskCompletion {
+  id: string;
+  taskId: string;
+  userId: string;
+  weekNumber: number;
+  status: TaskStatus;
+  progressCurrent: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Daily Task related types (shared across components)
 export type DailyTaskType = 'yes_no' | 'dropdown';
 
