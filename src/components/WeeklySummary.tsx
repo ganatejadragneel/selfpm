@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Task } from '../types';
-import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText } from 'lucide-react';
+import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText, ArrowRight } from 'lucide-react';
 import { useResponsive } from '../hooks/useResponsive';
 // Import only specific functions to reduce bundle size
 import { startOfWeek } from 'date-fns/startOfWeek';
@@ -12,6 +12,7 @@ import { theme, priorityConfigs } from '../styles/theme';
 import { parseLocalDate, getDaysUntilDate, getDateUrgency } from '../utils/dateUtils';
 import { filterPendingTasks, sortTasksByDeadlinePriority, shouldShowDeadlineView as checkShouldShowDeadlineView } from '../utils/taskFilters';
 import { calculateTaskStatistics, calculateSubtaskStats } from '../utils/taskStatistics';
+import { useMigratedTaskStore } from '../store/migratedTaskStore';
 
 interface WeeklySummaryProps {
   tasks: Task[];
@@ -27,7 +28,11 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
   const [currentSlide, setCurrentSlide] = useState(shouldShowDeadlineView ? 1 : 0);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasUserNavigated, setHasUserNavigated] = useState(false);
+  const [showMigrateConfirm, setShowMigrateConfirm] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
   const CARDS_PER_PAGE = isMobile ? 2 : 3;
+
+  const { migrateAllTasks } = useMigratedTaskStore();
   
   // Auto-switch to deadline view only on initial load and if user hasn't manually navigated
   useEffect(() => {
@@ -41,6 +46,32 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
   const weekStartDate = addWeeks(currentDate, weekNumber - getWeek(currentDate));
   const weekStart = startOfWeek(weekStartDate);
   const weekEnd = endOfWeek(weekStart);
+  
+  // Check if this is an older week (show migrate button)
+  const actualCurrentWeek = getWeek(new Date());
+  const isOlderWeek = weekNumber < actualCurrentWeek;
+  
+  // Count migratable tasks
+  const migratableTasks = useMemo(() => {
+    return tasks.filter(task => 
+      task.category !== 'weekly_recurring' && 
+      (task.status === 'todo' || task.status === 'in_progress')
+    );
+  }, [tasks]);
+
+  const handleMigrate = async () => {
+    if (migratableTasks.length === 0) return;
+    
+    setIsMigrating(true);
+    try {
+      await migrateAllTasks();
+      setShowMigrateConfirm(false);
+    } catch (error) {
+      console.error('Migration failed:', error);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
   
 
   // Filter and sort tasks for deadline view
@@ -164,20 +195,78 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
               flexDirection: isSmallMobile ? 'column' : 'row',
               gap: isSmallMobile ? '16px' : '0'
             }}>
-              <div>
-                <h2 style={{ 
-                  fontSize: isMobile ? '20px' : '24px', 
-                  fontWeight: 'bold', 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  margin: '0 0 8px 0'
-                }}>
-                  Week {weekNumber} Overview
-                </h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
-                  {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                <div>
+                  <h2 style={{ 
+                    fontSize: isMobile ? '20px' : '24px', 
+                    fontWeight: 'bold', 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    margin: '0 0 8px 0'
+                  }}>
+                    Week {weekNumber} Overview
+                  </h2>
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>
+                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                  </p>
+                </div>
+                
+                {/* Migrate All Button - Only show for older weeks with migratable tasks */}
+                {isOlderWeek && migratableTasks.length > 0 && (
+                  <button
+                    onClick={() => setShowMigrateConfirm(true)}
+                    disabled={isMigrating}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: isMobile ? '8px 12px' : '12px 16px',
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: isMigrating ? 'not-allowed' : 'pointer',
+                      fontSize: isMobile ? '12px' : '14px',
+                      fontWeight: '600',
+                      boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+                      transition: 'all 0.2s ease',
+                      opacity: isMigrating ? 0.7 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMigrating) {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 25px rgba(245, 158, 11, 0.5)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0px)';
+                      if (!isMigrating) {
+                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(245, 158, 11, 0.4)';
+                      }
+                    }}
+                    title={`Migrate ${migratableTasks.length} tasks to current week`}
+                  >
+                    {isMigrating ? (
+                      <>
+                        <div style={{
+                          width: '14px',
+                          height: '14px',
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          borderTop: '2px solid white',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                        {!isMobile && 'Migrating...'}
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRight className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                        {isMobile ? 'Migrate' : `Migrate All (${migratableTasks.length})`}
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{
@@ -815,6 +904,150 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
         </button>
       </div>
 
+      {/* Migration Confirmation Dialog */}
+      {showMigrateConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+            borderRadius: '20px',
+            padding: isMobile ? '24px' : '32px',
+            minWidth: isMobile ? '320px' : '400px',
+            maxWidth: '90vw',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '24px'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px auto',
+                boxShadow: '0 8px 24px rgba(245, 158, 11, 0.3)'
+              }}>
+                <ArrowRight className="w-8 h-8" style={{ color: 'white' }} />
+              </div>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: theme.colors.text.primary,
+                marginBottom: '8px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                Migrate Tasks to Current Week
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: theme.colors.text.secondary,
+                lineHeight: '1.5',
+                margin: 0
+              }}>
+                This will migrate {migratableTasks.length} tasks from Week {weekNumber} to Week {actualCurrentWeek}:
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: '1px solid rgba(245, 158, 11, 0.2)'
+            }}>
+              <div style={{ fontSize: '13px', color: '#92400e', marginBottom: '8px', fontWeight: '600' }}>
+                Migration Details:
+              </div>
+              <ul style={{ fontSize: '13px', color: '#92400e', margin: 0, paddingLeft: '16px' }}>
+                <li>To-Do tasks: Moved to Week {actualCurrentWeek}</li>
+                <li>In-Progress tasks: Copied to Week {actualCurrentWeek} (original kept)</li>
+                <li>Weekly recurring tasks are excluded</li>
+              </ul>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => setShowMigrateConfirm(false)}
+                disabled={isMigrating}
+                style={{
+                  padding: '12px 20px',
+                  background: 'transparent',
+                  color: theme.colors.text.secondary,
+                  border: `2px solid ${theme.colors.border.light}`,
+                  borderRadius: '12px',
+                  cursor: isMigrating ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                  opacity: isMigrating ? 0.5 : 1
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMigrate}
+                disabled={isMigrating}
+                style={{
+                  padding: '12px 20px',
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: isMigrating ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+                  transition: 'all 0.2s ease',
+                  opacity: isMigrating ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {isMigrating ? (
+                  <>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                    Migrating...
+                  </>
+                ) : (
+                  'Yes, Migrate All'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>
         {`
           @keyframes gradient-flow {
@@ -832,6 +1065,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
               filter: brightness(1.4);
               text-shadow: 0 0 10px rgba(239, 68, 68, 1);
             }
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
           .urgent-priority-text {
             animation: urgent-text-blink 2s ease-in-out infinite;

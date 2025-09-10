@@ -74,6 +74,9 @@ interface MigratedTaskStore {
   getWeeklyTaskCompletion: (taskId: string, weekNumber: number) => Promise<WeeklyTaskCompletion | null>;
   setWeeklyTaskCompletion: (taskId: string, weekNumber: number, status: string, progressCurrent?: number) => Promise<void>;
   updateWeeklyRecurringTaskStatus: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  
+  // Migration management
+  migrateAllTasks: () => Promise<void>;
 }
 
 export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
@@ -1598,6 +1601,137 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to update weekly recurring task status:', error);
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  migrateAllTasks: async () => {
+    try {
+      const authStore = useSupabaseAuthStore.getState();
+      const userId = authStore.user?.id;
+      
+      if (!userId) {
+        set({ error: 'User not authenticated' });
+        return;
+      }
+
+      const currentWeek = get().currentWeek;
+      const actualCurrentWeek = getWeek(new Date());
+      
+      // Only allow migration from older weeks
+      if (currentWeek >= actualCurrentWeek) {
+        set({ error: 'Migration is only available for older weeks' });
+        return;
+      }
+
+      // Get tasks that need migration (exclude weekly_recurring and completed tasks)
+      const tasksToMigrate = get().tasks.filter(task => 
+        task.category !== 'weekly_recurring' && 
+        (task.status === 'todo' || task.status === 'in_progress')
+      );
+
+      if (tasksToMigrate.length === 0) {
+        return; // Nothing to migrate
+      }
+
+      const todoTasks = tasksToMigrate.filter(task => task.status === 'todo');
+      const inProgressTasks = tasksToMigrate.filter(task => task.status === 'in_progress');
+
+      // For To-Do tasks: Update weekNumber to current week (move)
+      for (const task of todoTasks) {
+        const { error } = await supabase
+          .from('tasks')
+          .update({ week_number: actualCurrentWeek })
+          .eq('id', task.id)
+          .eq('new_user_id', userId);
+
+        if (error) throw error;
+
+        // Log activity
+        await get().logActivity(task.id, 'moved_week', currentWeek.toString(), actualCurrentWeek.toString());
+      }
+
+      // For In-Progress tasks: Create new task records for current week
+      for (const task of inProgressTasks) {
+        // Create new task record
+        const newTaskData = {
+          new_user_id: userId,
+          category: task.category,
+          title: task.title,
+          description: task.description,
+          status: 'in_progress',
+          priority: task.priority,
+          due_date: task.dueDate,
+          is_recurring: task.isRecurring,
+          recurrence_pattern: task.recurrencePattern,
+          progress_current: task.progressCurrent || 0,
+          progress_total: task.progressTotal,
+          week_number: actualCurrentWeek,
+          order: 0, // Add at beginning of category
+          auto_progress: task.autoProgress,
+          weighted_progress: task.weightedProgress
+        };
+
+        const { data: newTask, error: taskError } = await supabase
+          .from('tasks')
+          .insert([newTaskData])
+          .select()
+          .single();
+
+        if (taskError) throw taskError;
+
+        // Copy subtasks with preserved completion status
+        if (task.subtasks && task.subtasks.length > 0) {
+          const subtasksData = task.subtasks.map(subtask => ({
+            task_id: newTask.id,
+            title: subtask.title,
+            is_completed: subtask.isCompleted,
+            position: subtask.position,
+            weight: subtask.weight,
+            auto_complete_parent: subtask.autoCompleteParent
+          }));
+
+          const { error: subtasksError } = await supabase
+            .from('subtasks')
+            .insert(subtasksData);
+
+          if (subtasksError) throw subtasksError;
+        }
+
+        // Copy task dependencies (keep references to same dependency tasks)
+        if (task.dependencies && task.dependencies.length > 0) {
+          const dependenciesData = task.dependencies.map(dep => ({
+            task_id: newTask.id,
+            depends_on_task_id: dep.dependsOnTaskId,
+            dependency_type: dep.dependencyType
+          }));
+
+          const { error: depsError } = await supabase
+            .from('task_dependencies')
+            .insert(dependenciesData);
+
+          if (depsError) throw depsError;
+        }
+
+        // Attachments are shared/referenced by both tasks (no copying needed)
+        // since they reference the original task_id
+
+        // Log activity
+        await get().logActivity(newTask.id, 'created', undefined, `Migrated from week ${currentWeek}`, { 
+          originalTaskId: task.id,
+          migration: true 
+        });
+      }
+
+      // Refresh tasks to show the migrated tasks
+      await get().fetchTasks(actualCurrentWeek);
+      
+      // Switch to current week to show migrated tasks
+      get().setCurrentWeek(actualCurrentWeek);
+
+    } catch (error) {
+      console.error('Failed to migrate tasks:', error);
       set({ error: (error as Error).message });
       throw error;
     }
