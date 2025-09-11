@@ -859,7 +859,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                                 const newTotal = parseInt(tempEditProgressTotal) || 0;
                                 const currentProgress = task.progressCurrent || 0;
                                 // If new total is less than current progress, adjust current progress
-                                const updates: any = { progressTotal: newTotal };
+                                const updates: Partial<Task> = { progressTotal: newTotal };
                                 if (currentProgress > newTotal) {
                                   updates.progressCurrent = newTotal;
                                 }
@@ -877,7 +877,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                                 const newTotal = parseInt(tempEditProgressTotal) || 0;
                                 const currentProgress = task.progressCurrent || 0;
                                 // If new total is less than current progress, adjust current progress
-                                const updates: any = { progressTotal: newTotal };
+                                const updates: Partial<Task> = { progressTotal: newTotal };
                                 if (currentProgress > newTotal) {
                                   updates.progressCurrent = newTotal;
                                 }
@@ -1633,7 +1633,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
                             }
                           }
                           return 'Just now';
-                        } catch (error) {
+                        } catch {
                           return 'Just now';
                         }
                       })()}

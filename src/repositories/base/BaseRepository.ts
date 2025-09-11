@@ -10,7 +10,7 @@ export interface QueryOptions {
   orderBy?: { column: string; ascending?: boolean }[];
   limit?: number;
   offset?: number;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 export interface RepositoryResult<T> {
@@ -40,10 +40,10 @@ export abstract class BaseRepository<T extends { id: string }> {
    * Transform database snake_case to camelCase
    * Can be overridden in child classes for custom transformations
    */
-  protected transformFromDatabase(data: any): T {
-    if (!data) return data;
+  protected transformFromDatabase(data: Record<string, unknown>): T {
+    if (!data) return data as T;
     
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     for (const key in data) {
       const camelKey = this.snakeToCamel(key);
       transformed[camelKey] = data[key];
@@ -55,13 +55,13 @@ export abstract class BaseRepository<T extends { id: string }> {
    * Transform camelCase to database snake_case
    * Can be overridden in child classes for custom transformations
    */
-  protected transformToDatabase(data: Partial<T>): any {
+  protected transformToDatabase(data: Partial<T>): Record<string, unknown> {
     if (!data) return data;
     
-    const transformed: any = {};
+    const transformed: Record<string, unknown> = {};
     for (const key in data) {
       const snakeKey = this.camelToSnake(key);
-      transformed[snakeKey] = (data as any)[key];
+      transformed[snakeKey] = (data as Record<string, unknown>)[key];
     }
     return transformed;
   }

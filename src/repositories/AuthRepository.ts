@@ -329,16 +329,16 @@ export class AuthRepository {
   /**
    * Map database record to UserProfile
    */
-  private mapToUserProfile(data: any): UserProfile {
+  private mapToUserProfile(data: Record<string, unknown>): UserProfile {
     if (!data) return data;
 
     return {
-      id: data.new_user_id,
-      email: data.email,
-      fullName: data.full_name,
-      avatarUrl: data.avatar_url,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at || data.created_at,
+      id: data.new_user_id as string,
+      email: data.email as string,
+      fullName: data.full_name as string | undefined,
+      avatarUrl: data.avatar_url as string | undefined,
+      createdAt: data.created_at as string,
+      updatedAt: (data.updated_at || data.created_at) as string,
     };
   }
 }

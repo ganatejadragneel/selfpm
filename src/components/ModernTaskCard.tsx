@@ -12,7 +12,14 @@ import { formatDuration, calculateTimeRemaining, getTimeRemainingColor } from '.
 
 interface ModernTaskCardProps {
   task: Task;
-  categoryConfig: any;
+  categoryConfig: {
+    title: string;
+    emoji: string;
+    gradient: string;
+    bgGradient: string;
+    borderColor: string;
+    accentColor: string;
+  };
   onClick: () => void;
   onStatusToggle: () => void;
   onDelete: () => void;

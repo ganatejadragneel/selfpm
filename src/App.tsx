@@ -147,7 +147,7 @@ function AppContent() {
                 })
               )
             );
-          } catch (error) {
+          } catch {
             // Order column may not exist yet. Tasks reordered in UI only.
           }
         }

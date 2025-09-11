@@ -20,7 +20,7 @@ type GraphType = 'bar' | 'heatmap' | 'pie';
 // Time periods
 type TimePeriod = '7d' | '14d' | '30d';
 
-interface DailyTaskAnalyticsModalProps extends BaseModalProps {}
+type DailyTaskAnalyticsModalProps = BaseModalProps;
 
 export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = ({ 
   isOpen, 
@@ -75,6 +75,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
   // Generate date range array for bar chart (always show all days)
   const barChartDateRange = useCallback(() => {
     const dates = [];
+    // eslint-disable-next-line prefer-const
     let current = new Date(currentDateRange.start);
     const end = currentDateRange.end;
     
@@ -92,6 +93,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
   // Generate date range array for display (pie chart - can use sampling)
   const generateDateRange = useCallback((start: Date, end: Date) => {
     const dates = [];
+    // eslint-disable-next-line prefer-const
     let current = new Date(start);
     
     // For longer periods, sample dates to keep visualization manageable
@@ -121,6 +123,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
   // Generate full date range for heat map (always show all days, up to 31)
   const heatMapDateRange = useCallback(() => {
     const dates = [];
+    // eslint-disable-next-line prefer-const
     let current = new Date(currentDateRange.start);
     const end = currentDateRange.end;
     let dayCount = 0;

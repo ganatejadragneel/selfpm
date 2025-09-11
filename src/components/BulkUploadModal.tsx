@@ -213,7 +213,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
         setParsedTasks([]);
         setUploadStatus('idle');
       }, 1500);
-    } catch (error) {
+    } catch {
       setUploadStatus('error');
       setErrorMessage('Failed to import tasks. Please try again.');
     } finally {

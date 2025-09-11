@@ -198,6 +198,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
             order: task.order || 0,
             createdAt: task.created_at,
             updatedAt: task.updated_at,
+            newUserId: task.new_user_id,
             subtasks: (subtasksRes.data || []).map(subtask => ({
               id: subtask.id,
               taskId: subtask.task_id,
@@ -346,6 +347,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         order: data.order || 0,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
+        newUserId: data.new_user_id,
         subtasks: [],
         updates: [],
         attachments: [],
@@ -428,13 +430,13 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         await get().logActivity(id, 'progress_updated', currentTask.progressCurrent?.toString(), updates.progressCurrent.toString());
       }
       if (updates.weekNumber !== undefined) {
-        await get().logActivity(id, 'moved_week', currentTask.weekNumber?.toString(), updates.weekNumber.toString());
+        await get().logActivity(id, 'updated', currentTask.weekNumber?.toString(), `Moved to week ${updates.weekNumber}`);
       }
       if (updates.estimatedDuration !== undefined) {
-        await get().logActivity(id, 'duration_changed', currentTask.estimatedDuration?.toString(), updates.estimatedDuration.toString());
+        await get().logActivity(id, 'updated', currentTask.estimatedDuration?.toString(), `Duration changed to ${updates.estimatedDuration} minutes`);
       }
       if (updates.timeSpent !== undefined) {
-        await get().logActivity(id, 'time_logged', currentTask.timeSpent?.toString(), updates.timeSpent.toString());
+        await get().logActivity(id, 'updated', currentTask.timeSpent?.toString(), `Time spent: ${updates.timeSpent} minutes`);
       }
 
       // Update local state
@@ -1623,7 +1625,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
           
           // Log activity for time changes
           if (updates.timeSpent !== undefined) {
-            await get().logActivity(taskId, 'time_logged', task.timeSpent?.toString(), updates.timeSpent.toString());
+            await get().logActivity(taskId, 'updated', task.timeSpent?.toString(), `Time spent: ${updates.timeSpent} minutes`);
           }
         }
         
@@ -1687,7 +1689,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         if (error) throw error;
 
         // Log activity
-        await get().logActivity(task.id, 'moved_week', currentWeek.toString(), actualCurrentWeek.toString());
+        await get().logActivity(task.id, 'updated', currentWeek.toString(), `Rolled over to week ${actualCurrentWeek}`);
       }
 
       // For In-Progress tasks: Create new task records for current week

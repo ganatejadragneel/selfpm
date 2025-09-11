@@ -19,19 +19,19 @@ export class TaskRepository extends BaseRepository<Task> {
   /**
    * Custom transformation for tasks (handles nested data)
    */
-  protected transformFromDatabase(data: any): Task {
+  protected transformFromDatabase(data: Record<string, unknown>): Task {
     if (!data) return data;
 
     const base = super.transformFromDatabase(data);
     
     // Handle specific task transformations
     if (data.subtasks) {
-      (base as any).subtasks = data.subtasks.map((s: any) => super.transformFromDatabase(s));
+      (base as any).subtasks = (data.subtasks as Array<Record<string, unknown>>).map((s: Record<string, unknown>) => super.transformFromDatabase(s));
     }
     
     if (data.attachments && typeof data.attachments === 'string') {
       try {
-        (base as any).attachments = JSON.parse(data.attachments);
+        (base as any).attachments = JSON.parse(data.attachments as string);
       } catch {
         (base as any).attachments = [];
       }
@@ -39,7 +39,7 @@ export class TaskRepository extends BaseRepository<Task> {
 
     if (data.task_updates && typeof data.task_updates === 'string') {
       try {
-        (base as any).taskUpdates = JSON.parse(data.task_updates);
+        (base as any).taskUpdates = JSON.parse(data.task_updates as string);
       } catch {
         (base as any).taskUpdates = [];
       }

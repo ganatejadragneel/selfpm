@@ -20,6 +20,7 @@ export interface Task {
   order?: number;
   createdAt: string;
   updatedAt: string;
+  newUserId: string;
   subtasks?: Subtask[];
   updates?: TaskUpdate[];
   attachments?: Attachment[];
