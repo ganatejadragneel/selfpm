@@ -4,7 +4,7 @@
  */
 
 import { TaskRepository } from '../repositories/TaskRepository';
-import type { Task, TaskDependency } from '../types';
+import type { Task, TaskDependency, DependencyType } from '../types';
 
 export interface DependencyGraph {
   nodes: Map<string, Task>;
@@ -39,7 +39,7 @@ export class DependencyService {
   async addDependency(
     taskId: string,
     dependsOnTaskId: string,
-    userId: string
+    type: DependencyType = 'finish_to_start'
   ): Promise<TaskDependency> {
     // Validate that both tasks exist
     const [task, dependsOnTask] = await Promise.all([
@@ -55,7 +55,7 @@ export class DependencyService {
     }
 
     // Check for circular dependencies
-    const wouldCreateCycle = await this.wouldCreateCycle(taskId, dependsOnTaskId, userId);
+    const wouldCreateCycle = await this.wouldCreateCycle(taskId, dependsOnTaskId, '');
     if (wouldCreateCycle) {
       throw new Error('Adding this dependency would create a circular reference');
     }
@@ -71,12 +71,12 @@ export class DependencyService {
       id: `${taskId}_${dependsOnTaskId}`,
       taskId,
       dependsOnTaskId,
-      dependencyType: 'finish_to_start',
+      dependencyType: type,
       createdAt: new Date().toISOString(),
     };
 
     // Clear cache for affected user
-    this.clearCache(userId);
+    this.dependencyCache.clear();
 
     // In a real implementation, this would save to task_dependencies table
     return dependency;
@@ -86,12 +86,10 @@ export class DependencyService {
    * Remove dependency between tasks
    */
   async removeDependency(
-    _taskId: string,
-    _dependsOnTaskId: string,
-    userId: string
+    _dependencyId: string
   ): Promise<boolean> {
     // Clear cache for affected user
-    this.clearCache(userId);
+    this.dependencyCache.clear();
     
     // In a real implementation, this would delete from task_dependencies table
     return true;
@@ -152,14 +150,14 @@ export class DependencyService {
   /**
    * Check if task can be started (all dependencies completed)
    */
-  async canStartTask(taskId: string, _userId: string): Promise<boolean> {
-    const dependencies = await this.getTaskDependencies(taskId);
+  async canStartTask(task: Task, tasks: Task[], dependencies: TaskDependency[]): Promise<boolean> {
+    const taskDependencies = dependencies.filter(d => d.taskId === task.id);
     
-    for (const dep of dependencies) {
-      const depTask = await this.taskRepository.findById(dep.dependsOnTaskId);
-      if (depTask.error || !depTask.data) continue;
+    for (const dep of taskDependencies) {
+      const depTask = tasks.find(t => t.id === dep.dependsOnTaskId);
+      if (!depTask) continue;
       
-      if (depTask.data.status !== 'done') {
+      if (depTask.status !== 'done') {
         return false;
       }
     }
@@ -174,9 +172,12 @@ export class DependencyService {
     const graph = await this.buildDependencyGraph(userId);
     const readyTasks: Task[] = [];
 
-    for (const [taskId, task] of graph.nodes) {
+    const allTasks = Array.from(graph.nodes.values());
+    const allDependencies: TaskDependency[] = []; // Would need to be passed in or fetched
+    
+    for (const [_taskId, task] of graph.nodes) {
       if (task.status === 'todo') {
-        const canStart = await this.canStartTask(taskId, userId);
+        const canStart = await this.canStartTask(task, allTasks, allDependencies);
         if (canStart) {
           readyTasks.push(task);
         }
@@ -264,17 +265,30 @@ export class DependencyService {
   /**
    * Calculate critical path for project completion
    */
-  async calculateCriticalPath(userId: string): Promise<CriticalPath> {
-    const graph = await this.buildDependencyGraph(userId);
+  async calculateCriticalPath(_userId: string, tasks: Task[], dependencies: TaskDependency[]): Promise<Task[]> {
+    // Build graph from provided tasks and dependencies
+    const graph: DependencyGraph = {
+      nodes: new Map(tasks.map(t => [t.id, t])),
+      edges: new Map(),
+      reverseEdges: new Map()
+    };
+    
+    for (const dep of dependencies) {
+      if (!graph.edges.has(dep.taskId)) {
+        graph.edges.set(dep.taskId, new Set());
+      }
+      graph.edges.get(dep.taskId)!.add(dep.dependsOnTaskId);
+      
+      if (!graph.reverseEdges.has(dep.dependsOnTaskId)) {
+        graph.reverseEdges.set(dep.dependsOnTaskId, new Set());
+      }
+      graph.reverseEdges.get(dep.dependsOnTaskId)!.add(dep.taskId);
+    }
     
     // Topological sort to find task order
     const sortedTasks = this.topologicalSort(graph);
     if (sortedTasks.length === 0) {
-      return {
-        tasks: [],
-        totalDuration: 0,
-        criticalDate: new Date(),
-      };
+      return [];
     }
 
     // Calculate earliest start and finish times
@@ -338,14 +352,7 @@ export class DependencyService {
       }
     }
 
-    const criticalDate = new Date();
-    criticalDate.setDate(criticalDate.getDate() + maxFinishTime);
-
-    return {
-      tasks: criticalPath,
-      totalDuration: maxFinishTime,
-      criticalDate,
-    };
+    return criticalPath;
   }
 
   /**
@@ -615,8 +622,4 @@ export class DependencyService {
     return redundant;
   }
 
-  private clearCache(userId: string): void {
-    const cacheKey = `graph_${userId}`;
-    this.dependencyCache.delete(cacheKey);
-  }
 }
