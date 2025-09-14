@@ -10,5 +10,8 @@ export * from './CacheManager';
 // Modal state management
 export * from './ModalStateManager';
 
+// Phase 4: Advanced Modal System
+export * from './ModalPerformanceManager';
+
 // Re-export for convenience
 export { globalCache as sharedCache } from './CacheManager';
