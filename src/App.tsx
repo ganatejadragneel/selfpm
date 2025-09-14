@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
@@ -19,6 +19,7 @@ const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/Pro
 const DailyTaskAnalyticsModal = lazy(() => import('./components/DailyTaskAnalyticsModal').then(module => ({ default: module.DailyTaskAnalyticsModal })));
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
+import { Button, LoadingSpinner, ComponentLoadingSpinner, LazyModal } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -252,31 +253,12 @@ function AppContent() {
                 justifyContent: isMobile ? 'center' : 'flex-start',
                 paddingRight: isMobile ? '20px' : '0'
               }}>
-                <button
+                <Button
+                  variant="navigation"
+                  isMobile={isMobile}
                   onClick={() => handleWeekChange('prev')}
-                  style={{
-                    padding: isMobile ? '5px' : '10px',
-                    border: 'none',
-                    background: 'rgba(102, 126, 234, 0.1)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    color: '#667eea',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
-                  <ChevronLeft className={isMobile ? "w-3 h-3" : "w-5 h-5"} />
-                </button>
+                  icon={<ChevronLeft className={isMobile ? "w-3 h-3" : "w-5 h-5"} />}
+                />
                 
                 <div style={{ 
                   display: 'flex', 
@@ -305,31 +287,12 @@ function AppContent() {
                   </span>
                 </div>
                 
-                <button
+                <Button
+                  variant="navigation"
+                  isMobile={isMobile}
                   onClick={() => handleWeekChange('next')}
-                  style={{
-                    padding: isMobile ? '5px' : '10px',
-                    border: 'none',
-                    background: 'rgba(102, 126, 234, 0.1)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    color: '#667eea',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.2)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                >
-                  <ChevronRight className={isMobile ? "w-3 h-3" : "w-5 h-5"} />
-                </button>
+                  icon={<ChevronRight className={isMobile ? "w-3 h-3" : "w-5 h-5"} />}
+                />
               </div>
             </div>
             
@@ -340,163 +303,62 @@ function AppContent() {
               flex: '0 0 auto',
               flexWrap: 'wrap'
             }}>
-              <button
-                onClick={() => {
-                  setShowQuickAdd(true);
-                }}
+              <Button
+                variant="primary"
+                onClick={() => setShowQuickAdd(true)}
+                icon={<Plus className="w-4 h-4" />}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: isMobile ? '8px 12px' : '12px 20px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
                   fontSize: isMobile ? '12px' : '14px',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                  padding: isMobile ? '8px 12px' : '12px 20px',
                 }}
               >
-                <Plus className="w-4 h-4" />
                 Add Task
-              </button>
+              </Button>
               
               {/* Bulk Upload Button - Hide on mobile */}
-              {!isMobile && <button
-                onClick={() => setShowBulkUpload(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: 'transparent',
-                  color: '#667eea',
-                  border: '2px solid #667eea',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                }}
-                title="Bulk upload tasks from CSV"
-              >
-                <Upload className="w-4 h-4" />
-                Bulk Upload
-              </button>}
+              {!isMobile && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowBulkUpload(true)}
+                  icon={<Upload className="w-4 h-4" />}
+                  title="Bulk upload tasks from CSV"
+                >
+                  Bulk Upload
+                </Button>
+              )}
               
               {/* Activity Tracker Button - Hide on mobile */}
-              {!isMobile && <button
-                onClick={() => setShowActivityTracker(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: 'transparent',
-                  color: '#667eea',
-                  border: '2px solid #667eea',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.transform = 'translateY(0px)';
-                }}
-                title="View activity history"
-              >
-                <Activity className="w-4 h-4" />
-                Activity
-              </button>}
+              {!isMobile && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowActivityTracker(true)}
+                  icon={<Activity className="w-4 h-4" />}
+                  title="View activity history"
+                >
+                  Activity
+                </Button>
+              )}
               
               {/* Analytics Button */}
-              <button
+              <Button
+                variant="icon"
                 onClick={() => setShowAnalytics(!showAnalytics)}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  border: 'none',
-                  background: showAnalytics ? 'rgba(102, 126, 234, 0.1)' : theme.colors.surface.glass,
-                  backdropFilter: theme.effects.blur,
-                  borderRadius: theme.borderRadius.full,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  marginRight: theme.spacing.sm
-                }}
-                onMouseEnter={(e) => {
-                  if (!showAnalytics) {
-                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!showAnalytics) {
-                    e.currentTarget.style.background = theme.colors.surface.glass;
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }
-                }}
+                icon={<BarChart3 className="w-5 h-5" />}
                 title="View Analytics"
-              >
-                <BarChart3 className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
-              </button>
+                style={{
+                  marginRight: theme.spacing.sm,
+                  background: showAnalytics ? 'rgba(102, 126, 234, 0.1)' : theme.colors.surface.glass,
+                }}
+              />
               
               {/* Daily Task Analytics Button */}
-              <button
+              <Button
+                variant="icon"
                 onClick={() => setShowDailyTaskAnalytics(true)}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  border: 'none',
-                  background: theme.colors.surface.glass,
-                  backdropFilter: theme.effects.blur,
-                  borderRadius: theme.borderRadius.full,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  marginRight: theme.spacing.sm
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(102, 126, 234, 0.05)';
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = theme.colors.surface.glass;
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
+                icon={<Calendar className="w-5 h-5" />}
                 title="Daily Task Analytics"
-              >
-                <Calendar className="w-5 h-5" style={{ color: theme.colors.primary.dark }} />
-              </button>
+                style={{ marginRight: theme.spacing.sm }}
+              />
               
               <UserMenu />
             </div>
@@ -513,9 +375,7 @@ function AppContent() {
         {/* Analytics Dashboard - Collapsible */}
         {showAnalytics && (
           <div style={{ marginBottom: '32px' }}>
-            <Suspense fallback={<div>Loading analytics...</div>}>
-              <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
-            </Suspense>
+            <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
           </div>
         )}
 
@@ -530,24 +390,7 @@ function AppContent() {
 
         {/* Task Columns */}
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              border: '4px solid rgba(102, 126, 234, 0.3)',
-              borderTop: '4px solid #667eea',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            <style>
-              {`
-                @keyframes spin {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-              `}
-            </style>
-          </div>
+          <LoadingSpinner size="lg" text="Loading tasks..." />
         ) : (
           <DndContext 
             sensors={sensors}
@@ -636,60 +479,69 @@ function AppContent() {
         // Get the most up-to-date task from the store
         const currentTask = tasks.find(t => t.id === selectedTask.id);
         return currentTask ? (
-          <Suspense fallback={<div>Loading...</div>}>
-            <TaskModal
-              key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
-              task={currentTask}
-              isOpen={!!selectedTask}
-              onClose={() => setSelectedTask(null)}
-            />
-          </Suspense>
+          <LazyModal
+            key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
+            isOpen={!!selectedTask}
+            onClose={() => setSelectedTask(null)}
+            component={TaskModal}
+            componentProps={{
+              task: currentTask,
+              isOpen: !!selectedTask,
+              onClose: () => setSelectedTask(null),
+            }}
+            fallback={<ComponentLoadingSpinner text="Loading task details..." />}
+          />
         ) : null;
       })()}
 
-      {showQuickAdd && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <AddTaskModal
-            isOpen={showQuickAdd}
-            initialCategory={quickAddCategory}
-            onClose={() => {
-              console.log('Closing AddTask modal');
-              setShowQuickAdd(false);
-            }}
-          />
-        </Suspense>
-      )}
+      <LazyModal
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        component={AddTaskModal}
+        componentProps={{
+          isOpen: showQuickAdd,
+          initialCategory: quickAddCategory,
+          onClose: () => setShowQuickAdd(false),
+        }}
+        fallback={<ComponentLoadingSpinner text="Loading task form..." />}
+      />
       
       {/* Bulk Upload Modal */}
-      {showBulkUpload && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <BulkUploadModal
-            isOpen={showBulkUpload}
-            onClose={() => setShowBulkUpload(false)}
-          />
-        </Suspense>
-      )}
+      <LazyModal
+        isOpen={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        component={BulkUploadModal}
+        componentProps={{
+          isOpen: showBulkUpload,
+          onClose: () => setShowBulkUpload(false),
+        }}
+        fallback={<ComponentLoadingSpinner text="Loading bulk upload..." />}
+      />
       
       {/* Activity Tracker Modal */}
-      {showActivityTracker && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <ActivityTrackerModal
-            isOpen={showActivityTracker}
-            onClose={() => setShowActivityTracker(false)}
-            currentWeek={currentWeek}
-          />
-        </Suspense>
-      )}
+      <LazyModal
+        isOpen={showActivityTracker}
+        onClose={() => setShowActivityTracker(false)}
+        component={ActivityTrackerModal}
+        componentProps={{
+          isOpen: showActivityTracker,
+          onClose: () => setShowActivityTracker(false),
+          currentWeek: currentWeek,
+        }}
+        fallback={<ComponentLoadingSpinner text="Loading activity tracker..." />}
+      />
       
       {/* Daily Task Analytics Modal */}
-      {showDailyTaskAnalytics && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <DailyTaskAnalyticsModal
-            isOpen={showDailyTaskAnalytics}
-            onClose={() => setShowDailyTaskAnalytics(false)}
-          />
-        </Suspense>
-      )}
+      <LazyModal
+        isOpen={showDailyTaskAnalytics}
+        onClose={() => setShowDailyTaskAnalytics(false)}
+        component={DailyTaskAnalyticsModal}
+        componentProps={{
+          isOpen: showDailyTaskAnalytics,
+          onClose: () => setShowDailyTaskAnalytics(false),
+        }}
+        fallback={<ComponentLoadingSpinner text="Loading daily analytics..." />}
+      />
     </div>
   );
 }

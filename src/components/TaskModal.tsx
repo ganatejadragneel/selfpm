@@ -3,7 +3,7 @@ import type { Task, TaskStatus, TaskPriority } from '../types';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { useResponsive } from '../hooks/useResponsive';
 import { SpeechToTextButton } from './SpeechToTextButton';
-import { X, Plus, Check, Clock, AlertCircle, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
+import { X, Plus, Check, Clock, Edit3, Save, MessageSquare, Activity, Paperclip } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { SubtaskList } from './subtasks/SubtaskList';
 import { AttachmentUpload } from './attachments/AttachmentUpload';
@@ -13,6 +13,7 @@ import { CommentSection } from './activity/CommentSection';
 import { SmartProgressManager } from './progress/SmartProgressManager';
 import { TaskDependencyManager } from './dependencies/TaskDependencyManager';
 import { theme, priorityConfigs } from '../styles/theme';
+import { useFormOptions } from '../hooks/useConfigurations';
 import { formatDuration, calculateTimeRemaining, getTimeRemainingColor } from '../utils/timeUtils';
 
 interface TaskModalProps {
@@ -33,6 +34,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
     updateWeeklyRecurringTaskStatus,
   } = useMigratedTaskStore();
   const { isMobile } = useResponsive();
+  const { statusOptions } = useFormOptions();
   
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -91,12 +93,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose }) =
   };
 
 
-  const statusOptions: { value: TaskStatus; label: string; icon: React.ReactNode; color: string }[] = [
-    { value: 'todo', label: 'To Do', icon: <Clock className="w-4 h-4" />, color: 'text-gray-600' },
-    { value: 'in_progress', label: 'In Progress', icon: <Clock className="w-4 h-4" />, color: 'text-blue-600' },
-    { value: 'done', label: 'Done', icon: <Check className="w-4 h-4" />, color: 'text-green-600' },
-    { value: 'blocked', label: 'Blocked', icon: <AlertCircle className="w-4 h-4" />, color: 'text-red-600' },
-  ];
 
   if (!isOpen) return null;
 

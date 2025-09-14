@@ -115,27 +115,33 @@ export const theme = {
 export const categoryConfigs = {
   life_admin: {
     title: 'Life Admin',
+    label: 'Life Admin', // For form displays
     emoji: '🏠',
     gradient: theme.colors.status.info.gradient,
     bgGradient: `linear-gradient(135deg, ${theme.colors.status.info.light} 0%, rgba(29, 78, 216, 0.02) 100%)`,
     borderColor: theme.colors.status.info.medium,
     accentColor: theme.colors.status.info.dark,
+    color: theme.colors.status.info.light, // For form displays
   },
   work: {
     title: 'Work Tasks',
+    label: 'Work Tasks', // For form displays
     emoji: '💼',
     gradient: theme.colors.status.success.gradient,
     bgGradient: `linear-gradient(135deg, ${theme.colors.status.success.light} 0%, rgba(5, 150, 105, 0.02) 100%)`,
     borderColor: theme.colors.status.success.medium,
     accentColor: theme.colors.status.success.dark,
+    color: theme.colors.status.success.light, // For form displays
   },
   weekly_recurring: {
     title: 'Weekly Tasks',
+    label: 'Weekly Tasks', // For form displays
     emoji: '🔄',
     gradient: theme.colors.status.purple.gradient,
     bgGradient: `linear-gradient(135deg, ${theme.colors.status.purple.light} 0%, rgba(124, 58, 237, 0.02) 100%)`,
     borderColor: theme.colors.status.purple.medium,
     accentColor: theme.colors.status.purple.dark,
+    color: theme.colors.status.purple.light, // For form displays
   },
 } as const;
 
@@ -232,4 +238,154 @@ export const priorityConfigs = {
     borderColor: 'rgba(220, 38, 38, 0.5)',
     icon: '🔴'
   }
+} as const;
+
+// Enhanced button variants following DRY principles
+export const buttonVariants = {
+  primary: {
+    base: {
+      background: theme.colors.primary.gradient,
+      color: 'white',
+      border: 'none',
+      borderRadius: theme.borderRadius.md,
+      cursor: 'pointer',
+      fontSize: theme.typography.sizes.base,
+      fontWeight: theme.typography.weights.semibold,
+      padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+      transition: 'all 0.2s ease',
+      boxShadow: `0 4px 15px ${theme.colors.primary.dark}33`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.sm,
+    },
+    hover: {
+      transform: 'translateY(-2px)',
+      boxShadow: `0 6px 25px ${theme.colors.primary.dark}55`,
+    },
+    active: {
+      transform: 'translateY(0px)',
+    },
+  },
+  secondary: {
+    base: {
+      border: `2px solid ${theme.colors.primary.dark}`,
+      color: theme.colors.primary.dark,
+      backgroundColor: 'transparent',
+      borderRadius: theme.borderRadius.md,
+      cursor: 'pointer',
+      fontSize: theme.typography.sizes.base,
+      fontWeight: theme.typography.weights.semibold,
+      padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+      transition: 'all 0.2s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.sm,
+    },
+    hover: {
+      backgroundColor: theme.colors.primary.light,
+      transform: 'translateY(-2px)',
+    },
+    active: {
+      transform: 'translateY(0px)',
+    },
+  },
+  icon: {
+    base: {
+      width: '40px',
+      height: '40px',
+      border: 'none',
+      background: theme.colors.surface.glass,
+      backdropFilter: theme.effects.blur,
+      borderRadius: theme.borderRadius.full,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'all 0.2s ease',
+      color: theme.colors.primary.dark,
+    },
+    hover: {
+      background: theme.colors.primary.light,
+      transform: 'scale(1.05)',
+    },
+    active: {
+      transform: 'scale(1)',
+    },
+  },
+  navigation: {
+    base: {
+      padding: '10px',
+      border: 'none',
+      background: theme.colors.primary.light,
+      borderRadius: theme.borderRadius.md,
+      cursor: 'pointer',
+      color: theme.colors.primary.dark,
+      transition: 'all 0.2s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    hover: {
+      background: theme.colors.primary.medium,
+      transform: 'scale(1.05)',
+    },
+    active: {
+      transform: 'scale(1)',
+    },
+  },
+  navigationMobile: {
+    base: {
+      padding: '5px',
+      border: 'none',
+      background: theme.colors.primary.light,
+      borderRadius: theme.borderRadius.md,
+      cursor: 'pointer',
+      color: theme.colors.primary.dark,
+      transition: 'all 0.2s ease',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    hover: {
+      background: theme.colors.primary.medium,
+      transform: 'scale(1.05)',
+    },
+    active: {
+      transform: 'scale(1)',
+    },
+  },
+} as const;
+
+// Status configurations for consistent usage across components
+export const statusConfigs = {
+  todo: {
+    value: 'todo',
+    label: 'To Do',
+    color: theme.colors.text.secondary,
+    bgColor: 'rgba(107, 114, 128, 0.1)',
+    icon: '⏰'
+  },
+  in_progress: {
+    value: 'in_progress',
+    label: 'In Progress',
+    color: theme.colors.status.info.dark,
+    bgColor: theme.colors.status.info.light,
+    icon: '🔄'
+  },
+  done: {
+    value: 'done',
+    label: 'Done',
+    color: theme.colors.status.success.dark,
+    bgColor: theme.colors.status.success.light,
+    icon: '✅'
+  },
+  blocked: {
+    value: 'blocked',
+    label: 'Blocked',
+    color: theme.colors.status.error.dark,
+    bgColor: theme.colors.status.error.light,
+    icon: '🚫'
+  },
 } as const;

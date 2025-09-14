@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import type { TaskCategory, TaskPriority } from '../types';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { SpeechToTextButton } from './SpeechToTextButton';
-import { theme, priorityConfigs } from '../styles/theme';
+import { priorityConfigs } from '../styles/theme';
+import { useFormOptions } from '../hooks/useConfigurations';
+import { Input, Textarea } from './ui/Input';
+import { ButtonGroup, SelectField, NumberField } from './forms';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -10,14 +13,9 @@ interface AddTaskModalProps {
   onClose: () => void;
 }
 
-const categoryDisplayConfig = {
-  life_admin: { label: 'Life Admin', color: theme.colors.status.info.light },
-  work: { label: 'Work Tasks', color: theme.colors.status.success.light },
-  weekly_recurring: { label: 'Weekly Tasks', color: theme.colors.status.purple.light }
-};
-
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCategory, onClose }) => {
   const { createTask } = useMigratedTaskStore();
+  const { categoryOptions } = useFormOptions();
   const [category, setCategory] = useState<TaskCategory>(initialCategory);
   
   const [title, setTitle] = useState('');
@@ -141,341 +139,118 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           boxSizing: 'border-box'
         }}>
           {/* Category Selection */}
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-              Category
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              {(Object.keys(categoryDisplayConfig) as TaskCategory[]).map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  style={{
-                    padding: '16px 12px',
-                    borderRadius: '12px',
-                    border: category === cat ? '2px solid #667eea' : '2px solid #e5e7eb',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    backgroundColor: category === cat ? categoryDisplayConfig[cat].color : 'white',
-                    color: '#374151',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (category !== cat) {
-                      e.currentTarget.style.borderColor = '#9ca3af';
-                      e.currentTarget.style.backgroundColor = '#f9fafb';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (category !== cat) {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
-                  }}
-                >
-                  {categoryDisplayConfig[cat].label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ButtonGroup
+            label="Category"
+            value={category}
+            onChange={(value) => setCategory(value as TaskCategory)}
+            options={categoryOptions}
+            columns={3}
+          />
 
           {/* Task Title */}
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-              Task Title *
-            </label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="What needs to be done?"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 50px 12px 16px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#667eea';
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
-              <div style={{
-                position: 'absolute',
-                right: '8px',
-                top: '50%',
-                transform: 'translateY(-50%)'
-              }}>
-                <SpeechToTextButton
-                  onTranscription={(text) => setTitle(text)}
-                  size="sm"
-                />
-              </div>
-            </div>
+            <Input
+              label="Task Title *"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="What needs to be done?"
+              required
+              rightIcon={<SpeechToTextButton onTranscription={setTitle} size="sm" />}
+            />
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-              Description
-            </label>
-            <div style={{ position: 'relative' }}>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Add more details..."
-                rows={3}
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 50px 12px 16px',
-                  fontSize: '14px',
-                  resize: 'none',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#667eea';
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
+          <div style={{ marginBottom: '20px', position: 'relative' }}>
+            <Textarea
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add more details..."
+              rows={3}
+            />
+            <div style={{
+              position: 'absolute',
+              right: '8px',
+              top: '32px'
+            }}>
+              <SpeechToTextButton
+                onTranscription={(text) => setDescription(prev => prev ? `${prev} ${text}` : text)}
+                size="sm"
               />
-              <div style={{
-                position: 'absolute',
-                right: '8px',
-                top: '8px'
-              }}>
-                <SpeechToTextButton
-                  onTranscription={(text) => setDescription(prev => prev ? `${prev} ${text}` : text)}
-                  size="sm"
-                />
-              </div>
             </div>
           </div>
 
           {/* Priority Selection */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>
-              Priority
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-              {(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => (
-                <button
-                  key={prio}
-                  onClick={() => setPriority(prio)}
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: priority === prio ? `2px solid ${priorityConfigs[prio].color}` : '2px solid #e5e7eb',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    backgroundColor: priority === prio ? priorityConfigs[prio].bgColor : 'white',
-                    color: priority === prio ? priorityConfigs[prio].color : '#374151',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (priority !== prio) {
-                      e.currentTarget.style.borderColor = priorityConfigs[prio].color;
-                      e.currentTarget.style.backgroundColor = priorityConfigs[prio].bgColor;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (priority !== prio) {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
-                  }}
-                >
-                  <span>{priorityConfigs[prio].icon}</span>
-                  <span>{priorityConfigs[prio].title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <ButtonGroup
+            label="Priority"
+            value={priority}
+            onChange={(value) => setPriority(value as TaskPriority)}
+            options={(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => ({
+              value: prio,
+              label: `${priorityConfigs[prio].icon} ${priorityConfigs[prio].title}`,
+              color: priorityConfigs[prio].bgColor
+            }))}
+            columns={2}
+          />
 
           {/* Due Date and Progress Goal */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-                Due Date
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#667eea';
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-                Progress Goal
-              </label>
-              <input
-                type="number"
-                value={progressTotal}
-                onChange={(e) => setProgressTotal(e.target.value)}
-                placeholder="e.g. 50"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#667eea';
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              />
-            </div>
+            <Input
+              label="Due Date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+            <NumberField
+              label="Progress Goal"
+              value={progressTotal ? parseInt(progressTotal) : undefined}
+              onChange={(value) => setProgressTotal(value ? String(value) : '')}
+              placeholder="e.g. 50"
+              min={1}
+            />
           </div>
 
           {/* Estimated Duration */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-              Estimated Duration
-            </label>
-            <select
-              value={estimatedDuration || 5}
-              onChange={(e) => setEstimatedDuration(e.target.value ? parseInt(e.target.value) : undefined)}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                border: '2px solid #e5e7eb',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'all 0.2s ease',
-                backgroundColor: 'white',
-                cursor: 'pointer'
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#667eea';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e5e7eb';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <option value="5">5 min</option>
-              <option value="10">10 min</option>
-              <option value="15">15 min</option>
-              <option value="20">20 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60">1 hour</option>
-              <option value="90">1.5 hours</option>
-              <option value="120">2 hours</option>
-              <option value="180">3 hours</option>
-              <option value="240">4 hours</option>
-              <option value="300">5 hours</option>
-              <option value="360">6 hours</option>
-              <option value="480">8 hours</option>
-              <option value="600">10 hours</option>
-              <option value="720">12 hours</option>
-              <option value="960">16 hours</option>
-              <option value="1200">20 hours</option>
-              <option value="1440">24 hours</option>
-            </select>
-          </div>
+          <SelectField
+            label="Estimated Duration"
+            value={String(estimatedDuration || 5)}
+            onChange={(value) => setEstimatedDuration(value ? parseInt(value) : undefined)}
+            options={[
+              { value: '5', label: '5 min' },
+              { value: '10', label: '10 min' },
+              { value: '15', label: '15 min' },
+              { value: '20', label: '20 min' },
+              { value: '30', label: '30 min' },
+              { value: '45', label: '45 min' },
+              { value: '60', label: '1 hour' },
+              { value: '90', label: '1.5 hours' },
+              { value: '120', label: '2 hours' },
+              { value: '180', label: '3 hours' },
+              { value: '240', label: '4 hours' },
+              { value: '300', label: '5 hours' },
+              { value: '360', label: '6 hours' },
+              { value: '480', label: '8 hours' },
+              { value: '600', label: '10 hours' },
+              { value: '720', label: '12 hours' },
+              { value: '960', label: '16 hours' },
+              { value: '1200', label: '20 hours' },
+              { value: '1440', label: '24 hours' }
+            ]}
+          />
 
           {/* Number of Weeks for Weekly Tasks */}
           {category === 'weekly_recurring' && (
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>
-                Number of Weeks <span style={{ color: '#ef4444' }}>*</span>
-              </label>
-              <select
-                value={recurrenceWeeks}
-                onChange={(e) => setRecurrenceWeeks(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  backgroundColor: 'white',
-                  cursor: 'pointer'
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#667eea';
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {Array.from({ length: 15 }, (_, i) => i + 1).map(num => (
-                  <option key={num} value={num}>
-                    {num} {num === 1 ? 'week' : 'weeks'}
-                  </option>
-                ))}
-              </select>
-              <p style={{
-                fontSize: '12px',
-                color: '#6b7280',
-                marginTop: '6px',
-                margin: 0,
-                paddingTop: '6px'
-              }}>
-                This task will appear for {recurrenceWeeks} consecutive week(s)
-              </p>
-            </div>
+            <SelectField
+              label="Number of Weeks *"
+              value={String(recurrenceWeeks)}
+              onChange={(value) => setRecurrenceWeeks(parseInt(value))}
+              options={Array.from({ length: 15 }, (_, i) => i + 1).map(num => ({
+                value: String(num),
+                label: `${num} ${num === 1 ? 'week' : 'weeks'}`
+              }))}
+              helperText={`This task will appear for ${recurrenceWeeks} consecutive week(s)`}
+              required
+            />
           )}
 
           {/* Action Buttons */}
