@@ -1,11 +1,9 @@
 import React, { useState, forwardRef } from 'react';
 import { theme, styleUtils } from '../../styles/theme';
+import type { InputProps as BaseInputProps, TextareaProps as BaseTextareaProps } from '../../types/components';
 
-interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
-  label?: string;
-  error?: string;
+interface LocalInputProps extends BaseInputProps, Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'value' | 'onChange' | 'autoComplete' | 'required' | 'placeholder' | 'onBlur' | 'onFocus' | 'type'> {
   success?: string;
-  helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   variant?: 'default' | 'filled' | 'outlined';
@@ -19,7 +17,7 @@ const sizeMap = {
   lg: { padding: '16px 20px', fontSize: theme.typography.sizes.lg },
 };
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({
+export const Input = forwardRef<HTMLInputElement, LocalInputProps>(({
   label,
   error,
   success,
@@ -32,6 +30,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   className = '',
   style,
   disabled,
+  required,
+  placeholder,
+  value,
+  onChange,
+  onBlur: onBlurProp,
+  onFocus: onFocusProp,
+  'data-testid': dataTestId,
   ...props
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -133,14 +138,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
           style={inputStyles}
           className={className}
           disabled={disabled}
+          required={required}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
           onFocus={(e) => {
             setIsFocused(true);
-            props.onFocus?.(e);
+            onFocusProp?.(e);
           }}
           onBlur={(e) => {
             setIsFocused(false);
-            props.onBlur?.(e);
+            onBlurProp?.(e);
           }}
+          data-testid={dataTestId}
           {...props}
         />
         
@@ -170,17 +180,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
 Input.displayName = 'Input';
 
 // Textarea variant
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
-  error?: string;
+interface LocalTextareaProps extends BaseTextareaProps, Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange' | 'required' | 'placeholder' | 'onBlur' | 'onFocus' | 'rows' | 'cols' | 'maxLength' | 'minLength' | 'readOnly'> {
   success?: string;
-  helperText?: string;
   variant?: 'default' | 'filled' | 'outlined';
   fullWidth?: boolean;
   minRows?: number;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
+export const Textarea = forwardRef<HTMLTextAreaElement, LocalTextareaProps>(({
   label,
   error,
   success,
@@ -191,6 +198,19 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   className = '',
   style,
   disabled,
+  required,
+  placeholder,
+  value,
+  onChange,
+  onBlur: onBlurProp,
+  onFocus: onFocusProp,
+  rows,
+  cols,
+  maxLength,
+  minLength,
+  readOnly,
+  resize,
+  'data-testid': dataTestId,
   ...props
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -242,6 +262,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
       cursor: 'not-allowed',
       backgroundColor: theme.colors.background.tertiary,
     }),
+    ...(resize && { resize }),
     ...style,
   };
 
@@ -264,14 +285,24 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         style={textareaStyles}
         className={className}
         disabled={disabled}
+        required={required}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        rows={rows || minRows}
+        cols={cols}
+        maxLength={maxLength}
+        minLength={minLength}
+        readOnly={readOnly}
         onFocus={(e) => {
           setIsFocused(true);
-          props.onFocus?.(e);
+          onFocusProp?.(e);
         }}
         onBlur={(e) => {
           setIsFocused(false);
-          props.onBlur?.(e);
+          onBlurProp?.(e);
         }}
+        data-testid={dataTestId}
         {...props}
       />
       

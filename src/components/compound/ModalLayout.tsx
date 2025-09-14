@@ -1,11 +1,9 @@
 import React from 'react';
 import { Button } from '../ui/Button';
 import { theme } from '../../styles/theme';
+import type { ModalBaseProps } from '../../types/components';
 
-interface ModalLayoutProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
+interface ModalLayoutProps extends ModalBaseProps {
   subtitle?: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
@@ -28,9 +26,27 @@ export const ModalLayout: React.FC<ModalLayoutProps> = ({
   children,
   actions,
   size = 'md',
-  closeOnOverlayClick = true,
+  closeOnBackdropClick = true,
+  closeOnEscape = true,
+  className,
+  style,
+  'data-testid': dataTestId,
 }) => {
   if (!isOpen) return null;
+
+  // Handle escape key
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && closeOnEscape) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, closeOnEscape, onClose]);
 
   const overlayStyle: React.CSSProperties = {
     position: 'fixed',
@@ -56,6 +72,7 @@ export const ModalLayout: React.FC<ModalLayoutProps> = ({
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
+    ...style
   };
 
   const headerStyle: React.CSSProperties = {
@@ -82,11 +99,13 @@ export const ModalLayout: React.FC<ModalLayoutProps> = ({
   };
 
   return (
-    <div 
+    <div
+      className={className}
       style={overlayStyle}
-      onClick={closeOnOverlayClick ? onClose : undefined}
+      onClick={closeOnBackdropClick ? onClose : undefined}
+      data-testid={dataTestId}
     >
-      <div 
+      <div
         style={modalStyle}
         onClick={(e) => e.stopPropagation()}
       >

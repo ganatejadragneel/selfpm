@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { TaskCategory, TaskPriority } from '../types';
 import { useMigratedTaskStore } from '../store/migratedTaskStore';
 import { SpeechToTextButton } from './SpeechToTextButton';
 import { priorityConfigs } from '../styles/theme';
 import { useFormOptions } from '../hooks/useConfigurations';
+import { useFormState } from '../hooks/useFormState';
+import { addTaskSchema } from '../utils/formSchemas';
+import type { AddTaskFormData } from '../utils/formSchemas';
 import { Input, Textarea } from './ui/Input';
 import { ButtonGroup, SelectField, NumberField } from './forms';
 
@@ -16,41 +19,36 @@ interface AddTaskModalProps {
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCategory, onClose }) => {
   const { createTask } = useMigratedTaskStore();
   const { categoryOptions } = useFormOptions();
-  const [category, setCategory] = useState<TaskCategory>(initialCategory);
-  
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [progressTotal, setProgressTotal] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [recurrenceWeeks, setRecurrenceWeeks] = useState(1);
-  const [estimatedDuration, setEstimatedDuration] = useState<number | undefined>(5); // Default to 5 minutes
+
+  // Use schema with dynamic initial category
+  const schemaWithCategory = {
+    ...addTaskSchema,
+    category: { ...addTaskSchema.category, initialValue: initialCategory }
+  };
+
+  const form = useFormState<AddTaskFormData>(schemaWithCategory);
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    if (!title.trim()) return;
+    if (!form.validateForm()) return;
+
+    const { values } = form;
 
     try {
       await createTask({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        category,
-        dueDate: dueDate || undefined,
-        progressTotal: progressTotal ? parseInt(progressTotal) : undefined,
-        priority,
-        recurrenceWeeks: category === 'weekly_recurring' ? recurrenceWeeks : undefined,
-        estimatedDuration
+        title: values.title.trim(),
+        description: values.description.trim() || undefined,
+        category: values.category,
+        dueDate: values.dueDate || undefined,
+        progressTotal: values.progressTotal ? parseInt(values.progressTotal) : undefined,
+        priority: values.priority,
+        recurrenceWeeks: values.category === 'weekly_recurring' ? values.recurrenceWeeks : undefined,
+        estimatedDuration: values.estimatedDuration
       });
-      
+
       // Reset form
-      setTitle('');
-      setDescription('');
-      setDueDate('');
-      setProgressTotal('');
-      setPriority('medium');
-      setRecurrenceWeeks(1);
-      setEstimatedDuration(5); // Reset to default 5 minutes
+      form.reset();
       onClose();
     } catch (error) {
       console.error('Error creating task:', error);
@@ -141,8 +139,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           {/* Category Selection */}
           <ButtonGroup
             label="Category"
-            value={category}
-            onChange={(value) => setCategory(value as TaskCategory)}
+            value={form.values.category}
+            onChange={(value) => form.setValue('category', value as TaskCategory)}
             options={categoryOptions}
             columns={3}
           />
@@ -151,11 +149,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           <div style={{ marginBottom: '20px' }}>
             <Input
               label="Task Title *"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={form.values.title}
+              onChange={form.handleChange('title')}
               placeholder="What needs to be done?"
               required
-              rightIcon={<SpeechToTextButton onTranscription={setTitle} size="sm" />}
+              rightIcon={<SpeechToTextButton onTranscription={(text) => form.setValue('title', text)} size="sm" />}
             />
           </div>
 
@@ -163,8 +161,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           <div style={{ marginBottom: '20px', position: 'relative' }}>
             <Textarea
               label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={form.values.description}
+              onChange={form.handleChange('description')}
               placeholder="Add more details..."
               rows={3}
             />
@@ -174,7 +172,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
               top: '32px'
             }}>
               <SpeechToTextButton
-                onTranscription={(text) => setDescription(prev => prev ? `${prev} ${text}` : text)}
+                onTranscription={(text) => form.setValue('description', form.values.description ? `${form.values.description} ${text}` : text)}
                 size="sm"
               />
             </div>
@@ -183,8 +181,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           {/* Priority Selection */}
           <ButtonGroup
             label="Priority"
-            value={priority}
-            onChange={(value) => setPriority(value as TaskPriority)}
+            value={form.values.priority}
+            onChange={(value) => form.setValue('priority', value as TaskPriority)}
             options={(Object.keys(priorityConfigs) as TaskPriority[]).map(prio => ({
               value: prio,
               label: `${priorityConfigs[prio].icon} ${priorityConfigs[prio].title}`,
@@ -198,13 +196,13 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
             <Input
               label="Due Date"
               type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              value={form.values.dueDate}
+              onChange={form.handleChange('dueDate')}
             />
             <NumberField
               label="Progress Goal"
-              value={progressTotal ? parseInt(progressTotal) : undefined}
-              onChange={(value) => setProgressTotal(value ? String(value) : '')}
+              value={form.values.progressTotal ? parseInt(form.values.progressTotal) : undefined}
+              onChange={(value) => form.setValue('progressTotal', value ? String(value) : '')}
               placeholder="e.g. 50"
               min={1}
             />
@@ -213,8 +211,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           {/* Estimated Duration */}
           <SelectField
             label="Estimated Duration"
-            value={String(estimatedDuration || 5)}
-            onChange={(value) => setEstimatedDuration(value ? parseInt(value) : undefined)}
+            value={String(form.values.estimatedDuration || 5)}
+            onChange={(value) => form.setValue('estimatedDuration', value ? parseInt(value) : undefined)}
             options={[
               { value: '5', label: '5 min' },
               { value: '10', label: '10 min' },
@@ -239,16 +237,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           />
 
           {/* Number of Weeks for Weekly Tasks */}
-          {category === 'weekly_recurring' && (
+          {form.values.category === 'weekly_recurring' && (
             <SelectField
               label="Number of Weeks *"
-              value={String(recurrenceWeeks)}
-              onChange={(value) => setRecurrenceWeeks(parseInt(value))}
+              value={String(form.values.recurrenceWeeks)}
+              onChange={(value) => form.setValue('recurrenceWeeks', parseInt(value))}
               options={Array.from({ length: 15 }, (_, i) => i + 1).map(num => ({
                 value: String(num),
                 label: `${num} ${num === 1 ? 'week' : 'weeks'}`
               }))}
-              helperText={`This task will appear for ${recurrenceWeeks} consecutive week(s)`}
+              helperText={`This task will appear for ${form.values.recurrenceWeeks} consecutive week(s)`}
               required
             />
           )}
@@ -257,29 +255,29 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
             <button
               onClick={handleSubmit}
-              disabled={!title.trim()}
+              disabled={!form.isValid || !form.values.title.trim()}
               style={{
                 flex: 1,
                 padding: '14px 24px',
-                backgroundColor: !title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                background: !title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundColor: !form.values.title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: !form.values.title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '12px',
-                cursor: !title.trim() ? 'not-allowed' : 'pointer',
+                cursor: !form.values.title.trim() ? 'not-allowed' : 'pointer',
                 fontSize: '14px',
                 fontWeight: '600',
-                boxShadow: !title.trim() ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.3)',
+                boxShadow: !form.values.title.trim() ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.3)',
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                if (title.trim()) {
+                if (form.values.title.trim()) {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.4)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (title.trim()) {
+                if (form.values.title.trim()) {
                   e.currentTarget.style.transform = 'translateY(0px)';
                   e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
                 }

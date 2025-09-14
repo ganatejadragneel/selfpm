@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
 import { buttonVariants } from '../../styles/theme';
+import type { ButtonBaseProps } from '../../types/components';
 
 type ButtonVariant = keyof typeof buttonVariants;
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonBaseProps, React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
-  children?: React.ReactNode;
-  icon?: React.ReactNode;
-  loading?: boolean;
   isMobile?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  variant = 'primary', 
-  children, 
+export const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  children,
   icon,
+  iconPosition = 'left',
   loading = false,
+  loadingText,
   isMobile = false,
+  size = 'md',
+  fullWidth = false,
   disabled,
   onClick,
-  ...props 
+  className,
+  style,
+  'data-testid': dataTestId,
+  ...props
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -32,11 +37,13 @@ export const Button: React.FC<ButtonProps> = ({
     ...variantStyles.base,
     ...(isHovered && !disabled && !loading ? variantStyles.hover : {}),
     ...(isActive && !disabled && !loading ? variantStyles.active : {}),
-    ...(disabled || loading ? { 
-      opacity: 0.6, 
+    ...(disabled || loading ? {
+      opacity: 0.6,
       cursor: 'not-allowed',
       transform: 'none'
     } : {}),
+    ...(fullWidth ? { width: '100%' } : {}),
+    ...style
   };
 
   const handleMouseEnter = () => {
@@ -66,18 +73,9 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
-  return (
-    <button
-      style={combinedStyles}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onClick={handleClick}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading ? (
+  const renderContent = () => {
+    if (loading) {
+      return (
         <>
           <div style={{
             width: '16px',
@@ -87,7 +85,7 @@ export const Button: React.FC<ButtonProps> = ({
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />
-          {variant !== 'icon' && 'Loading...'}
+          {variant !== 'icon' && (loadingText || 'Loading...')}
           <style>
             {`
               @keyframes spin {
@@ -97,12 +95,36 @@ export const Button: React.FC<ButtonProps> = ({
             `}
           </style>
         </>
-      ) : (
-        <>
-          {icon}
-          {variant !== 'icon' && children}
-        </>
-      )}
+      );
+    }
+
+    if (variant === 'icon') {
+      return icon;
+    }
+
+    return (
+      <>
+        {icon && iconPosition === 'left' && icon}
+        {children}
+        {icon && iconPosition === 'right' && icon}
+      </>
+    );
+  };
+
+  return (
+    <button
+      className={className}
+      style={combinedStyles}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onClick={handleClick}
+      disabled={disabled || loading}
+      data-testid={dataTestId}
+      {...props}
+    >
+      {renderContent()}
     </button>
   );
 };

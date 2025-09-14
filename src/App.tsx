@@ -2,24 +2,22 @@ import { useEffect, useState, lazy } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
+import { useToggle } from './hooks/useToggle';
 import { useResponsive } from './hooks/useResponsive';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ModalProvider, useModal } from './contexts/ModalContext';
 import { useThemeColors } from './hooks/useThemeColors';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { UserMenu } from './components/UserMenu';
 import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { DailyTaskTracker } from './components/DailyTaskTracker';
-// Lazy load large modal components
-const TaskModal = lazy(() => import('./components/TaskModal').then(module => ({ default: module.TaskModal })));
-const AddTaskModal = lazy(() => import('./components/AddTaskModal').then(module => ({ default: module.AddTaskModal })));
-const BulkUploadModal = lazy(() => import('./components/BulkUploadModal').then(module => ({ default: module.BulkUploadModal })));
-const ActivityTrackerModal = lazy(() => import('./components/ActivityTrackerModal').then(module => ({ default: module.ActivityTrackerModal })));
+import { ModalRegistry } from './components/modals/ModalRegistry';
+// Lazy load analytics dashboard
 const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-const DailyTaskAnalyticsModal = lazy(() => import('./components/DailyTaskAnalyticsModal').then(module => ({ default: module.DailyTaskAnalyticsModal })));
 import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
-import { Button, LoadingSpinner, ComponentLoadingSpinner, LazyModal } from './components/ui';
+import { Button, LoadingSpinner } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -27,9 +25,11 @@ import { arrayMove } from '@dnd-kit/sortable';
 function App() {
   return (
     <ThemeProvider>
-      <AuthGuard>
-        <AppContent />
-      </AuthGuard>
+      <ModalProvider>
+        <AuthGuard>
+          <AppContent />
+        </AuthGuard>
+      </ModalProvider>
     </ThemeProvider>
   );
 }
@@ -48,14 +48,15 @@ function AppContent() {
 
   const { handleStatusToggle, handleDelete } = useTaskActions();
   const { isMobile, isSmallMobile } = useResponsive();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [quickAddCategory, setQuickAddCategory] = useState<TaskCategory>('life_admin');
+  const {
+    openTaskModal,
+    openAddTaskModal,
+    openBulkUploadModal,
+    openActivityTrackerModal,
+    openDailyAnalyticsModal,
+  } = useModal();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [showActivityTracker, setShowActivityTracker] = useState(false);
-  const [showDailyTaskAnalytics, setShowDailyTaskAnalytics] = useState(false);
+  const showAnalytics = useToggle(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -305,7 +306,7 @@ function AppContent() {
             }}>
               <Button
                 variant="primary"
-                onClick={() => setShowQuickAdd(true)}
+                onClick={() => openAddTaskModal('life_admin')}
                 icon={<Plus className="w-4 h-4" />}
               >
                 Add Task
@@ -315,7 +316,7 @@ function AppContent() {
               {!isMobile && (
                 <Button
                   variant="primary"
-                  onClick={() => setShowBulkUpload(true)}
+                  onClick={() => openBulkUploadModal()}
                   icon={<Upload className="w-4 h-4" />}
                   title="Bulk upload tasks from CSV"
                 >
@@ -327,7 +328,7 @@ function AppContent() {
               {!isMobile && (
                 <Button
                   variant="primary"
-                  onClick={() => setShowActivityTracker(true)}
+                  onClick={() => openActivityTrackerModal()}
                   icon={<Activity className="w-4 h-4" />}
                   title="View activity history"
                 >
@@ -338,7 +339,7 @@ function AppContent() {
               {/* Analytics Button */}
               <Button
                 variant="primary"
-                onClick={() => setShowAnalytics(!showAnalytics)}
+                onClick={showAnalytics.toggle}
                 icon={<BarChart3 className="w-4 h-4" />}
                 title="View Analytics"
               >
@@ -347,7 +348,7 @@ function AppContent() {
               {/* Daily Task Analytics Button */}
               <Button
                 variant="primary"
-                onClick={() => setShowDailyTaskAnalytics(true)}
+                onClick={() => openDailyAnalyticsModal()}
                 icon={<Calendar className="w-4 h-4" />}
                 title="Daily Task Analytics"
               >
@@ -366,7 +367,7 @@ function AppContent() {
         padding: isMobile ? '16px 12px' : '24px' 
       }}>
         {/* Analytics Dashboard - Collapsible */}
-        {showAnalytics && (
+        {showAnalytics.value && (
           <div style={{ marginBottom: '32px' }}>
             <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
           </div>
@@ -377,7 +378,7 @@ function AppContent() {
           <WeeklySummary 
             tasks={tasks} 
             weekNumber={currentWeek} 
-            onTaskClick={(task) => setSelectedTask(task)}
+            onTaskClick={(task) => openTaskModal(task)}
           />
         </div>
 
@@ -402,37 +403,28 @@ function AppContent() {
               <ModernCategoryColumn
                 category="life_admin"
                 tasks={tasksByCategory.life_admin}
-                onTaskClick={setSelectedTask}
+                onTaskClick={openTaskModal}
                 onTaskStatusToggle={handleStatusToggle}
                 onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => {
-                  setQuickAddCategory('life_admin');
-                  setShowQuickAdd(true);
-                }}
+                onAddTask={() => openAddTaskModal('life_admin')}
               />
               
               <ModernCategoryColumn
                 category="work"
                 tasks={tasksByCategory.work}
-                onTaskClick={setSelectedTask}
+                onTaskClick={openTaskModal}
                 onTaskStatusToggle={handleStatusToggle}
                 onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => {
-                  setQuickAddCategory('work');
-                  setShowQuickAdd(true);
-                }}
+                onAddTask={() => openAddTaskModal('work')}
               />
               
               <ModernCategoryColumn
                 category="weekly_recurring"
                 tasks={tasksByCategory.weekly_recurring}
-                onTaskClick={setSelectedTask}
+                onTaskClick={openTaskModal}
                 onTaskStatusToggle={handleStatusToggle}
                 onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => {
-                  setQuickAddCategory('weekly_recurring');
-                  setShowQuickAdd(true);
-                }}
+                onAddTask={() => openAddTaskModal('weekly_recurring')}
               />
             </div>
             
@@ -468,73 +460,7 @@ function AppContent() {
       </div>
 
       {/* Modals */}
-      {selectedTask && (() => {
-        // Get the most up-to-date task from the store
-        const currentTask = tasks.find(t => t.id === selectedTask.id);
-        return currentTask ? (
-          <LazyModal
-            key={`task-modal-${currentTask.id}-${currentTask.updatedAt}`}
-            isOpen={!!selectedTask}
-            onClose={() => setSelectedTask(null)}
-            component={TaskModal}
-            componentProps={{
-              task: currentTask,
-              isOpen: !!selectedTask,
-              onClose: () => setSelectedTask(null),
-            }}
-            fallback={<ComponentLoadingSpinner text="Loading task details..." />}
-          />
-        ) : null;
-      })()}
-
-      <LazyModal
-        isOpen={showQuickAdd}
-        onClose={() => setShowQuickAdd(false)}
-        component={AddTaskModal}
-        componentProps={{
-          isOpen: showQuickAdd,
-          initialCategory: quickAddCategory,
-          onClose: () => setShowQuickAdd(false),
-        }}
-        fallback={<ComponentLoadingSpinner text="Loading task form..." />}
-      />
-      
-      {/* Bulk Upload Modal */}
-      <LazyModal
-        isOpen={showBulkUpload}
-        onClose={() => setShowBulkUpload(false)}
-        component={BulkUploadModal}
-        componentProps={{
-          isOpen: showBulkUpload,
-          onClose: () => setShowBulkUpload(false),
-        }}
-        fallback={<ComponentLoadingSpinner text="Loading bulk upload..." />}
-      />
-      
-      {/* Activity Tracker Modal */}
-      <LazyModal
-        isOpen={showActivityTracker}
-        onClose={() => setShowActivityTracker(false)}
-        component={ActivityTrackerModal}
-        componentProps={{
-          isOpen: showActivityTracker,
-          onClose: () => setShowActivityTracker(false),
-          currentWeek: currentWeek,
-        }}
-        fallback={<ComponentLoadingSpinner text="Loading activity tracker..." />}
-      />
-      
-      {/* Daily Task Analytics Modal */}
-      <LazyModal
-        isOpen={showDailyTaskAnalytics}
-        onClose={() => setShowDailyTaskAnalytics(false)}
-        component={DailyTaskAnalyticsModal}
-        componentProps={{
-          isOpen: showDailyTaskAnalytics,
-          onClose: () => setShowDailyTaskAnalytics(false),
-        }}
-        fallback={<ComponentLoadingSpinner text="Loading daily analytics..." />}
-      />
+      <ModalRegistry tasks={tasks} currentWeek={currentWeek} />
     </div>
   );
 }
