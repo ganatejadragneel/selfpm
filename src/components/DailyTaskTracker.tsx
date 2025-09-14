@@ -389,8 +389,11 @@ export const DailyTaskTracker: React.FC = () => {
           left: 0,
           height: '100vh',
           width: stripWidth,
-          background: isExpanded 
+          backgroundImage: isExpanded
             ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)'
+            : 'none',
+          backgroundColor: isExpanded
+            ? 'transparent'
             : theme.colors.surface.white,
           borderRight: isExpanded 
             ? `3px solid transparent`
@@ -423,8 +426,8 @@ export const DailyTaskTracker: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             padding: theme.spacing.sm,
-            background: completionPercentage === 100 
-              ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)' 
+            backgroundImage: completionPercentage === 100
+              ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
               : completionPercentage > 50 
                 ? 'linear-gradient(180deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)'
                 : 'linear-gradient(180deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%)',
@@ -453,7 +456,7 @@ export const DailyTaskTracker: React.FC = () => {
             {/* Task count badge with gradient */}
             {totalCount > 0 && (
               <div style={{
-                background: completionPercentage === 100 
+                backgroundImage: completionPercentage === 100
                   ? theme.colors.status.success.gradient
                   : completionPercentage > 50 
                     ? theme.colors.status.warning.gradient
@@ -507,7 +510,7 @@ export const DailyTaskTracker: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             padding: theme.spacing.lg,
-            background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            backgroundImage: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
             backdropFilter: 'blur(10px)'
           }}>
             {/* Header with gradient accent */}
@@ -529,7 +532,7 @@ export const DailyTaskTracker: React.FC = () => {
                   color: theme.colors.text.primary,
                   fontSize: '20px',
                   fontWeight: 700,
-                  background: theme.colors.primary.gradient,
+                  backgroundImage: theme.colors.primary.gradient,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -573,7 +576,7 @@ export const DailyTaskTracker: React.FC = () => {
                 <button
                   onClick={handleMobileClose}
                   style={{
-                    background: theme.colors.surface.glass,
+                    backgroundColor: theme.colors.surface.glass,
                     border: `1px solid ${theme.colors.border.light}`,
                     cursor: 'pointer',
                     padding: theme.spacing.sm,
@@ -614,7 +617,7 @@ export const DailyTaskTracker: React.FC = () => {
                 <div style={{
                   height: '100%',
                   width: `${completionPercentage}%`,
-                  background: completionPercentage === 100 
+                  backgroundImage: completionPercentage === 100
                     ? theme.colors.status.success.gradient
                     : completionPercentage > 50 
                       ? theme.colors.status.warning.gradient
@@ -668,7 +671,7 @@ export const DailyTaskTracker: React.FC = () => {
                       style={{
                         marginBottom: theme.spacing.md,
                         padding: theme.spacing.md,
-                        background: isCompleted
+                        backgroundImage: isCompleted
                           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
                           : isExplicitlyNotDone
                             ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)'
@@ -696,7 +699,7 @@ export const DailyTaskTracker: React.FC = () => {
                           right: 0,
                           width: '40px',
                           height: '40px',
-                          background: theme.colors.status.success.gradient,
+                          backgroundImage: theme.colors.status.success.gradient,
                           borderRadius: '0 12px 0 20px',
                           display: 'flex',
                           alignItems: 'center',
@@ -730,7 +733,7 @@ export const DailyTaskTracker: React.FC = () => {
                           <div style={{
                             width: '4px',
                             height: '20px',
-                            background: isCompleted 
+                            backgroundImage: isCompleted
                               ? theme.colors.status.success.gradient
                               : isExplicitlyNotDone
                                 ? theme.colors.status.error.gradient
@@ -744,7 +747,7 @@ export const DailyTaskTracker: React.FC = () => {
                               alignItems: 'center',
                               justifyContent: 'center',
                               padding: '2px 8px',
-                              background: theme.colors.status.purple.gradient,
+                              backgroundImage: theme.colors.status.purple.gradient,
                               borderRadius: theme.borderRadius.full,
                               fontSize: '10px',
                               fontWeight: 600,
@@ -815,7 +818,7 @@ export const DailyTaskTracker: React.FC = () => {
                         <div style={{
                           marginBottom: theme.spacing.md,
                           padding: theme.spacing.md,
-                          background: task.alt_task_done
+                          backgroundImage: task.alt_task_done
                             ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
                             : 'linear-gradient(135deg, rgba(241, 245, 249, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
                           borderRadius: theme.borderRadius.md,

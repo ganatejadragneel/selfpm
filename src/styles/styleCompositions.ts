@@ -270,7 +270,7 @@ export const styleCompositions = {
     }),
 
     gradient: (): CSSProperties => ({
-      background: theme.colors.primary.gradient,
+      backgroundImage: theme.colors.primary.gradient,
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text',

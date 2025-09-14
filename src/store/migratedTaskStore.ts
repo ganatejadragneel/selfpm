@@ -3,6 +3,7 @@ import type { Task, TaskDependency, DependencyType, RecurringTaskTemplate, TaskA
 import { supabase } from '../lib/supabase';
 import { getWeek, getYear } from 'date-fns';
 import { useSupabaseAuthStore } from './supabaseAuthStore';
+import { normalizeActivityType, ACTIVITY_TYPES } from '../utils/shared/activityTypes';
 
 interface MigratedTaskStore {
   tasks: Task[];
@@ -325,7 +326,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       if (error) throw error;
       
       // Log activity for task creation
-      await get().logActivity(data.id, 'created', undefined, data.title, { category: data.category });
+      await get().logActivity(data.id, ACTIVITY_TYPES.TASK_CREATED, undefined, data.title, { category: data.category });
       
       // Transform database format to frontend format (snake_case to camelCase)
       const transformedTask = {
@@ -419,10 +420,10 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
 
       // Log activity if there were meaningful changes (using captured old values)
       if (updates.status) {
-        await get().logActivity(id, 'status_changed', currentTask.status, updates.status);
+        await get().logActivity(id, ACTIVITY_TYPES.STATUS_CHANGED, currentTask.status, updates.status);
       }
       if (updates.priority) {
-        await get().logActivity(id, 'priority_changed', currentTask.priority, updates.priority);
+        await get().logActivity(id, ACTIVITY_TYPES.PRIORITY_CHANGED, currentTask.priority, updates.priority);
       }
       if (updates.progressCurrent !== undefined) {
         await get().logActivity(id, 'progress_updated', currentTask.progressCurrent?.toString(), updates.progressCurrent.toString());
@@ -928,7 +929,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         .insert({
           task_id: taskId,
           new_user_id: userId, // Use new_user_id for migrated table
-          activity_type: activityType,
+          activity_type: normalizeActivityType(activityType),
           old_value: oldValue,
           new_value: newValue,
           metadata: metadata

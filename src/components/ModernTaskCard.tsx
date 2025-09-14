@@ -84,9 +84,16 @@ export const ModernTaskCard: React.FC<ModernTaskCardProps> = ({
         ...style,
         ...priorityStyle,
         borderRadius: theme.borderRadius.lg,
-        border: isDragging 
-          ? `2px solid ${categoryConfig.accentColor}` 
+        borderTop: isDragging
+          ? `2px solid ${categoryConfig.accentColor}`
           : `1px solid ${theme.colors.surface.glassBorder}`,
+        borderRight: isDragging
+          ? `2px solid ${categoryConfig.accentColor}`
+          : `1px solid ${theme.colors.surface.glassBorder}`,
+        borderBottom: isDragging
+          ? `2px solid ${categoryConfig.accentColor}`
+          : `1px solid ${theme.colors.surface.glassBorder}`,
+        // borderLeft is handled by priorityStyle
         cursor: isDragging ? 'grabbing' : 'pointer',
         transition: isDragging ? 'none' : 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         backdropFilter: theme.effects.blur,

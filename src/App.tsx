@@ -180,9 +180,12 @@ function AppContent() {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      background: theme.currentTheme === 'dark' 
-        ? theme.colors.background.primary 
+      backgroundImage: theme.currentTheme === 'dark'
+        ? 'none'
         : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      backgroundColor: theme.currentTheme === 'dark'
+        ? theme.colors.background.primary
+        : 'transparent',
       color: theme.colors.text.primary
     }}>
       {/* Daily Task Tracker */}
@@ -221,7 +224,7 @@ function AppContent() {
                 <div style={{
                   width: isMobile ? '32px' : '40px',
                   height: isMobile ? '32px' : '40px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
@@ -233,10 +236,10 @@ function AppContent() {
                 }}>
                   S
                 </div>
-                <h1 style={{ 
-                  fontSize: isMobile ? '20px' : '28px', 
-                  fontWeight: 'bold', 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                <h1 style={{
+                  fontSize: isMobile ? '20px' : '28px',
+                  fontWeight: 'bold',
+                  backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   margin: 0
@@ -266,16 +269,16 @@ function AppContent() {
                   alignItems: 'center', 
                   gap: '8px', 
                   padding: isMobile ? '6px 10px' : '12px 20px',
-                  background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                  backgroundImage: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
                   borderRadius: '12px',
                   border: '1px solid rgba(102, 126, 234, 0.2)',
                   minWidth: isMobile ? '120px' : '200px',
                   justifyContent: 'center'
                 }}>
                   <Calendar className={isMobile ? "w-3 h-3" : "w-4 h-4"} style={{ color: '#667eea' }} />
-                  <span style={{ 
-                    fontWeight: '600', 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  <span style={{
+                    fontWeight: '600',
+                    backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     fontSize: isMobile ? '11px' : '14px',

@@ -17,6 +17,9 @@ export {
   injectGlobalAnimations
 } from './animations';
 
+// Phase 7C: Shared style utilities (optional for components to adopt)
+export * from './shared';
+
 // Enhanced style creation helpers
 import { styleCompositions, mergeStyles } from './styleCompositions';
 import { semanticTokens } from './designTokens';

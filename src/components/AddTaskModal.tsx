@@ -89,10 +89,10 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           borderBottom: '1px solid rgba(102, 126, 234, 0.1)' 
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '700', 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               margin: 0 
@@ -259,8 +259,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
               style={{
                 flex: 1,
                 padding: '14px 24px',
-                backgroundColor: !form.values.title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                background: !form.values.title.trim() ? '#e5e7eb' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundImage: !form.values.title.trim() ? 'none' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundColor: !form.values.title.trim() ? '#e5e7eb' : 'transparent',
                 color: 'white',
                 border: 'none',
                 borderRadius: '12px',

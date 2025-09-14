@@ -232,3 +232,6 @@ export interface BaseModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Phase 7A: Export additional shared interfaces (optional for components to adopt)
+export * from './shared';

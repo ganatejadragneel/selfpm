@@ -198,10 +198,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
                 <div>
-                  <h2 style={{ 
-                    fontSize: isMobile ? '20px' : '24px', 
-                    fontWeight: 'bold', 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  <h2 style={{
+                    fontSize: isMobile ? '20px' : '24px',
+                    fontWeight: 'bold',
+                    backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     margin: '0 0 8px 0'
@@ -273,7 +273,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                 <div style={{
                   fontSize: '48px',
                   fontWeight: 'bold',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  backgroundImage: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   lineHeight: '1',
@@ -468,10 +468,10 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
               paddingLeft: isMobile ? '16px' : '80px', 
               paddingRight: isMobile ? '16px' : '80px' 
             }}>
-              <h2 style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                backgroundImage: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 margin: '0 0 8px 0'
@@ -992,7 +992,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
                 fontWeight: 'bold',
                 color: theme.colors.text.primary,
                 marginBottom: '8px',
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                backgroundImage: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>

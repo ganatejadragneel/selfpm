@@ -202,7 +202,7 @@ export const styleUtils = {
   }),
   
   gradientText: () => ({
-    background: theme.colors.primary.gradient,
+    backgroundImage: theme.colors.primary.gradient,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   }),
