@@ -15,12 +15,20 @@ export * from './asyncStateUtils';
 export * from './validationUtils';
 export * from './arrayUtils';
 
+// Phase 6: Error & Loading State Unification
+export * from './errorStateManager';
+export * from './loadingStateManager';
+export * from './notificationStateManager';
+
 // Re-export convenience objects
 export { configUtils } from './configurationUtils';
 export { taskTransforms } from './transformationUtils';
 export { asyncStateUtils } from './asyncStateUtils';
 export { validationUtils } from './validationUtils';
 export { dataUtils } from './arrayUtils';
+export { errorUtils } from './errorStateManager';
+export { loadingUtils } from './loadingStateManager';
+export { notificationStyles } from './notificationStateManager';
 
 // Import utilities for grouped export
 import {
@@ -35,6 +43,9 @@ import { taskTransforms } from './transformationUtils';
 import { asyncStateUtils } from './asyncStateUtils';
 import { validationUtils } from './validationUtils';
 import { dataUtils } from './arrayUtils';
+import { errorUtils } from './errorStateManager';
+import { loadingUtils } from './loadingStateManager';
+import { notificationStyles } from './notificationStateManager';
 
 // Export as grouped utilities for easy access
 export const sharedUtils = {
@@ -50,4 +61,7 @@ export const sharedUtils = {
   async: asyncStateUtils,
   validation: validationUtils,
   data: dataUtils,
+  errors: errorUtils,
+  loading: loadingUtils,
+  notifications: notificationStyles,
 };
