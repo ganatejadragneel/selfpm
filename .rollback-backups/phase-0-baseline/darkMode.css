@@ -1,0 +1,232 @@
+/* Dark Mode Transitions */
+* {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Prevent transition on initial load */
+.no-transition * {
+  transition: none !important;
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  background: #0d1117;
+  color: #e6edf3;
+}
+
+/* Scrollbar styling for dark mode */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #161b22;
+  border-radius: 10px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 10px;
+  border: 2px solid #161b22;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Dark mode component overrides */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #161b22 !important;
+  color: #e6edf3 !important;
+  border-color: #30363d !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  background-color: #1c2127 !important;
+  border-color: #388bfd !important;
+  outline: none !important;
+}
+
+[data-theme="dark"] button {
+  color: #e6edf3;
+}
+
+/* Modal backgrounds in dark mode */
+[data-theme="dark"] [role="dialog"] {
+  background-color: #161b22 !important;
+  color: #e6edf3 !important;
+}
+
+/* Card backgrounds in dark mode */
+[data-theme="dark"] .card,
+[data-theme="dark"] [class*="card"],
+[data-theme="dark"] [class*="Card"] {
+  background-color: #1c2127 !important;
+  border-color: #30363d !important;
+}
+
+/* Daily task component in dark mode */
+[data-theme="dark"] [class*="daily"],
+[data-theme="dark"] [class*="Daily"] {
+  background-color: #161b22 !important;
+  border-color: #30363d !important;
+}
+
+/* Dropdown menus in dark mode */
+[data-theme="dark"] [class*="dropdown"],
+[data-theme="dark"] [class*="Dropdown"],
+[data-theme="dark"] [class*="menu"],
+[data-theme="dark"] [class*="Menu"] {
+  background-color: #1c2127 !important;
+  border-color: #30363d !important;
+}
+
+/* Override any white backgrounds in dark mode */
+[data-theme="dark"] * {
+  --bg-white: #1c2127;
+  --bg-glass: rgba(28, 33, 39, 0.95);
+}
+
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background-color: white"],
+[data-theme="dark"] [style*="background:white"],
+[data-theme="dark"] [style*="background-color:white"] {
+  background: #1c2127 !important;
+}
+
+[data-theme="dark"] [style*="rgba(255, 255, 255"] {
+  background: rgba(28, 33, 39, 0.95) !important;
+}
+
+/* Headers and navigation in dark mode */
+[data-theme="dark"] header,
+[data-theme="dark"] nav {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+}
+
+/* Badges and chips in dark mode */
+[data-theme="dark"] [class*="badge"],
+[data-theme="dark"] [class*="Badge"],
+[data-theme="dark"] [class*="chip"],
+[data-theme="dark"] [class*="Chip"],
+[data-theme="dark"] [class*="tag"],
+[data-theme="dark"] [class*="Tag"] {
+  background: rgba(48, 54, 61, 0.5) !important;
+  color: #e6edf3 !important;
+  border-color: #30363d !important;
+}
+
+/* Tooltips in dark mode */
+[data-theme="dark"] [class*="tooltip"],
+[data-theme="dark"] [class*="Tooltip"],
+[data-theme="dark"] [role="tooltip"] {
+  background: #21262d !important;
+  color: #e6edf3 !important;
+  border-color: #30363d !important;
+}
+
+/* Progress bars in dark mode */
+[data-theme="dark"] [class*="progress"],
+[data-theme="dark"] [class*="Progress"] {
+  background: #161b22 !important;
+}
+
+/* Hover states in dark mode */
+[data-theme="dark"] button:hover,
+[data-theme="dark"] a:hover {
+  opacity: 0.9;
+}
+
+/* Focus states in dark mode */
+[data-theme="dark"] *:focus-visible {
+  outline-color: #388bfd !important;
+}
+
+/* Fix black/dark text that becomes invisible */
+[data-theme="dark"] [style*="color: black"],
+[data-theme="dark"] [style*="color:black"],
+[data-theme="dark"] [style*="color: #000"],
+[data-theme="dark"] [style*="color:#000"],
+[data-theme="dark"] [style*="color: rgb(0"],
+[data-theme="dark"] [style*="color:rgb(0"],
+[data-theme="dark"] [style*="color: #1"],
+[data-theme="dark"] [style*="color: #2"],
+[data-theme="dark"] [style*="color: #3"],
+[data-theme="dark"] [style*="color: #4"],
+[data-theme="dark"] [style*="color: #5"] {
+  color: #e6edf3 !important;
+}
+
+/* Ensure all text in specific elements is visible */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] p,
+[data-theme="dark"] span:not([style*="gradient"]),
+[data-theme="dark"] div:not([style*="gradient"]),
+[data-theme="dark"] label,
+[data-theme="dark"] li,
+[data-theme="dark"] td,
+[data-theme="dark"] th {
+  color: #e6edf3 !important;
+}
+
+/* Keep gradient text as is */
+[data-theme="dark"] [style*="gradient"] {
+  color: inherit !important;
+}
+
+/* Fix specific dark text colors from theme */
+[data-theme="dark"] [style*="#1f2937"],
+[data-theme="dark"] [style*="#374151"],
+[data-theme="dark"] [style*="#4b5563"],
+[data-theme="dark"] [style*="#6b7280"],
+[data-theme="dark"] [style*="#9ca3af"] {
+  color: #e6edf3 !important;
+}
+
+/* Button text should always be visible */
+[data-theme="dark"] button {
+  color: #e6edf3 !important;
+}
+
+/* Links should be visible */
+[data-theme="dark"] a {
+  color: #58a6ff !important;
+}
+
+/* Light mode scrollbar */
+[data-theme="light"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

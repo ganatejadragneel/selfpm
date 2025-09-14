@@ -238,3 +238,10 @@ export const STYLE_SYSTEM_CONFIG = {
     accessibility: true,
   },
 } as const;
+// Phase 2 Extensions: Additional style patterns
+export { 
+  styleExtensions, 
+  responsiveExtensions, 
+  animationKeyframes, 
+  injectAnimationKeyframes 
+} from './styleCompositions';
