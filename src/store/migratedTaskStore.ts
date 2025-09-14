@@ -998,24 +998,44 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         return;
       }
 
-      // For now, we need to set both user_id and new_user_id due to schema constraints
-      // user_id should be null for new Supabase Auth users, but the schema might require it
-      const { error } = await supabase
+      // Insert comment and get the created data back
+      const { data, error } = await supabase
         .from('task_comments')
         .insert({
           task_id: taskId,
           new_user_id: userId, // Use new_user_id for Supabase Auth
           content: content,
           parent_comment_id: parentCommentId
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       // Log activity
       await get().logActivity(taskId, 'comment_added', undefined, content);
 
-      // Refresh the task data to show the new comment
-      await get().fetchTasks();
+      // Create formatted comment for optimistic UI update
+      const formattedComment = {
+        id: data.id,
+        taskId: data.task_id,
+        userId: data.new_user_id,
+        parentCommentId: data.parent_comment_id,
+        content: data.content,
+        isEdited: data.is_edited,
+        editedAt: data.edited_at,
+        createdAt: data.created_at,
+        user: undefined // User details not available due to auth.users join limitations
+      };
+
+      // Optimistic UI update - add comment to local state
+      set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId
+            ? { ...task, comments: [...(task.comments || []), formattedComment] }
+            : task
+        )
+      }));
 
     } catch (error) {
       set({ error: (error as Error).message });
@@ -1026,7 +1046,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
     try {
       const authStore = useSupabaseAuthStore.getState();
       const userId = authStore.user?.id;
-      
+
       if (!userId) {
         set({ error: 'User not authenticated' });
         return;
@@ -1034,7 +1054,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
 
       const { error } = await supabase
         .from('task_comments')
-        .update({ 
+        .update({
           content: content,
           is_edited: true,
           edited_at: new Date().toISOString()
@@ -1044,8 +1064,17 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
 
       if (error) throw error;
 
-      // Refresh the task data to show the updated comment
-      await get().fetchTasks();
+      // Optimistic UI update - update comment in local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          comments: task.comments?.map(comment =>
+            comment.id === commentId
+              ? { ...comment, content, isEdited: true, editedAt: new Date().toISOString() }
+              : comment
+          )
+        }))
+      }));
 
     } catch (error) {
       set({ error: (error as Error).message });
@@ -1056,7 +1085,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
     try {
       const authStore = useSupabaseAuthStore.getState();
       const userId = authStore.user?.id;
-      
+
       if (!userId) {
         set({ error: 'User not authenticated' });
         return;
@@ -1070,8 +1099,13 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
 
       if (error) throw error;
 
-      // Refresh the task data to show the comment was deleted
-      await get().fetchTasks();
+      // Optimistic UI update - remove comment from local state
+      set(state => ({
+        tasks: state.tasks.map(task => ({
+          ...task,
+          comments: task.comments?.filter(comment => comment.id !== commentId)
+        }))
+      }));
 
     } catch (error) {
       set({ error: (error as Error).message });

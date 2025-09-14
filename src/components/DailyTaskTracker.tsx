@@ -389,16 +389,13 @@ export const DailyTaskTracker: React.FC = () => {
           left: 0,
           height: '100vh',
           width: stripWidth,
-          backgroundImage: isExpanded
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)'
-            : 'none',
           backgroundColor: isExpanded
             ? 'transparent'
             : theme.colors.surface.white,
-          borderRight: isExpanded 
+          borderRight: isExpanded
             ? `3px solid transparent`
             : `2px solid ${theme.colors.border.light}`,
-          backgroundImage: isExpanded 
+          backgroundImage: isExpanded
             ? `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%), linear-gradient(90deg, ${theme.colors.primary.light}, ${theme.colors.status.success.light})`
             : 'none',
           backgroundClip: isExpanded ? 'padding-box, border-box' : 'padding-box',
