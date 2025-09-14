@@ -148,7 +148,7 @@ function AppContent() {
                 })
               )
             );
-          } catch (error) {
+          } catch {
             // Order column may not exist yet. Tasks reordered in UI only.
           }
         }
@@ -307,10 +307,6 @@ function AppContent() {
                 variant="primary"
                 onClick={() => setShowQuickAdd(true)}
                 icon={<Plus className="w-4 h-4" />}
-                style={{
-                  fontSize: isMobile ? '12px' : '14px',
-                  padding: isMobile ? '8px 12px' : '12px 20px',
-                }}
               >
                 Add Task
               </Button>
@@ -318,7 +314,7 @@ function AppContent() {
               {/* Bulk Upload Button - Hide on mobile */}
               {!isMobile && (
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   onClick={() => setShowBulkUpload(true)}
                   icon={<Upload className="w-4 h-4" />}
                   title="Bulk upload tasks from CSV"
@@ -330,7 +326,7 @@ function AppContent() {
               {/* Activity Tracker Button - Hide on mobile */}
               {!isMobile && (
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   onClick={() => setShowActivityTracker(true)}
                   icon={<Activity className="w-4 h-4" />}
                   title="View activity history"
@@ -341,24 +337,21 @@ function AppContent() {
               
               {/* Analytics Button */}
               <Button
-                variant="icon"
+                variant="primary"
                 onClick={() => setShowAnalytics(!showAnalytics)}
-                icon={<BarChart3 className="w-5 h-5" />}
+                icon={<BarChart3 className="w-4 h-4" />}
                 title="View Analytics"
-                style={{
-                  marginRight: theme.spacing.sm,
-                  background: showAnalytics ? 'rgba(102, 126, 234, 0.1)' : theme.colors.surface.glass,
-                }}
-              />
-              
+              >
+              </Button>
+
               {/* Daily Task Analytics Button */}
               <Button
-                variant="icon"
+                variant="primary"
                 onClick={() => setShowDailyTaskAnalytics(true)}
-                icon={<Calendar className="w-5 h-5" />}
+                icon={<Calendar className="w-4 h-4" />}
                 title="Daily Task Analytics"
-                style={{ marginRight: theme.spacing.sm }}
-              />
+              >
+              </Button>
               
               <UserMenu />
             </div>
