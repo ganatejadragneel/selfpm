@@ -20,6 +20,10 @@ export * from './errorStateManager';
 export * from './loadingStateManager';
 export * from './notificationStateManager';
 
+// Phase 7: Form System Enhancement
+export * from './formSystemManager';
+export * from './formValidators';
+
 // Re-export convenience objects
 export { configUtils } from './configurationUtils';
 export { taskTransforms } from './transformationUtils';
@@ -29,6 +33,7 @@ export { dataUtils } from './arrayUtils';
 export { errorUtils } from './errorStateManager';
 export { loadingUtils } from './loadingStateManager';
 export { notificationStyles } from './notificationStateManager';
+export { validators } from './formValidators';
 
 // Import utilities for grouped export
 import {
@@ -46,6 +51,7 @@ import { dataUtils } from './arrayUtils';
 import { errorUtils } from './errorStateManager';
 import { loadingUtils } from './loadingStateManager';
 import { notificationStyles } from './notificationStateManager';
+import { validators } from './formValidators';
 
 // Export as grouped utilities for easy access
 export const sharedUtils = {
@@ -64,4 +70,5 @@ export const sharedUtils = {
   errors: errorUtils,
   loading: loadingUtils,
   notifications: notificationStyles,
+  forms: validators,
 };
