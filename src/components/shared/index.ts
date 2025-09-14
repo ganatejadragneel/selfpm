@@ -8,6 +8,12 @@ export * from './UnifiedStateComponents';
 export * from './EnhancedFormComponents';
 export * from './FormTemplates';
 
+// Phase 8: Component Interface Optimization
+export * from './ComponentWrappers';
+
+// Phase 9: Animation & Responsive System Maturation
+export * from './AnimatedComponents';
+
 // Re-export individual components for convenience
 
 // Phase 6 Components
@@ -44,3 +50,30 @@ export {
   FormStepWizard,
   withFormEnhancements,
 } from './FormTemplates';
+
+// Phase 8 Components
+export {
+  withLoading,
+  withErrorBoundary,
+  withPermissions,
+  withAnimation,
+  withFocusManagement,
+  withClickOutside,
+  withKeyboardNavigation,
+  SpacingWrapper,
+  ContainerWrapper,
+  CardWrapper,
+  ResponsiveWrapper,
+  compose,
+  withAllEnhancements,
+  createStandardComponent,
+} from './ComponentWrappers';
+
+// Phase 9 Components
+export {
+  AnimatedContainer,
+  AnimatedCard,
+  AnimatedButton,
+  AnimatedModal,
+  AnimatedList,
+} from './AnimatedComponents';

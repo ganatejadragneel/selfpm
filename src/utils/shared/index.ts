@@ -24,6 +24,20 @@ export * from './notificationStateManager';
 export * from './formSystemManager';
 export * from './formValidators';
 
+// Phase 8: Component Interface Optimization
+export * from './componentPropFactories';
+export * from './componentPatterns';
+
+// Phase 9: Animation & Responsive System Maturation
+export * from './animationConstants';
+export * from './animationHelpers';
+export * from './responsiveSystem';
+
+// Phase 10: Performance & Bundle Optimization
+export * from './performanceMonitoring';
+export * from './lazyLoadingUtils';
+export * from './bundleOptimization';
+
 // Re-export convenience objects
 export { configUtils } from './configurationUtils';
 export { taskTransforms } from './transformationUtils';
@@ -34,6 +48,13 @@ export { errorUtils } from './errorStateManager';
 export { loadingUtils } from './loadingStateManager';
 export { notificationStyles } from './notificationStateManager';
 export { validators } from './formValidators';
+export { propUtils, propFactories, eventUtils, a11yUtils } from './componentPropFactories';
+export { propValidators, eventPatterns, propMergers, statePatterns, compositionPatterns, apiPatterns } from './componentPatterns';
+export { animationHelpers, useAnimations, animationUtils } from './animationHelpers';
+export { responsiveHelpers, useResponsive, responsiveUtils } from './responsiveSystem';
+export { performanceMonitor, usePerformanceMonitoring, performanceUtils } from './performanceMonitoring';
+export { codeSplittingUtils, imageLazyLoadingUtils, contentLazyLoadingUtils, preloadingUtils } from './lazyLoadingUtils';
+export { bundleOptimizationUtils, dynamicImportUtils, resourceOptimizationUtils, performanceBudgetUtils } from './bundleOptimization';
 
 // Import utilities for grouped export
 import {
@@ -52,6 +73,13 @@ import { errorUtils } from './errorStateManager';
 import { loadingUtils } from './loadingStateManager';
 import { notificationStyles } from './notificationStateManager';
 import { validators } from './formValidators';
+import { propUtils, propFactories, eventUtils, a11yUtils } from './componentPropFactories';
+import { propValidators, eventPatterns, propMergers, statePatterns, compositionPatterns, apiPatterns } from './componentPatterns';
+import { animationHelpers, useAnimations, animationUtils } from './animationHelpers';
+import { responsiveHelpers, useResponsive, responsiveUtils } from './responsiveSystem';
+import { performanceMonitor, usePerformanceMonitoring, performanceUtils } from './performanceMonitoring';
+import { codeSplittingUtils, imageLazyLoadingUtils, contentLazyLoadingUtils, preloadingUtils } from './lazyLoadingUtils';
+import { bundleOptimizationUtils, dynamicImportUtils, resourceOptimizationUtils, performanceBudgetUtils } from './bundleOptimization';
 
 // Export as grouped utilities for easy access
 export const sharedUtils = {
@@ -71,4 +99,45 @@ export const sharedUtils = {
   loading: loadingUtils,
   notifications: notificationStyles,
   forms: validators,
+  components: {
+    props: propUtils,
+    factories: propFactories,
+    events: eventUtils,
+    a11y: a11yUtils,
+    validators: propValidators,
+    patterns: {
+      events: eventPatterns,
+      mergers: propMergers,
+      state: statePatterns,
+      composition: compositionPatterns,
+      api: apiPatterns,
+    },
+  },
+  animations: {
+    helpers: animationHelpers,
+    hooks: useAnimations,
+    utils: animationUtils,
+  },
+  responsive: {
+    helpers: responsiveHelpers,
+    hooks: useResponsive,
+    utils: responsiveUtils,
+  },
+  performance: {
+    monitor: performanceMonitor,
+    hooks: usePerformanceMonitoring,
+    utils: performanceUtils,
+  },
+  lazyLoading: {
+    codeSplitting: codeSplittingUtils,
+    images: imageLazyLoadingUtils,
+    content: contentLazyLoadingUtils,
+    preloading: preloadingUtils,
+  },
+  bundleOptimization: {
+    analysis: bundleOptimizationUtils,
+    imports: dynamicImportUtils,
+    resources: resourceOptimizationUtils,
+    budgets: performanceBudgetUtils,
+  },
 };
