@@ -949,8 +949,6 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       const authStore = useSupabaseAuthStore.getState();
       const userId = authStore.user?.id;
       
-      console.log('fetchActivities: userId =', userId);
-      console.log('fetchActivities: date range =', startDate.toISOString(), 'to', endDate.toISOString());
       
       if (!userId) return [];
       
@@ -962,8 +960,6 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         .lte('created_at', endDate.toISOString())
         .order('created_at', { ascending: false });
       
-      console.log('fetchActivities: raw data =', data);
-      console.log('fetchActivities: error =', error);
       
       if (error) throw error;
       
@@ -980,7 +976,6 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
         user: undefined // No user join data available from client side
       }));
       
-      console.log('fetchActivities: formatted activities =', formattedActivities.length);
       return formattedActivities;
     } catch (error) {
       console.error('Failed to fetch activities:', error);
@@ -1400,7 +1395,7 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       
       if (!userId) return;
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('recurring_task_templates')
         .select('*')
         .eq('new_user_id', userId)
@@ -1410,7 +1405,6 @@ export const useMigratedTaskStore = create<MigratedTaskStore>((set, get) => ({
       
       // Store in recurring templates state if it exists
       // For now, we'll just log success
-      console.log('Fetched recurring templates:', data?.length || 0);
     } catch (error) {
       console.error('Failed to fetch recurring templates:', error);
       set({ error: (error as Error).message });

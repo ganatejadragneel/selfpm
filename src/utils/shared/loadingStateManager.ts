@@ -364,7 +364,6 @@ export const useAsyncOperationWithLoading = <T = any>() => {
         }
 
         if (options?.successMessage) {
-          console.log(options.successMessage);
         }
 
         return result;
@@ -373,7 +372,6 @@ export const useAsyncOperationWithLoading = <T = any>() => {
 
         // Retry logic
         if (attemptCount < maxAttempts) {
-          console.log(`Retrying operation (attempt ${attemptCount + 1}/${maxAttempts})`);
           await new Promise(resolve => setTimeout(resolve, 1000 * attemptCount)); // Exponential backoff
           return attempt();
         }

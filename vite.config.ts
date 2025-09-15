@@ -60,9 +60,7 @@ export default defineConfig({
           }
 
           // Performance and caching phase 6 additions
-          if (id.includes('/lib/cache') || id.includes('/lib/apiClient') || id.includes('/lib/transformers')) {
-            return 'performance-utils';
-          }
+          // Note: apiClient removed as dead code
 
           // Analytics and reporting components
           if (id.includes('/analytics/') || id.includes('ProgressAnalyticsDashboard') || id.includes('DailyTaskAnalyticsModal')) {

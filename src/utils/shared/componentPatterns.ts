@@ -105,7 +105,6 @@ export const eventPatterns = {
       // Analytics tracking
       if (options.analytics) {
         // Track analytics event (integration point)
-        console.log('Analytics:', options.analytics.event, options.analytics.properties);
       }
 
       onClick?.(event);
@@ -480,7 +479,6 @@ export const apiPatterns = {
       eventAPI[eventName as keyof TEvents] = ((...args: any[]) => {
         // Add analytics tracking
         if (options.analytics) {
-          console.log(`Event: ${eventName}`, args);
         }
 
         // Add validation if needed
@@ -537,7 +535,6 @@ export const apiPatterns = {
         if (result && result !== data) {
           // Validate if validator provided
           if (options.validation && !options.validation(result)) {
-            console.warn(`Data validation failed for operation: ${operationName}`);
             return data;
           }
 

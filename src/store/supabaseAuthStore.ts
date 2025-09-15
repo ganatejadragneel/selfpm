@@ -254,7 +254,6 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
       const baseUrl = window.location.origin;
       const redirectUrl = `${baseUrl}?type=recovery&v=${Date.now()}`;
         
-      console.log('Password reset redirect URL:', redirectUrl);
         
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
@@ -410,20 +409,12 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
   ensureUserInMappingTable: async (user: User) => {
     // Prevent duplicate processing of the same user
     if (usersBeingProcessed.has(user.id)) {
-      console.log('⚠️ User already being processed, skipping:', user.id);
       return;
     }
 
     usersBeingProcessed.add(user.id);
     
     try {
-      console.log('=== STARTING ensureUserInMappingTable ===');
-      console.log('User object:', {
-        id: user.id,
-        email: user.email,
-        user_metadata: user.user_metadata,
-        created_at: user.created_at
-      });
     
     const timeout = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('ensureUserInMappingTable timeout after 5 seconds')), 5000);
@@ -541,7 +532,6 @@ export const useSupabaseAuthStore = create<SupabaseAuthStore>((set, get) => ({
               
               if (!verifyError && verifyUsers && verifyUsers.length > 0) {
                 if (verifyUsers.length > 1) {
-                  console.warn('⚠️ Multiple mappings found for user, but login will still work:', verifyUsers.length);
                 }
               } else {
                 console.error('❌ VERIFICATION FAILED: User not found after insert', verifyError);

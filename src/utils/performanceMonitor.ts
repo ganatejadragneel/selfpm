@@ -5,14 +5,7 @@
 // Report Web Vitals (install web-vitals package to enable)
 export function reportWebVitals(onPerfEntry?: (metric: any) => void) {
   if (onPerfEntry && onPerfEntry instanceof Function) {
-    // TODO: Install web-vitals package and uncomment to enable monitoring
-    // import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    //   getCLS(onPerfEntry);
-    //   getFID(onPerfEntry);
-    //   getFCP(onPerfEntry);
-    //   getLCP(onPerfEntry);
-    //   getTTFB(onPerfEntry);
-    // });
+    console.info('Web Vitals monitoring requires web-vitals package to be installed');
   }
 }
 
