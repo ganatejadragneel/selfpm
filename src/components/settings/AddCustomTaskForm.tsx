@@ -63,6 +63,7 @@ export const AddCustomTaskForm: React.FC = () => {
 
     setLoading(true);
     try {
+      const now = new Date().toISOString();
       const taskData = {
         user_id: null, // Legacy field, set to null for Supabase Auth users
         new_user_id: user.id, // Use new_user_id for Supabase Auth
@@ -71,7 +72,7 @@ export const AddCustomTaskForm: React.FC = () => {
         type,
         options: type === 'dropdown' ? options.filter(opt => opt.trim()) : null,
         alt_task: altTask.trim() || null,
-        alt_task_done: false
+        created_at: now
       };
 
       const { error: insertError } = await supabase.from('custom_tasks').insert(taskData);
@@ -87,7 +88,15 @@ export const AddCustomTaskForm: React.FC = () => {
       setOptions(['']);
       setAltTask('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      console.error('Error creating custom task:', err);
+      // Show detailed error message for better debugging
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (typeof err === 'object' && err !== null) {
+        setError(JSON.stringify(err));
+      } else {
+        setError('An unknown error occurred');
+      }
     } finally {
       setLoading(false);
     }
