@@ -9,6 +9,9 @@ import { format } from 'date-fns/format';
 import { formatLocalDateString } from '../utils/dateUtils';
 import type { BaseModalProps } from '../types';
 
+// DRY Principle: Define character limit as a constant to avoid magic numbers
+const MAX_NOTE_LENGTH = 600;
+
 interface TaskNoteModalProps extends BaseModalProps {
   taskId: string;
   taskName: string;
@@ -111,7 +114,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
 
   if (!isOpen) return null;
 
-  const remainingChars = 200 - noteText.length;
+  const remainingChars = MAX_NOTE_LENGTH - noteText.length;
 
   return createPortal(
     <div style={{
@@ -215,7 +218,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
             <div style={{ position: 'relative' }}>
               <textarea
                 value={noteText}
-                onChange={(e) => setNoteText(e.target.value.slice(0, 200))}
+                onChange={(e) => setNoteText(e.target.value.slice(0, MAX_NOTE_LENGTH))}
                 placeholder="Add your thoughts, reasons, or reflections about this task..."
                 style={{
                   width: '100%',
@@ -247,7 +250,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
                 <SpeechToTextButton
                   onTranscription={(text) => setNoteText(prev => {
                     const combined = prev ? `${prev} ${text}` : text;
-                    return combined.slice(0, 200); // Respect the character limit
+                    return combined.slice(0, MAX_NOTE_LENGTH); // Respect the character limit
                   })}
                   size="sm"
                 />
