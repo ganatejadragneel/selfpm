@@ -141,6 +141,46 @@ export const DailyTasksView: React.FC = () => {
     setEditForm({ ...editForm, options: newOptions });
   };
 
+  const exportData = async () => {
+    if (!user) return;
+
+    try {
+      const { data: completions } = await supabase
+        .from('daily_task_completions')
+        .select('*')
+        .eq('new_user_id', user.id)
+        .order('completion_date', { ascending: true });
+
+      const { data: notes } = await supabase
+        .from('daily_task_notes')
+        .select('*')
+        .eq('new_user_id', user.id)
+        .order('note_date', { ascending: true });
+
+      const exportData = {
+        user: { id: user.id, email: user.email },
+        customTasks: tasks,
+        completions: completions || [],
+        notes: notes || [],
+        exportedAt: new Date().toISOString()
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `habit_data_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      setError('Failed to export data');
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -207,38 +247,55 @@ export const DailyTasksView: React.FC = () => {
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: theme.spacing.md,
+        justifyContent: 'space-between',
         marginBottom: theme.spacing.xl
       }}>
         <div style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: theme.borderRadius.lg,
-          background: theme.colors.status.success.gradient,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          gap: theme.spacing.md
         }}>
-          <Calendar size={24} color="white" />
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: theme.borderRadius.lg,
+            background: theme.colors.status.success.gradient,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }}>
+            <Calendar size={24} color="white" />
+          </div>
+          <div>
+            <h3 style={{
+              fontSize: theme.typography.sizes.xl,
+              fontWeight: theme.typography.weights.bold,
+              color: theme.colors.text.primary,
+              marginBottom: theme.spacing.xs,
+              background: `linear-gradient(135deg, ${theme.colors.status.success.dark}, ${theme.colors.primary.dark})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>Your Daily Tasks</h3>
+            <p style={{
+              fontSize: theme.typography.sizes.sm,
+              color: theme.colors.text.secondary,
+              margin: 0
+            }}>Manage and customize your daily tracking tasks</p>
+          </div>
         </div>
-        <div>
-          <h3 style={{
-            fontSize: theme.typography.sizes.xl,
-            fontWeight: theme.typography.weights.bold,
-            color: theme.colors.text.primary,
-            marginBottom: theme.spacing.xs,
-            background: `linear-gradient(135deg, ${theme.colors.status.success.dark}, ${theme.colors.primary.dark})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>Your Daily Tasks</h3>
-          <p style={{
-            fontSize: theme.typography.sizes.sm,
-            color: theme.colors.text.secondary,
-            margin: 0
-          }}>Manage and customize your daily tracking tasks</p>
-        </div>
+        <button
+          onClick={exportData}
+          style={{
+            ...formStyles.primaryButton,
+            width: 'auto',
+            padding: '10px 20px',
+            fontSize: theme.typography.sizes.sm
+          }}
+        >
+          Export Data
+        </button>
       </div>
       
       {tasks.length === 0 ? (
