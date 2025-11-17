@@ -14,7 +14,7 @@ export const NO_SELECTION_COLOR = '#ef4444'; // Red for empty dropdown selection
 
 // Daily task constraints
 export const MAX_DROPDOWN_OPTIONS = 30;
-export const MAX_NOTE_LENGTH = 200;
+export const MAX_NOTE_LENGTH = 600;
 
 // Display value formatters
 export const getDisplayValue = (val: string, taskType: string): string => {
