@@ -4,7 +4,7 @@ import { theme } from '../styles/theme';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { supabase } from '../lib/supabase';
 import { TaskNoteModal } from './TaskNoteModal';
-import { getTodayLocalString, isSameLocalDate } from '../utils/dateUtils';
+import { getTodayLocalString, getYesterdayLocalString, isSameLocalDate, parseLocalDate } from '../utils/dateUtils';
 import { parseTaskValue, createTaskValue } from '../utils/taskValueUtils';
 import type { CustomDailyTask } from '../types';
 
@@ -16,7 +16,11 @@ export const DailyTaskTracker: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<CustomDailyTask | null>(null);
-  
+
+  // Date selection state: 'today' or 'yesterday'
+  const [dateView, setDateView] = useState<'today' | 'yesterday'>('today');
+  const selectedDate = dateView === 'today' ? getTodayLocalString() : getYesterdayLocalString();
+
   const { user } = useSupabaseAuthStore();
 
   // Detect mobile
@@ -33,40 +37,37 @@ export const DailyTaskTracker: React.FC = () => {
 
   const fetchCustomTasksAndCompletions = useCallback(async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
-      // Get today's date in local timezone
-      const today = getTodayLocalString();
-      
       // Fetch custom daily tasks
       const { data: customTasksData, error: tasksError } = await supabase
         .from('custom_tasks')
         .select('*')
         .eq('new_user_id', user.id);
-      
+
       if (tasksError) {
         console.error('Error fetching custom tasks:', tasksError);
         return;
       }
-      
-      // Fetch today's completions
+
+      // Fetch completions for selected date
       const { data: completionsData, error: completionsError } = await supabase
         .from('daily_task_completions')
         .select('*')
         .eq('new_user_id', user.id)
-        .eq('completion_date', today);
-      
+        .eq('completion_date', selectedDate);
+
       if (completionsError) {
         console.error('Error fetching completions:', completionsError);
       }
 
-      // Fetch today's notes
+      // Fetch notes for selected date
       const { data: notesData, error: notesError } = await supabase
         .from('daily_task_notes')
         .select('*')
         .eq('new_user_id', user.id)
-        .eq('note_date', today);
+        .eq('note_date', selectedDate);
       
       if (notesError) {
         console.error('Error fetching notes:', notesError);
@@ -104,9 +105,9 @@ export const DailyTaskTracker: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, selectedDate]);
 
-  // Fetch custom daily tasks and today's completion status
+  // Fetch custom daily tasks and completion status for selected date
   useEffect(() => {
     if (!user) return;
     
@@ -126,6 +127,7 @@ export const DailyTaskTracker: React.FC = () => {
       if (!isSameLocalDate(currentDate, lastKnownDate)) {
         console.log('New day detected, refreshing daily tasks...');
         lastKnownDate = currentDate;
+        setDateView('today'); // Reset to today view on day change
         fetchCustomTasksAndCompletions(); // This will fetch today's completions (which will be empty for new day)
       }
     }, 60000); // Check every minute
@@ -135,10 +137,8 @@ export const DailyTaskTracker: React.FC = () => {
 
   const handleTaskValueChange = async (taskId: string, newValue: string) => {
     if (!user) return;
-    
+
     try {
-      const today = getTodayLocalString();
-      
       // Get current task to preserve alt status
       const currentTask = customTasks.find(t => t.id === taskId);
       const currentAltStatus = currentTask?.alt_task_done ? 'Done' : '';
@@ -154,11 +154,11 @@ export const DailyTaskTracker: React.FC = () => {
               custom_task_id: taskId,
               new_user_id: user.id,
               value: combinedValue,
-              completion_date: today
+              completion_date: selectedDate
             }, {
               onConflict: 'custom_task_id,new_user_id,completion_date'
             });
-          
+
           if (error) {
             console.error('Error updating task completion:', error);
             return;
@@ -170,7 +170,7 @@ export const DailyTaskTracker: React.FC = () => {
             .delete()
             .eq('custom_task_id', taskId)
             .eq('new_user_id', user.id)
-            .eq('completion_date', today);
+            .eq('completion_date', selectedDate);
           
           if (error) {
             console.error('Error deleting task completion:', error);
@@ -201,11 +201,11 @@ export const DailyTaskTracker: React.FC = () => {
             custom_task_id: taskId,
             new_user_id: user.id,
             value: combinedValue,
-            completion_date: today
+            completion_date: selectedDate
           }, {
             onConflict: 'custom_task_id,new_user_id,completion_date'
           });
-        
+
         if (error) {
           console.error('Error updating task completion:', error);
           return;
@@ -231,18 +231,16 @@ export const DailyTaskTracker: React.FC = () => {
 
   const handleAltTaskChange = async (taskId: string, isDone: boolean) => {
     if (!user) return;
-    
+
     try {
-      const today = getTodayLocalString();
-      
       // Get current task to preserve main status
       const currentTask = customTasks.find(t => t.id === taskId);
       const currentMainStatus = currentTask?.currentValue || '';
       const newAltStatus = isDone ? 'Done' : 'Not Done';
-      
+
       // Create combined value
       const combinedValue = createTaskValue(currentMainStatus, newAltStatus);
-      
+
       // Update or insert completion record with combined value
       const { error } = await supabase
         .from('daily_task_completions')
@@ -250,7 +248,7 @@ export const DailyTaskTracker: React.FC = () => {
           custom_task_id: taskId,
           new_user_id: user.id,
           value: combinedValue,
-          completion_date: today
+          completion_date: selectedDate
         }, {
           onConflict: 'custom_task_id,new_user_id,completion_date'
         });
@@ -597,6 +595,52 @@ export const DailyTaskTracker: React.FC = () => {
                   <X size={18} />
                 </button>
               )}
+            </div>
+
+            {/* Date Toggle Tabs */}
+            <div style={{
+              display: 'flex',
+              gap: theme.spacing.xs,
+              marginBottom: theme.spacing.md,
+              padding: '4px',
+              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              borderRadius: theme.borderRadius.md,
+              width: 'fit-content'
+            }}>
+              <button
+                onClick={() => setDateView('today')}
+                style={{
+                  padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                  borderRadius: theme.borderRadius.sm,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: theme.typography.sizes.sm,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  backgroundColor: dateView === 'today' ? theme.colors.surface.card : 'transparent',
+                  color: dateView === 'today' ? theme.colors.text.primary : theme.colors.text.secondary,
+                  boxShadow: dateView === 'today' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setDateView('yesterday')}
+                style={{
+                  padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                  borderRadius: theme.borderRadius.sm,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: theme.typography.sizes.sm,
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                  backgroundColor: dateView === 'yesterday' ? theme.colors.surface.card : 'transparent',
+                  color: dateView === 'yesterday' ? theme.colors.text.primary : theme.colors.text.secondary,
+                  boxShadow: dateView === 'yesterday' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
+                }}
+              >
+                Yesterday
+              </button>
             </div>
 
             {/* Enhanced Progress bar */}
@@ -976,7 +1020,7 @@ export const DailyTaskTracker: React.FC = () => {
           }}
           taskId={selectedTask.id}
           taskName={selectedTask.name}
-          date={new Date()}
+          date={parseLocalDate(selectedDate)}
           existingNote={selectedTask.noteText}
           onNoteSaved={(noteText) => {
             handleNoteSaved(selectedTask.id, noteText);

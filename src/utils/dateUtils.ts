@@ -103,6 +103,16 @@ export const getTodayLocalString = (): string => {
   return getLocalDateString(new Date());
 };
 
+
+/**
+ * Returns yesterday's date as a YYYY-MM-DD string in local timezone
+ */
+export const getYesterdayLocalString = (): string => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return getLocalDateString(yesterday);
+};
+
 /**
  * Check if two date strings represent the same local date
  * @param dateStr1 - First date string (YYYY-MM-DD)
