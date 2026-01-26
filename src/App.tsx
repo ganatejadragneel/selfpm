@@ -13,9 +13,10 @@ import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { DailyTaskTracker } from './components/DailyTaskTracker';
 import { ModalRegistry } from './components/modals/ModalRegistry';
+import { SprintDashboard } from './components/Sprint';
 // Lazy load analytics dashboard
 const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, Target } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -57,6 +58,7 @@ function AppContent() {
   } = useModal();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const showAnalytics = useToggle(false);
+  const showSprintDashboard = useToggle(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -356,7 +358,19 @@ function AppContent() {
                 title="Daily Task Analytics"
               >
               </Button>
-              
+
+              {/* Sprint Focus Button */}
+              {!isMobile && (
+                <Button
+                  variant="primary"
+                  onClick={showSprintDashboard.toggle}
+                  icon={<Target className="w-4 h-4" />}
+                  title="Sprint Focus Dashboard"
+                >
+                  Sprint
+                </Button>
+              )}
+
               <UserMenu />
             </div>
           </div>
@@ -373,6 +387,13 @@ function AppContent() {
         {showAnalytics.value && (
           <div style={{ marginBottom: '32px' }}>
             <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+          </div>
+        )}
+
+        {/* Sprint Focus Dashboard */}
+        {showSprintDashboard.value && (
+          <div style={{ marginBottom: '32px' }}>
+            <SprintDashboard />
           </div>
         )}
 
