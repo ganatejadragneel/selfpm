@@ -10,7 +10,7 @@ import { formatLocalDateString } from '../utils/dateUtils';
 import type { BaseModalProps } from '../types';
 
 // DRY Principle: Define character limit as a constant to avoid magic numbers
-const MAX_NOTE_LENGTH = 600;
+const MAX_NOTE_LENGTH = 2500;
 
 interface TaskNoteModalProps extends BaseModalProps {
   taskId: string;
