@@ -617,7 +617,7 @@ export const DailyTaskTracker: React.FC = () => {
                   fontSize: theme.typography.sizes.sm,
                   fontWeight: 600,
                   transition: 'all 0.2s ease',
-                  backgroundColor: dateView === 'today' ? theme.colors.surface.card : 'transparent',
+                  backgroundColor: dateView === 'today' ? theme.colors.surface.white : 'transparent',
                   color: dateView === 'today' ? theme.colors.text.primary : theme.colors.text.secondary,
                   boxShadow: dateView === 'today' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                 }}
@@ -634,7 +634,7 @@ export const DailyTaskTracker: React.FC = () => {
                   fontSize: theme.typography.sizes.sm,
                   fontWeight: 600,
                   transition: 'all 0.2s ease',
-                  backgroundColor: dateView === 'yesterday' ? theme.colors.surface.card : 'transparent',
+                  backgroundColor: dateView === 'yesterday' ? theme.colors.surface.white : 'transparent',
                   color: dateView === 'yesterday' ? theme.colors.text.primary : theme.colors.text.secondary,
                   boxShadow: dateView === 'yesterday' ? '0 1px 3px rgba(0, 0, 0, 0.1)' : 'none'
                 }}
