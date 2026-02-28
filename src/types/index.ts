@@ -236,8 +236,5 @@ export interface BaseModalProps {
 // Phase 7A: Export additional shared interfaces (optional for components to adopt)
 export * from './shared';
 
-// Morning Command Center types
-export * from './blueprint';
-
 // Sprint Focus System types
 export * from './sprint';

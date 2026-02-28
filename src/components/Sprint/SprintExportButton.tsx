@@ -2,7 +2,7 @@ import { useState, useCallback, memo } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { Download, Check, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import type { SprintWithMetrics, SprintExport } from '../../types/sprint';
+import type { SprintWithMetrics, SprintExport, WeeklyTarget } from '../../types/sprint';
 import {
   generateDayColumns,
   calculateMetricWeeklyProgress,
@@ -85,7 +85,7 @@ export const SprintExportButton = memo(function SprintExportButton({
         name: metric.name,
         metric_type: metric.metric_type,
         daily_target: dailyTargetDesc,
-        weekly_target: metric.weekly_target as { type: string; count: number; total: number },
+        weekly_target: metric.weekly_target as WeeklyTarget,
         weekly_result: {
           achieved: progress.current,
           target: progress.target,

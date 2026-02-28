@@ -3,7 +3,6 @@ export { useTaskOperations } from './useTaskOperations';
 export { useModalOperations } from './useModalOperations';
 export { useDataFetching, useTasksFetch, useWeeklyTasksFetch } from './useDataFetching';
 export { useDragAndDrop } from './useDragAndDrop';
-export { useDailyBlueprint } from './useDailyBlueprint';
 export { useSprint } from './useSprint';
 
 // State Management Hooks
@@ -22,9 +21,6 @@ export type { UseDragAndDropReturn, UseDragAndDropProps } from './useDragAndDrop
 export type { UseAsyncStateReturn } from './useAsyncState';
 export type { UseToggleReturn } from './useToggle';
 export type { UseFormStateReturn, FieldConfig, ValidationRule } from './useFormState';
-
-// Blueprint hook types (exported from types/blueprint.ts)
-export type { UseDailyBlueprintReturn } from '../types/blueprint';
 
 // Sprint hook types
 export type { UseSprintReturn } from './useSprint';
