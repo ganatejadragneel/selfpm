@@ -1,0 +1,153 @@
+SelfPM Q4 
+
+## Day 4: Metrics & Measurement
+
+### Question 4: How Do You Know It's Working?
+
+*"If SelfPM had 1,000 users tomorrow, what metrics would you track to know if the product is successful? Define your North Star metric and 3 supporting metrics. How would you instrument them?"*
+
+**What they're evaluating:**
+- Do you think quantitatively about product success?
+- Can you distinguish vanity metrics from meaningful ones?
+- Do you understand the metrics hierarchy?
+
+**Your deliverable:**
+- North Star metric (the one number that matters most) + why
+- 3 supporting metrics + what each tells you
+- Leading vs. lagging indicators
+- How you'd actually measure these (what data you'd capture)
+
+
+If SelfPM had a thousand users tomorrow’s I’d just want to know if they were meeting their target metrics. First, I need to e able to classify Ores (the daily tasks tracked in the observation phase) into enablers and targets. Then, over time, once they move from observation to execution [this time period could be different for different users — observation phase will end when there is consistent causal relationship of over 85% (how did I get this number? It’s just arbitrary — seems high enough to hypothesize) between enablers and targets in 3 consequtive CPO reports (one per week). 
+
+Once they moved into execution phase, I’d like to see them set targets, and only track their ability to perform the enablers, and achieve these targets. If they are able to maintain these targets (95%+) for 3 sprints, then, it is a success. If not, we’ll need a new set of enablers  / gems to support target completion. 
+
+
+The metric that matters most to me, is that they are able to meet target metrics. 
+
+The support metrics, will be their ability to ‘complete’ enablers. And also, to ensure that there is still this causal relationship between the enablers and the target completion. If they are meeting targets without doing the enablers (I haven’t come across this yet, but we might), then, its not bad, but, we should find out what the seeker IS doing, that is enabling them. They might be doing it sub consciously, so it will be good to find out more (through prompting deeper introspection in the ‘general note’ (during sprints)// CPO analysis prompting other ores to be recorded during observation. 
+
+The leading indicator is the ability to complete enablers, the lagging indicator is the completion of the target metric. 
+
+Also, I need to capture engagement metrics to understand stickiness, and when users fall off 
+ DAU / WAU / MAU
+
+  
+   DAU     │ Daily Active Users   │ How many unique users opened SelfPM today      │
+  ─┤
+  │ WAU     │ Weekly Active Users  │ How many unique users opened SelfPM this week  │
+  ─┤
+  │ MAU     │ Monthly Active Users │ How many unique users opened SelfPM this month │
+
+Also, retention curves — Day 1, 7, 30 — helps me understand how many people stayed over time — I could also model these retention curves to measure retention at each edge of the funnel — 
+
+My funnel looks like this: 
+
+  Join
+    ↓
+  Complete Week 1 (baseline established)
+    ↓
+  Complete Week 2 (first CPO report)
+    ↓
+  Graduate Observation (85% causal relationship)
+    ↓
+  Complete 1 Sprint Week
+    ↓
+  Pass Sprint (3 weeks, 1 week at 100% target)
+
+
+
+Also, Sprint success rate definition — when seekers complete 2 continuous sprints (weeks), with 100% target met (if its 6/7, or 7/7, or however frequently they want to achieve that target). Then, they graduate SelfPM (at least for this target — they’re free to continue with sprints for a different target, or go back to observation to learn more about themselves. 
+
+CPO report metrics — now, these are important, because, they are the primary value drivers of SelfPM. They help a seeker understand their observations, identify patterns, and potential enablers that can help them meet their targets. Maybe their targets themselves need to change (for me, it wasn’t bad habits, but ‘Identity pressure, so I started working towards a ‘regulated state’ as a target, and measuring different enablers to make sure I had a ‘great day’ instead of ‘did I smoke weed (release behavior from dysregulation) 
+
+
+How can I judge effectiveness of CPO reports? First things first, the big difference is that, I made my own CPO reports, and now, the system is going to make one for the seekers,a nd send it to them at regular intervals (first one after two weeks of joining to get some level of data, and then weekly after. - -this is what I have in mind for now, maybe sooner if there’s something ‘groundbreaking’. ) So, I want to imagine the journey of a seeker. 
+
+I am accounting(I am realizing now that an even cooler term for accounting (same as observing), would be ‘polishing’?? The more you polish an ore, it becomes a gem?? Wow, I should come back to this) for my ores everyday. I observe them, and, I learn a little bit about them everyday. I assume that the seeker is doing them with diligence (happy path - I’ll address friction / disinterest / other scenarios. Later, because right now, it’s only highly filtered users who get access to selfPM, because I want the intent to exist). So, I learn a little but about myself, about that ore, I get more aware, and maybe I start to improve on it just a little, or maybe there’s no change at all, but I continue to observe(polish) anyway (this is most likely scenario - I don’t foresee they’ll discover anything groundbreaking in the first week — although, an older lady who started polishing her ore of ‘be mindful when you do kitchen chores not to mess it up’, notes that the more she accounts for her ore, the more she realizes that she’s so rushed in her mind for no reason, and literally in 3 days, she has reduced the incident rate, by jut being more mindful when it happens. Amazing!) 
+
+Now anyway, after a week — I should ideally get some interaction from SPM — giving me a baseline maybe? Whatever I(Kaushik — the creator — Im going to refer to myself as MS (MasterSkywalker) from now on when I refer to myself as a creator, and then as seeker when im referring to seeker journey)
+
+Anyway, MS should deliver the first week baseline assessment that he keeps for SelfPm product metrics, to seekers also, so they know where they started. It should be presented nicely (take an action item to create a good format for that, with notes and context from ore notes, and also how many times they polished , how many misses, etc — its a real ‘you started here’ document) 
+
+Seeker: I feel some sort of joy I guess from this, at least im being noted, and listened to, and the app gives a shit about me. 
+
+Then, I fill it for another week, and now, I get this — ‘CPO analysis’??? (Note to MS — we should probably intimate the seeker that they’ll receive the CPO analysis in another week — wait - -should we show them the entire funnel the whole time on the side, and say ‘you are here’ based on where they fall? Something to think about - please note and brainstorm) 
+
+Anyway, back to seeker — I see the CPO report — (note to MS — come up with a nice template for CPO report)
+
+CPO report 
+
+What I (seeker) care about deeply (the target and the ‘why’ from the ore notes, if they’ve provided it) — (also note for MS — I want to capture the ‘why’ from the seeker at some point. They should know why they want to d this. Many times, they are following or seeking a target for the fuck of it. Because society, or their mother, or their childhood version beloved it. But do they , the ‘now’ seeker know why? Let’s find out. If they don’t , lets prompt them tp think about nit. But, this shouldn’t
+T be a generic — oh, tell me why you want to do this ‘ prompt on the first day — I think we should ease into it. Maybe a surprise on one of their logins? I could use a random funciton and have SPM pop this question next to the ore one fine day, and force them to go 2-3 levels deep into why they want tp do it? Maybe I can check for days they are making good notes, maybe there’s a pattern of stable high number of notes/. Imporving character counts,a nd then we sprint it on them — I want to capture it, but more importantly, I want them to know why they want this. 
+
+
+Anyway, 
+
+CPO report — shows what the target is (with some witty / personal explanation) + why the seeker wants this
+
+What’s been observed so far? 
+Qualitative breakdown of Ore notes — “ you recorded that you don’t like to eat your supplements, because they taste odd “ on 3 days, and that
+
+“You dont have time to eat them” 
+
+Or, you forget about them, or whatever it is. 
+
+Then, reason out why we think this is happening, also based on the ore notes. 
+
+This could be beaus you’re busy, or you dont keep them out, or you dont mix them with milk, or whatever (we might knowt this, we might not — but we should ask questions. 
+
+Another note to MS- - the CPO report should definitely pass inquisitive comments to the seeker, so they can respond, and take time to really understand why are not doing xyzzy things. The CPO report should take responses, and then use these to create enablers. And targets — ores for the coming week. (They should be more or less the same, but the prompt for the note could be different? Need to think this through — I need some sample data to work with — maybe I can use my own? ) 
+
+Anyway, CPo report has all this — asks questions — first CPO metric — are they opening the report (we should place it in a OBVIOUS location when ready)
+
+Next, are they interacting with it — they should answer each question it has (we can figure out design later), and submit — it will instant analyze and return responses + recommendations for new ores. 
+
+Third, are they now creating and tracking new ores . These would e my metrics, and this is how I would instrument them.  (High level, I can deep dive later) 
+
+Other metrics: 
+Failure / churn — later bro. I know I should plan for this. Okay let’s think. 
+
+Users who quit during observation — why? I don’t know - I should have some kind of exit survey I guess — keep in mind, im not planning for this to be a mass commercial app. Even if I can get 100 people, but materially affect these 100 people, I believe they will pay $100 each per month to use this. 
+
+Im not sure what these types of payment apps are called — where we expect fewer users, but, the ones who use it will pay a lot to do so, because it needs focused effort, and provides appropriate value. I even thought, as we go, I will charge (let’s say) $100 per month, and then give back based on number of ‘good accounts’ for ores and gems. In a way they can even get back their entire money (after I break even for Claude, hosting cost, etc) — this is for later ofc, but just a thought. 
+
+My point is, I dont think users will fall off — thats not true— they might, but I will put in efforts to understand why. 
+
+If they miss a few days in a row — I’ll say — “why is this not working for you? Have you deprioritized this goal? ( I will bring up the ‘why’ and ask with puppy face), or, something else — I will contact them personally and understand. First set of users are all personal contacts (or friends of friends), so this is not seomthingi want to focus on now. 
+
+
+
+Establishing Baseline & Attribution
+
+  To prove SelfPM's impact (not just user outcomes), I need to establish a baseline during Week 1 of observation. This allows me to say: "Seekers improved
+  target completion by X% from their Week 1 baseline after Y weeks on SelfPM." Without baseline, I can't attribute improvement to the product.
+
+  Engagement Metrics
+
+  Beyond outcome metrics, I'll track:
+  - Session frequency (how often seekers return daily/weekly)
+  - Missed entries - distinguishing between "didn't log on at all" (engagement problem) vs. "skipped specific ores" (friction/avoidance on that ore) —
+  different problems requiring different interventions
+  - Note character count (baseline at Week 1, track increase over time — more notes = more awareness = more insight potential)
+  - Creation of new ores (shows active observation and learning)
+
+  The Funnel
+
+  Join
+    ↓
+  Complete Week 1 (baseline established)
+    ↓
+  Complete Week 2 (first CPO report)
+    ↓
+  Graduate Observation (85%+ causal relationship between enablers and target)
+    ↓
+  Complete First Sprint Week
+    ↓
+  Pass Sprint (3 weeks, with at least 1 week achieving target goal)
+
+  Each stage has a conversion rate to track. Drop-off at each stage tells me where product friction exists.
+
+  Causal Relationship Calculation
+
+  Causal relationship score = (days target met when enablers completed) / (total days enablers completed). Threshold for graduation: ≥0.85

@@ -1,0 +1,208 @@
+# SelfPM Q1: The Problem Statement
+
+## Day 1: Problem Discovery & User Empathy
+
+### Question
+*"Walk me through the problem SelfPM solves. What was broken before? What did you try before building it? Why did those solutions fail? And how do you know this is a real problem vs. a solution looking for a problem?"*
+
+---
+
+# EXECUTIVE SUMMARY (300-500 words)
+
+**The One-Sentence Problem:**
+SelfPM helps high-achievers understand *why* they fail at consistency by replacing accountability-based tracking with 
+observation-based pattern recognition.
+
+**The Core Insight:**
+For years, I tried to fix my consistency problem with more tracking / accountability—spreadsheets, apps, 
+accountability partners, even sharing my habits progress with my CEO. Every solution failed. Not because I lacked discipline, 
+but because each one added more *Identity Pressure*: the psychological weight of being judged (by myself or others) 
+based on whether I completed a task.
+
+The breakthrough came when I stopped asking "Did I do it?" and started asking "Why didn't I?"
+
+**What SelfPM Does Differently:**
+Traditional habit trackers reward you for completing tasks. SelfPM rewards you for *honest observation*. 
+The game isn't execution—it's understanding. By removing judgment from tracking, I could finally record the brutal 
+reality without fear. This generated 257,000 characters of diagnostic notes in 10 weeks—data that enabled an 
+LLM-powered "CPO Analysis" to identify the root cause I'd missed for years: Identity Pressure.
+
+**The System I Built From That Insight:**
+Once I understood that Identity Pressure *compounds throughout the day*, I designed around it:
+- **4:30am wake-up** — not discipline, but strategy. The hard task feels achievable before pressure builds.
+- **IP Attack** — within 90 minutes of waking, I do the ONE task threatening my identity most. Before my brain builds
+     a case for why I can't.
+- **Morning Routine** (meditation, reading, visualization) — nervous system regulation before high-stakes work.
+- **10am Identity Pressure Check-in** — data showed: skip IP Attack → 7-8/10 pressure. Complete it → 3-4/10.
+
+**The Evidence:**
+| Metric | Pre-SelfPM | Post-CPO Analysis |
+|--------|-----------|-------------------|
+| Tracking consistency | 57% | 91% |
+| Weed-free rate | 51% | 91% |
+| Daily reflection notes | 0 | 10.8/day |
+| Total self-analysis | 0 chars | 257,000 chars |
+
+**Why This Matters:**
+The transformation isn't in the behavior metrics. It's in the *self-awareness infrastructure*. I didn't become more disciplined—I became aware that discipline wasn't the problem. Identity Pressure was. Once I could see it as data, I could design around it.
+
+SelfPM isn't a habit tracker. It's a gap analysis tool that reveals why you fail, so you can stop attacking symptoms and address root causes.
+
+*Be curious, not judgmental.*
+
+---
+
+# DETAILED PROBLEM STATEMENT
+
+## The Problem
+
+SelfPM solves a problem of a lack of awareness, of why I kept failing repetitively at the tasks, seemingly so important to me. For years, I have known that I want to quit smoking weed, that I want to work harder, smarter, with a higher working ethic, and deliver my responsibilities in a manner congruent with how I imagine myself to work, to go to the gym, to eat well and nourish myself, to sleep with content, to not sabotage my day in ways that I am not able to achieve what I had planned. I kept failing. The same patterns would emerge.
+
+I would make plans, I would 'prioritize', and then, I would fail at execution every.single.time.
+
+I always thought it was the planning, that was the issue. It took me years to understand that execution is a science in itself. There are aspects to execution, like focus, patience, proactivity, discipline, accountability, that I was simply missing. This is what SelfPM helped me fix. It helped me execute my plans. At a high level anyway.
+
+Deeper down, it helped me understand *why* my execution was failing. It helps me understand why I am not able to do the parts of the work I am seemingly SO WILLING and rearing to do.
+
+---
+
+## The Evolution: From Accountability to Observation
+
+I initially created SelfPM to help me build accountability for my actions. In marking an update next to a 'KPI' everyday, I would be accountable to myself, to have gotten it done. I remember telling myself—I better do this, otherwise I'll have to face the version of me (accountant Kaushik) who takes account of whether it was done, and I'm going to be mighty disappointed in myself for doing something so 'easy'.
+
+Turns out, that didn't work. Accountability is important in execution, but even before, it's more important to *observe*. To understand why things are not happening. So, I removed the 'judgement' from having to fill accounts everyday, in that, I stopped expecting that I will actually 'complete' the task. Now, all I was interested in, is just accounting for what actually happened, and reasoning why / why not I finished the task.
+
+Removing the 'expectation' of accountability, to have to 'get it done', I was now able to freely enter my actual result without any judgement. I was just happy to get it done. I changed the 'accountability', from having to get the task done, to having to fill out my entry. This completely changed the dynamic. Now, I didn't care how well I performed. I stopped missing entering accounts into SelfPM, because I was 'scared' to confront the accountant, and 'scared' of surfacing my inadequacies. Now, I was so happy to just enter the absolute, brutal reality with radical honesty, in a way that allowed me to 'get points' for just adding my honest result. More points if I added context! Now, the game was to understand, not to execute, the performance WAS the accounting. I didn't have to fear it anymore, only the laziness to fill in the reality!
+
+**At its core, SelfPM is a gap analysis tool.** It helps me understand everyday, why I am not able to execute a particular task that I have planned for. It helps me realize the 'gap' that existed—physical, environmental, psychological, nutritional—in my circumstances, that did not allow me to succeed in my pursuits.
+
+---
+
+## The Turning Point: CPO Analysis
+
+I did this for 2 months or so. 70 days to be exact. Then, in a monumental moment, I exported all of my habit tracking data (results + context), into a pattern recognition LLM, and had it create my first ever 'CPO Analysis', essentially creating a 'psychological review' of myself and habits, based on the honest evaluations of my everyday efforts, I had collected over a period of time.
+
+This was the turning point.
+
+The analysis helped me reveal that I was struggling from a hidden saboteur—**Identity Pressure**. This pattern seemed to come up in my notes multiple times, as I recorded myself trying and failing at different tasks. I had often remarked that I would smoke weed because 'work was tough', or that 'I didn't play well', or that 'I had an excellent day, and needed to keep it up'—all indicators that I evaluated myself based on my worth to execute a task successfully, and the pressure of having to do it, and if I did, of having to sustain it, was causing me to cave, and to relent to avoidance behaviors, to 'soothe' myself and to 'take my mind' off it.
+
+Incredible insight. Only could have been possible, if I had duly recorded honest evaluations, over this period of time.
+
+---
+
+## Understanding Identity Pressure
+
+It helped me identify the 'gap' in execution. The gap being—'unresolved' Identity Pressure. This kept getting in my way, of executing tasks, by putting a very high tax on effort towards important tasks. Tasks / habits that would allow me to be 'judged' as a 'good / bad' person (I was good if I did tasks towards my goals, and bad if I didn't—a simple taxonomy I had created in my mind over a period of time).
+
+All through my life, I have wanted to be 'extraordinary'. I have wanted to be more. And, I knew this was the path to do it. My family had their hopes pinned on me. I had my hopes pinned on me. I was never able to 'be like the other kids', or to 'have friends like normal'. I wanted to be more. And I knew, that every time I did an activity, that would put me one step closer to this 'extraordinary Kaushik'. I was scared shitless, if I would be able to succeed in its execution.
+
+This was threatening my 'identity'. The fear of 'if I fail at this'—'I can't be the Kaushik I have decided I am, can't be the Kaushik I have shunned everyone else to become, can't make my parents proud, can't make up for all the times I've failed before'. This pressure caused insane paralysis, and never let me work on anything.
+
+The times that I would execute, I would get more pressurized, thinking—"that's all I've done so far... now, I need to do this everyday, for a very long period of time before I can get anywhere—that's tough!". I would have a fear of success almost, in everyday tasks that required discipline. I am okay to do one-off tasks, in fact, I am very good at it. But, I cannot be consistent with anything. And this is why. I would be so afraid that I 'can't' make it all the way, and if I didn't, I would let myself and everyone else who believed in me down, and my whole life would not mean anything', and I would just let off.
+
+This brings me to the next important aspect of what SelfPM fixes—**consistency**. It allows me to understand patterns, of why I fail to be consistent in my execution, and fix them.
+
+---
+
+## What I Tried Before SelfPM
+
+**'Oh, so much.'**
+
+### Detailed Planning
+For long, I have made detailed plans on what I'm going to do over the next week, month, 3 months. Very detailed plans, sometimes even indicating what time I would wake up and activities in 30-minute slots across the day. I always used to believe that if you fail to plan, you plan to fail. Turns out you also plan to fail if your plan doesn't account for the various pressures of execution, but I wouldn't figure that out until much later...
+
+Each plan would add so much more identity pressure. Already I know that I need to do xyzzy tasks. Now, I have spent tremendous time and mental resources looking at calendars and making plans tight with others to make this detailed plan, which, most often would not even last a day, maybe 3 at best. This would make me feel even more pressurized because I'm wasting precious time on the 'Road to Kaushik'.
+
+### Accountability Partners
+For the longest time, I thought it was the habit itself that I was not able to 'do'. So, I was attacking each of the habits individually. I would try to have an accountability partner for the gym in my roommate, but turns out that added even more identity pressure (if I don't go with him, he'll think I'm a wuss/indisciplined, and will categorize me as such, and won't respect me). So, I stopped that engagement citing unrelated work pressures.
+
+### Education-Based Approaches
+I tried to stop smoking weed by learning all about the horrors of smoking, and the damage it does to your body and to your lungs. No avail.
+
+### Overworking
+I used to work into the night to 'catch up' on work, and 'do more' so I would be liked and respected—but, this only burnt me out even more, increased my overall fatigue and led to poorer decisions the following day.
+
+### Habit Tracking Apps
+I tried self-accountability apps—there's one with a penguin... Pingu? I don't remember, but apparently it's very helpful to help people maintain habits, by helping them track everyday. Again—it tracks accountability, doesn't enable observability—which is the core requirement I had in needing to understand myself. I didn't need another app to tell me I wasn't doing the right thing. I needed to understand why. So, in a month or less, this also fell off. I tried to get on it again, this time with a renewed enthusiasm to succeed, having made tall promises of international success if I just 'stuck with it', but also, to no avail. Failed being consistent a second time, and quit after ~40 days.
+
+### Spreadsheets
+Over the years, I have maintained spreadsheets to track my progress across everyday tasks. I have had some months where I track 7 metrics, some where I track 14 (didn't realize HOW MUCH MORE IP I WAS ADDING, EXPECTING SUCCESS ACROSS 14 DIFFERENT ACTIVITIES IN A DAY, WHEN I COULDN'T EVEN DO 3).
+
+There were months where I filled in >80% entries, and there were entire months where not a single entry went in.
+
+### CEO Supervision
+I realized I was having trouble being accountable, to fill in everyday results. This is also when I was getting close to my new CEO. I was brought into this company as a 'prodigy'—a special assistant to the CEO to work on special projects, with him, all the time. So, I confided in him my struggles, and shared my spreadsheet with him, hoping that his supervision would encourage me to be more timely with my daily entries. This was still the time I was just doing binary accounting, no context.
+
+Alas, this failed spectacularly. Now I was filling it regularly, but with bogus metrics. I would make them up everyday, so as to not look bad in the CEO's eyes. I don't even think he ever checked it, but now this became an additional burden for me to maintain. I just could not be honest with myself. So, I started maintaining yet another sheet, where I would try to be honest, and this sheet I would maintain for him. Truly a circus of events now that I look back.
+
+### Gamification with Stakes
+Then, specific to the weed, I made a deal with him that I would message him everyday, if I smoked up or not. We are both from the cricket fraternity, so I came up with a 'score' for everyday. I would get a run for everyday I didn't smoke, and lose a 'wicket' for everyday that I did. Man, only now I realized how much I have the capability to lie and bullshit someone, when I felt my image and reputation and 'identity' were at stake. I used to lie ever so often. Long story short—didn't work.
+
+### Building My Own App (Steam)
+Now that all of this was failing—I wanted to create an app for myself, where I would be truly honest. Still counting, not observation. I made an app called Steam with my close developer friend from my early startup days. It was just a fancy spreadsheet—allowing me to record daily activities. I even paid for hosting, so I thought—if I'm paying for this, I MUST take it seriously. Nope. Added more pressure to perform, didn't end up doing it.
+
+**Which brings me to September 2025**—when I decided—I need to also account for WHY I am doing / not doing something. This is when the first hypothesis of 'why don't I try to understand my pain', instead of running from it came, and it has made a remarkable difference since.
+
+---
+
+## Why They All Failed
+
+Each of the previous attempts, literally each of them—all did the same thing. They made me accountable for something I already knew I couldn't do. In doing so, they added MORE pressure to live up to an identity that was already being attacked, because of my inability to do the task. Each of these 'solutions' were actually just adding fuel to the flame, reinforcing to myself and others, that I wasn't 'capable' of doing the 'easy' tasks I have set my mind to. I am just another 'planner', without execution.
+
+This judgement killed me. None of these solutions helped me understand the root cause. They tried to make me accountable for the symptoms, when I didn't even understand why they were occurring in the first place.
+
+**Each previous solution made the problem exponentially worse by adding judgement and more pressure to perform.** Because I was just evaluating, publicly (even if in my mind, it seemed so loud, and... visible) all my flaws.
+
+---
+
+## How I Know This Problem Is Real
+
+I lived it. For years, I was addicted to all kinds of avoidance behavior—weed, sexual releases, junk food, sleeping late, binging content, avoiding meaningful relationships because I knew I wasn't 'good enough', shitty performance at work when I am so good at it, dropping off my CEO's special assistant position and doing nominal work on the projects, losing out on friends who I didn't keep in touch with because I felt not good about myself (couldn't hold up to my 'identity'), poor performances in cricket because my anxiety was through the roof when I needed to perform, and what bigger performance than to play your favorite sport in front of your team, in a division 1 (local league cricket in Washington DC) setting? (I am a real good cricketer, but my performance last couple years has waned significantly because of this), missed gym sessions (even with a trainer, I kept up for a bit, then fell off), getting fat af, unable to maintain decent conversations with my parents—and a general hatred towards myself because of these actions.
+
+Oh yes, the problem was real. No doubt about it. Still is in some parts.
+
+---
+
+## The Evidence: Quantitative Transformation
+
+**The transformation isn't in the behavior metrics—weed-free went from 51% to 71%. The transformation is in the self-awareness infrastructure: I went from zero structured reflection to 257,000 characters of diagnostic notes in 10 weeks. That data enabled the CPO Analysis that identified the root cause I'd missed for years.**
+
+| Metric | Pre-SelfPM (Dec '23 - Jun '24) | Post-CPO Analysis (Nov '25 - Jan '26) | Change |
+|--------|-------------------------------|---------------------------------------|--------|
+| Tracking consistency | 57% (86/151 days) | 91% (note days) | +34% |
+| Weed-free rate | 51% (44/86 days) | 71% (30/42 days) | +20% |
+| Daily reflection notes | ~0 | 10.8/day average | ∞ |
+| Total self-analysis | 0 characters | 257,346 characters | 12x |
+| Note depth | N/A | 154 → 314 chars avg | +104% |
+
+---
+
+## The Evidence: Qualitative Transformation
+
+### Before SelfPM — The Degenerate Loop
+
+I would wake up late—9am, 10am, sometimes noon. The first thing I'd feel wasn't rest; it was dread. A backlog of "important tasks" I'd been avoiding for days, sometimes weeks. I'd scroll my phone to delay facing them. Then I'd eat junk—something fast, something that didn't require effort. By afternoon, the Identity Pressure had compounded: every hour that passed without tackling the hard task made it feel heavier. So I'd avoid it more. By evening, I'd smoke weed to quiet the voice telling me I was failing. Then I'd stay up late, either numbing with content or making ambitious plans for "tomorrow." Tomorrow never came. The cycle repeated.
+
+### After SelfPM — The IP Attack Protocol
+
+Now I wake at 4:30am—not because I'm disciplined, but because I've learned something: Identity Pressure accumulates throughout the day. The task that feels impossible at 3pm feels achievable at 5am, before the weight builds. So I built a system around this insight:
+
+- **Morning Routine** (meditation, reading, visualization) — regulates my nervous system before I engage with high-stakes work
+- **IP Attack** — the single most important metric I track. Within the first 90 minutes of waking, I do the ONE task that threatens my identity most. The task I've been avoiding. Before my brain has time to build a case for why I can't.
+- **10am Identity Pressure Check-in** — I log how much pressure I'm feeling. This data showed me: days where I skip IP Attack, my 10am pressure is 7-8/10. Days where I complete it? 3-4/10.
+
+The gym became possible again—not through willpower, but because I wasn't carrying the weight of avoidance by the time evening came. Reading became possible. Consistent sleep became possible. Not because I "tried harder," but because I addressed the root cause: the compounding anxiety of tasks that threatened my sense of self.
+
+### The System Insight
+
+SelfPM didn't make me more disciplined. It made me aware that discipline wasn't the problem. Identity Pressure was. Once I could see it—logged as data, tracked over time, analyzed for patterns—I could design around it. The IP Attack isn't about doing hard things. It's about doing hard things *before your brain convinces you that failing at them means you're worthless*.
+
+---
+
+## Summary
+
+SelfPM is a gap analysis tool that rewards me for showing radical honesty in evaluating my everyday actions, to understand inhibitors to success and to track my ability to address and overcome them. My goal of consistency was threatened for a number of years, for reasons I could never understand. I always thought it was willpower. "I don't want it bad enough"—turns out I DID. Too bad almost, and that was the wrecking ball. I put so much pressure on every activity, that I was not able to do any of it.
+
+I learnt, instead, to be curious, not judgmental, and let my awareness guide me to the light.
+
+This, is SelfPM.
