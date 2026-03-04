@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy } from 'react';
+import { useEffect, useState } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
@@ -13,9 +13,10 @@ import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { DailyTaskTracker } from './components/DailyTaskTracker';
 import { ModalRegistry } from './components/modals/ModalRegistry';
-// Lazy load analytics dashboard
-const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
+import { SprintDashboard } from './components/Sprint';
+import { PrivacyPledge } from './components/PrivacyPledge';
+import { PrivacyPledgeModal, hasAcceptedPrivacyPledge } from './components/PrivacyPledgeModal';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Shield, Target } from 'lucide-react';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -51,12 +52,12 @@ function AppContent() {
   const {
     openTaskModal,
     openAddTaskModal,
-    openBulkUploadModal,
-    openActivityTrackerModal,
     openDailyAnalyticsModal,
   } = useModal();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const showAnalytics = useToggle(false);
+  const showSprintDashboard = useToggle(false);
+  const showPrivacyPledge = useToggle(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(() => !hasAcceptedPrivacyPledge());
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -315,38 +316,17 @@ function AppContent() {
                 Add Task
               </Button>
               
-              {/* Bulk Upload Button - Hide on mobile */}
+              {/* Privacy Pledge Button */}
               {!isMobile && (
                 <Button
                   variant="primary"
-                  onClick={() => openBulkUploadModal()}
-                  icon={<Upload className="w-4 h-4" />}
-                  title="Bulk upload tasks from CSV"
+                  onClick={showPrivacyPledge.toggle}
+                  icon={<Shield className="w-4 h-4" />}
+                  title="Privacy Pledge"
                 >
-                  Bulk Upload
+                  Privacy Pledge
                 </Button>
               )}
-              
-              {/* Activity Tracker Button - Hide on mobile */}
-              {!isMobile && (
-                <Button
-                  variant="primary"
-                  onClick={() => openActivityTrackerModal()}
-                  icon={<Activity className="w-4 h-4" />}
-                  title="View activity history"
-                >
-                  Activity
-                </Button>
-              )}
-              
-              {/* Analytics Button */}
-              <Button
-                variant="primary"
-                onClick={showAnalytics.toggle}
-                icon={<BarChart3 className="w-4 h-4" />}
-                title="View Analytics"
-              >
-              </Button>
 
               {/* Daily Task Analytics Button */}
               <Button
@@ -356,7 +336,19 @@ function AppContent() {
                 title="Daily Task Analytics"
               >
               </Button>
-              
+
+              {/* Sprint Focus Button */}
+              {!isMobile && (
+                <Button
+                  variant="primary"
+                  onClick={showSprintDashboard.toggle}
+                  icon={<Target className="w-4 h-4" />}
+                  title="Sprint Focus Dashboard"
+                >
+                  Sprint
+                </Button>
+              )}
+
               <UserMenu />
             </div>
           </div>
@@ -369,24 +361,33 @@ function AppContent() {
         margin: '0 auto', 
         padding: isMobile ? '16px 12px' : '24px' 
       }}>
-        {/* Analytics Dashboard - Collapsible */}
-        {showAnalytics.value && (
+        {/* Privacy Pledge Page */}
+        {showPrivacyPledge.value && (
           <div style={{ marginBottom: '32px' }}>
-            <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+            <PrivacyPledge onClose={showPrivacyPledge.toggle} />
+          </div>
+        )}
+
+        {/* Sprint Focus Dashboard */}
+        {showSprintDashboard.value && !showPrivacyPledge.value && (
+          <div style={{ marginBottom: '32px' }}>
+            <SprintDashboard />
           </div>
         )}
 
         {/* Weekly Summary */}
+        {!showPrivacyPledge.value && (
         <div style={{ marginBottom: '32px' }}>
-          <WeeklySummary 
-            tasks={tasks} 
-            weekNumber={currentWeek} 
+          <WeeklySummary
+            tasks={tasks}
+            weekNumber={currentWeek}
             onTaskClick={(task) => openTaskModal(task)}
           />
         </div>
+        )}
 
         {/* Task Columns */}
-        {loading ? (
+        {!showPrivacyPledge.value && (loading ? (
           <LoadingSpinner size="lg" text="Loading tasks..." />
         ) : (
           <DndContext 
@@ -459,8 +460,14 @@ function AppContent() {
               ) : null}
             </DragOverlay>
           </DndContext>
-        )}
+        ))}
       </div>
+
+      {/* Privacy Pledge First-Login Modal */}
+      <PrivacyPledgeModal
+        isOpen={showPrivacyModal}
+        onAccept={() => setShowPrivacyModal(false)}
+      />
 
       {/* Modals */}
       <ModalRegistry tasks={tasks} currentWeek={currentWeek} />

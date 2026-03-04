@@ -235,3 +235,6 @@ export interface BaseModalProps {
 
 // Phase 7A: Export additional shared interfaces (optional for components to adopt)
 export * from './shared';
+
+// Sprint Focus System types
+export * from './sprint';
