@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { useSprint } from '../../hooks/useSprint';
-import { SprintComingSoon } from './SprintComingSoon';
 import { SprintEntryPanel } from './SprintEntryPanel';
 import { SprintDashboardGrid } from './SprintDashboardGrid';
 import { SprintNotesPopup } from './SprintNotesPopup';
@@ -24,8 +23,7 @@ interface NotesPopupState {
  * SprintDashboard - Main sprint tracking interface
  *
  * Phase 5: Full dashboard with grid view
- * - Auto-creates sprint on mount for enabled users
- * - Shows "Coming Soon" for non-enabled users
+ * - Auto-creates sprint on mount for authenticated users
  * - Displays sprint header with dates and progress overview
  * - SprintEntryPanel for entering daily data
  * - SprintDashboardGrid for viewing the week
@@ -35,7 +33,6 @@ export const SprintDashboard = () => {
   const {
     loading,
     error,
-    isFeatureEnabled,
     activeSprint,
     sprintProgress,
     saveEntry,
@@ -112,11 +109,6 @@ export const SprintDashboard = () => {
         <LoadingSpinner size="lg" text="Loading Sprint Focus..." />
       </div>
     );
-  }
-
-  // Show "Coming Soon" for non-enabled users
-  if (!isFeatureEnabled) {
-    return <SprintComingSoon />;
   }
 
   // Show error state

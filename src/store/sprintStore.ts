@@ -15,7 +15,6 @@ import type {
   SprintProgress,
 } from '../types/sprint';
 import {
-  isSprintEnabledForUser,
   getCurrentSprintDates,
   DURATION_TARGETS,
   SLEEP_WAKE_TARGET,
@@ -32,10 +31,7 @@ interface SprintStore {
   completedSprints: Sprint[];
   loading: boolean;
   error: string | null;
-  isFeatureEnabled: boolean;
-
   // Sprint Operations
-  checkFeatureEnabled: () => boolean;
   fetchActiveSprint: () => Promise<SprintWithMetrics | null>;
   ensureActiveSprint: () => Promise<SprintWithMetrics | null>;
   completeSprint: (sprintId: string) => Promise<CompleteSprintResponse>;
@@ -117,20 +113,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   completedSprints: [],
   loading: false,
   error: null,
-  isFeatureEnabled: false,
-
-  // =====================================================
-  // FEATURE CHECK
-  // =====================================================
-
-  checkFeatureEnabled: () => {
-    const authStore = useSupabaseAuthStore.getState();
-    const userId = authStore.user?.id;
-    const enabled = isSprintEnabledForUser(userId);
-    set({ isFeatureEnabled: enabled });
-    return enabled;
-  },
-
   // =====================================================
   // SPRINT OPERATIONS
   // =====================================================
@@ -209,12 +191,6 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
 
   ensureActiveSprint: async () => {
     const state = get();
-
-    // Check if feature is enabled
-    if (!state.checkFeatureEnabled()) {
-      set({ error: 'Sprint feature not enabled for this user', loading: false });
-      return null;
-    }
 
     set({ loading: true, error: null });
 

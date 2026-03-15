@@ -6,17 +6,6 @@
 import type { FocusMetricConfig } from '../types/sprint';
 
 // =====================================================
-// USER GATING
-// =====================================================
-
-/**
- * Only this user ID has sprint feature enabled
- * Server-side enforcement in create_sprint_with_metrics RPC
- * Client-side check for showing/hiding UI
- */
-export const SPRINT_ENABLED_USER_ID = '41a94776-0ab1-4ae3-a752-2cb1c6ae0d27';
-
-// =====================================================
 // SPRINT TIMING
 // =====================================================
 
@@ -216,13 +205,6 @@ export const VALIDATION_RULES = {
 // =====================================================
 // HELPER FUNCTIONS
 // =====================================================
-
-/**
- * Check if a user has sprint feature enabled
- */
-export const isSprintEnabledForUser = (userId: string | undefined): boolean => {
-  return userId === SPRINT_ENABLED_USER_ID;
-};
 
 /**
  * Get the Monday of the current week

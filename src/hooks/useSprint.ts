@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSprintStore } from '../store/sprintStore';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
-import { isSprintEnabledForUser } from '../constants/sprint';
 import type {
   SprintWithMetrics,
   Sprint,
@@ -20,7 +19,6 @@ export interface UseSprintReturn {
   // State
   loading: boolean;
   error: string | null;
-  isFeatureEnabled: boolean;
   activeSprint: SprintWithMetrics | null;
   completedSprints: Sprint[];
   sprintProgress: SprintProgress | null;
@@ -56,7 +54,6 @@ export const useSprint = (): UseSprintReturn => {
   // Local state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isFeatureEnabled, setIsFeatureEnabled] = useState(false);
   const [sprintProgress, setSprintProgress] = useState<SprintProgress | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -82,15 +79,9 @@ export const useSprint = (): UseSprintReturn => {
     clearError: storeClearError,
   } = useSprintStore();
 
-  // Check feature enablement when user changes
+  // Auto-fetch/create sprint when user is authenticated
   useEffect(() => {
-    const enabled = isSprintEnabledForUser(user?.id);
-    setIsFeatureEnabled(enabled);
-  }, [user?.id]);
-
-  // Auto-fetch/create sprint when feature is enabled and user is authenticated
-  useEffect(() => {
-    if (!user?.id || !isFeatureEnabled || initialized) {
+    if (!user?.id || initialized) {
       return;
     }
 
@@ -110,7 +101,7 @@ export const useSprint = (): UseSprintReturn => {
     };
 
     initializeSprint();
-  }, [user?.id, isFeatureEnabled, initialized, storeEnsureActiveSprint]);
+  }, [user?.id, initialized, storeEnsureActiveSprint]);
 
   // Calculate progress when activeSprint changes
   useEffect(() => {
@@ -127,11 +118,6 @@ export const useSprint = (): UseSprintReturn => {
   // =====================================================
 
   const ensureActiveSprint = useCallback(async (): Promise<SprintWithMetrics | null> => {
-    if (!isFeatureEnabled) {
-      setError('Sprint feature not enabled for this user');
-      return null;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -145,10 +131,9 @@ export const useSprint = (): UseSprintReturn => {
     } finally {
       setLoading(false);
     }
-  }, [isFeatureEnabled, storeEnsureActiveSprint]);
+  }, [storeEnsureActiveSprint]);
 
   const refreshActiveSprint = useCallback(async (): Promise<void> => {
-    if (!isFeatureEnabled) return;
 
     setLoading(true);
     setError(null);
@@ -162,7 +147,7 @@ export const useSprint = (): UseSprintReturn => {
     } finally {
       setLoading(false);
     }
-  }, [isFeatureEnabled, storeFetchActiveSprint]);
+  }, [storeFetchActiveSprint]);
 
   const completeSprint = useCallback(
     async (sprintId: string): Promise<CompleteSprintResponse> => {
@@ -312,7 +297,6 @@ export const useSprint = (): UseSprintReturn => {
     // State
     loading: combinedLoading,
     error: combinedError,
-    isFeatureEnabled,
     activeSprint,
     completedSprints,
     sprintProgress,

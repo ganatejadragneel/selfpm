@@ -1,6 +1,5 @@
 // Sprint Focus System Components
 export { SprintDashboard } from './SprintDashboard';
-export { SprintComingSoon } from './SprintComingSoon';
 export { SprintEntryPanel } from './SprintEntryPanel';
 export { SprintMetricCard } from './SprintMetricCard';
 export { SprintDashboardGrid } from './SprintDashboardGrid';
