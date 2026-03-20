@@ -63,8 +63,22 @@ export const AddCustomTaskForm: React.FC = () => {
 
     setLoading(true);
     try {
+      // Get the next display_order for this user (graceful if column doesn't exist yet)
+      let nextOrder: number | undefined;
+      const { data: maxOrderData, error: orderError } = await supabase
+        .from('custom_tasks')
+        .select('display_order')
+        .eq('new_user_id', user.id)
+        .order('display_order', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!orderError) {
+        nextOrder = (maxOrderData?.display_order ?? 0) + 1;
+      }
+
       const now = new Date().toISOString();
-      const taskData = {
+      const taskData: Record<string, any> = {
         user_id: null, // Legacy field, set to null for Supabase Auth users
         new_user_id: user.id, // Use new_user_id for Supabase Auth
         name,
@@ -72,8 +86,12 @@ export const AddCustomTaskForm: React.FC = () => {
         type,
         options: type === 'dropdown' ? options.filter(opt => opt.trim()) : null,
         alt_task: altTask.trim() || null,
-        created_at: now
+        created_at: now,
       };
+
+      if (nextOrder !== undefined) {
+        taskData.display_order = nextOrder;
+      }
 
       const { error: insertError } = await supabase.from('custom_tasks').insert(taskData);
 

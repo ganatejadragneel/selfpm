@@ -208,6 +208,7 @@ export interface CustomDailyTask {
   noteText?: string;
   alt_task?: string;
   alt_task_done?: boolean;
+  display_order?: number;
 }
 
 export interface DailyTaskCompletion {

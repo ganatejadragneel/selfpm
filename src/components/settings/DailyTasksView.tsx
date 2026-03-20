@@ -27,14 +27,23 @@ export const DailyTasksView: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const { data: tasksData, error: tasksError } = await supabase
+      // Try display_order first, fall back to created_at if column doesn't exist yet
+      let result = await supabase
         .from('custom_tasks')
         .select('*')
         .eq('new_user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('display_order', { ascending: true });
 
-      if (tasksError) throw tasksError;
-      setTasks(tasksData as CustomDailyTask[]);
+      if (result.error) {
+        result = await supabase
+          .from('custom_tasks')
+          .select('*')
+          .eq('new_user_id', user.id)
+          .order('created_at', { ascending: true });
+      }
+
+      if (result.error) throw result.error;
+      setTasks(result.data as CustomDailyTask[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
     } finally {
