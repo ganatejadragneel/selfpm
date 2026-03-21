@@ -1266,6 +1266,91 @@ export const DailyTaskTracker: React.FC = () => {
                           ))}
                         </select>
                       )}
+
+                      {task.type === 'multi_select' && task.options && (() => {
+                        const selectedValues = (task.currentValue || '').split(',').filter(v => v.trim() !== '');
+                        return (
+                          <div>
+                            <div style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: theme.spacing.sm,
+                            }}>
+                              {task.options.map(option => {
+                                const isSelected = selectedValues.includes(option);
+                                return (
+                                  <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => {
+                                      const newSelected = isSelected
+                                        ? selectedValues.filter(v => v !== option)
+                                        : [...selectedValues, option];
+                                      handleTaskValueChange(task.id, newSelected.join(','));
+                                    }}
+                                    style={{
+                                      padding: '8px 14px',
+                                      borderRadius: '20px',
+                                      border: `2px solid ${isSelected ? '#7c3aed' : theme.colors.border.light}`,
+                                      background: isSelected
+                                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%)'
+                                        : 'rgba(255, 255, 255, 0.8)',
+                                      color: isSelected ? '#7c3aed' : theme.colors.text.secondary,
+                                      fontSize: theme.typography.sizes.sm,
+                                      fontWeight: isSelected ? 600 : 500,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                    }}
+                                  >
+                                    <span style={{
+                                      width: '16px',
+                                      height: '16px',
+                                      borderRadius: '4px',
+                                      border: `2px solid ${isSelected ? '#7c3aed' : '#d1d5db'}`,
+                                      background: isSelected ? '#7c3aed' : 'transparent',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '10px',
+                                      color: 'white',
+                                      flexShrink: 0,
+                                    }}>
+                                      {isSelected && '✓'}
+                                    </span>
+                                    {option}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {selectedValues.length > 0 && (
+                              <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '4px',
+                                marginTop: theme.spacing.sm,
+                                paddingTop: theme.spacing.sm,
+                                borderTop: `1px solid ${theme.colors.border.light}`,
+                              }}>
+                                {selectedValues.map(val => (
+                                  <span key={val} style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '10px',
+                                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                                    color: 'white',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                  }}>
+                                    {val}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })
