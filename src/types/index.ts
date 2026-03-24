@@ -195,7 +195,7 @@ export interface WeeklyTaskCompletion {
 }
 
 // Daily Task related types (shared across components)
-export type DailyTaskType = 'yes_no' | 'dropdown';
+export type DailyTaskType = 'yes_no' | 'dropdown' | 'multi_select';
 
 export interface CustomDailyTask {
   id: string;
@@ -208,6 +208,7 @@ export interface CustomDailyTask {
   noteText?: string;
   alt_task?: string;
   alt_task_done?: boolean;
+  display_order?: number;
 }
 
 export interface DailyTaskCompletion {

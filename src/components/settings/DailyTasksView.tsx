@@ -12,10 +12,10 @@ export const DailyTasksView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ 
-    name: '', 
-    description: '', 
-    type: 'yes_no' as 'yes_no' | 'dropdown', 
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    type: 'yes_no' as 'yes_no' | 'dropdown' | 'multi_select',
     options: [''],
     alt_task: ''
   });
@@ -27,14 +27,23 @@ export const DailyTasksView: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const { data: tasksData, error: tasksError } = await supabase
+      // Try display_order first, fall back to created_at if column doesn't exist yet
+      let result = await supabase
         .from('custom_tasks')
         .select('*')
         .eq('new_user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('display_order', { ascending: true });
 
-      if (tasksError) throw tasksError;
-      setTasks(tasksData as CustomDailyTask[]);
+      if (result.error) {
+        result = await supabase
+          .from('custom_tasks')
+          .select('*')
+          .eq('new_user_id', user.id)
+          .order('created_at', { ascending: true });
+      }
+
+      if (result.error) throw result.error;
+      setTasks(result.data as CustomDailyTask[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tasks');
     } finally {
@@ -52,7 +61,7 @@ export const DailyTasksView: React.FC = () => {
       name: task.name,
       description: task.description || '',
       type: task.type,
-      options: task.type === 'dropdown' && task.options ? [...task.options] : [''],
+      options: (task.type === 'dropdown' || task.type === 'multi_select') && task.options ? [...task.options] : [''],
       alt_task: task.alt_task || ''
     });
   };
@@ -70,7 +79,7 @@ export const DailyTasksView: React.FC = () => {
         name: editForm.name,
         description: editForm.description,
         type: editForm.type,
-        options: editForm.type === 'dropdown' ? editForm.options.filter(opt => opt.trim()) : null,
+        options: (editForm.type === 'dropdown' || editForm.type === 'multi_select') ? editForm.options.filter(opt => opt.trim()) : null,
         alt_task: editForm.alt_task.trim() || null,
       };
 
@@ -359,9 +368,11 @@ export const DailyTasksView: React.FC = () => {
                 top: 0,
                 right: 0,
                 padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                background: task.type === 'yes_no' 
-                  ? theme.colors.status.success.gradient 
-                  : theme.colors.primary.gradient,
+                background: task.type === 'yes_no'
+                  ? theme.colors.status.success.gradient
+                  : task.type === 'multi_select'
+                    ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                    : theme.colors.primary.gradient,
                 borderRadius: `0 0 0 ${theme.borderRadius.md}`,
                 fontSize: theme.typography.sizes.xs,
                 color: 'white',
@@ -369,7 +380,7 @@ export const DailyTasksView: React.FC = () => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                {task.type === 'yes_no' ? 'Binary' : 'Options'}
+                {task.type === 'yes_no' ? 'Binary' : task.type === 'multi_select' ? 'Multi-Select' : 'Options'}
               </div>
               
               {editingTask === task.id ? (
@@ -499,10 +510,19 @@ export const DailyTasksView: React.FC = () => {
                         />
                         Dropdown
                       </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm, cursor: 'pointer' }}>
+                        <input
+                          type="radio"
+                          value="multi_select"
+                          checked={editForm.type === 'multi_select'}
+                          onChange={() => setEditForm({ ...editForm, type: 'multi_select' })}
+                        />
+                        Multi-Select
+                      </label>
                     </div>
                   </div>
 
-                  {editForm.type === 'dropdown' && (
+                  {(editForm.type === 'dropdown' || editForm.type === 'multi_select') && (
                     <div style={{ marginBottom: theme.spacing.md }}>
                       <label style={{
                         ...formStyles.label,
@@ -606,9 +626,11 @@ export const DailyTasksView: React.FC = () => {
                       <div style={{
                         width: '6px',
                         height: '32px',
-                        background: task.type === 'yes_no' 
+                        background: task.type === 'yes_no'
                           ? theme.colors.status.success.gradient
-                          : theme.colors.primary.gradient,
+                          : task.type === 'multi_select'
+                            ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                            : theme.colors.primary.gradient,
                         borderRadius: '3px',
                         flexShrink: 0
                       }} />
@@ -664,8 +686,8 @@ export const DailyTasksView: React.FC = () => {
                         color: theme.colors.text.primary,
                         fontWeight: 500
                       }}>
-                        <span>Type: {task.type === 'yes_no' ? 'Done / Not Done' : 'Dropdown'}</span>
-                        {task.type === 'dropdown' && task.options && (
+                        <span>Type: {task.type === 'yes_no' ? 'Done / Not Done' : task.type === 'multi_select' ? 'Multi-Select' : 'Dropdown'}</span>
+                        {(task.type === 'dropdown' || task.type === 'multi_select') && task.options && (
                           <div style={{ marginTop: theme.spacing.xs }}>
                             <span style={{ color: theme.colors.text.secondary }}>Options: </span>
                             <div style={{

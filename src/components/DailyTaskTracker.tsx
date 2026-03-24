@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronRight, Calendar, CheckCircle2, X, StickyNote } from 'lucide-react';
+import { ChevronRight, Calendar, CheckCircle2, X, StickyNote, GripVertical } from 'lucide-react';
 import { theme } from '../styles/theme';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { supabase } from '../lib/supabase';
@@ -7,6 +7,140 @@ import { TaskNoteModal } from './TaskNoteModal';
 import { getTodayLocalString, getYesterdayLocalString, isSameLocalDate, parseLocalDate } from '../utils/dateUtils';
 import { parseTaskValue, createTaskValue } from '../utils/taskValueUtils';
 import type { CustomDailyTask } from '../types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+
+// Compact sortable card shown during reorder mode
+const SortableDailyTaskCard: React.FC<{
+  task: CustomDailyTask;
+  index: number;
+}> = ({ task, index }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const isCompleted = task.type === 'yes_no'
+    ? task.currentValue === 'Done'
+    : task.currentValue && task.currentValue !== '';
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing.md,
+        padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+        marginBottom: theme.spacing.sm,
+        backgroundImage: isDragging
+          ? 'none'
+          : isCompleted
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
+            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+        backgroundColor: isDragging ? 'rgba(102, 126, 234, 0.12)' : undefined,
+        borderRadius: theme.borderRadius.lg,
+        border: `${isDragging ? '2px dashed' : isCompleted ? '2px solid' : '1px solid'} ${
+          isDragging
+            ? 'rgba(102, 126, 234, 0.5)'
+            : isCompleted
+              ? theme.colors.status.success.light
+              : theme.colors.border.light
+        }`,
+        cursor: isDragging ? 'grabbing' : 'grab',
+        opacity: isDragging ? 0.7 : 1,
+        boxShadow: isDragging
+          ? '0 8px 32px rgba(102, 126, 234, 0.3)'
+          : '0 2px 8px rgba(0, 0, 0, 0.08)',
+        zIndex: isDragging ? 1000 : 'auto',
+        touchAction: 'none',
+      }}
+    >
+      {/* Position badge */}
+      <div style={{
+        width: '24px',
+        height: '24px',
+        borderRadius: '6px',
+        backgroundImage: theme.colors.primary.gradient,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '11px',
+        fontWeight: 700,
+        flexShrink: 0,
+      }}>
+        {index + 1}
+      </div>
+
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        style={{
+          cursor: isDragging ? 'grabbing' : 'grab',
+          color: isDragging ? theme.colors.primary.dark : theme.colors.text.muted,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          transition: 'color 0.2s ease',
+        }}
+        title="Drag to reorder"
+      >
+        <GripVertical size={16} />
+      </div>
+
+      {/* Task name only */}
+      <span style={{
+        flex: 1,
+        fontSize: theme.typography.sizes.base,
+        fontWeight: 600,
+        color: isCompleted
+          ? theme.colors.status.success.dark
+          : theme.colors.text.primary,
+        wordBreak: 'break-word',
+      }}>
+        {task.name}
+      </span>
+
+      {/* Completion indicator */}
+      {isCompleted && (
+        <CheckCircle2
+          size={16}
+          color={theme.colors.status.success.dark}
+          style={{ flexShrink: 0 }}
+        />
+      )}
+    </div>
+  );
+};
 
 
 export const DailyTaskTracker: React.FC = () => {
@@ -16,6 +150,8 @@ export const DailyTaskTracker: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<CustomDailyTask | null>(null);
+
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   // Date selection state: 'today' or 'yesterday'
   const [dateView, setDateView] = useState<'today' | 'yesterday'>('today');
@@ -40,11 +176,29 @@ export const DailyTaskTracker: React.FC = () => {
 
     setLoading(true);
     try {
-      // Fetch custom daily tasks
-      const { data: customTasksData, error: tasksError } = await supabase
+      // Fetch custom daily tasks (try display_order, fall back to created_at if column doesn't exist yet)
+      let customTasksData: any[] | null = null;
+      let tasksError: any = null;
+
+      const primaryResult = await supabase
         .from('custom_tasks')
         .select('*')
-        .eq('new_user_id', user.id);
+        .eq('new_user_id', user.id)
+        .order('display_order', { ascending: true });
+
+      if (primaryResult.error) {
+        // display_order column may not exist yet — fall back to created_at
+        const fallbackResult = await supabase
+          .from('custom_tasks')
+          .select('*')
+          .eq('new_user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        customTasksData = fallbackResult.data;
+        tasksError = fallbackResult.error;
+      } else {
+        customTasksData = primaryResult.data;
+      }
 
       if (tasksError) {
         console.error('Error fetching custom tasks:', tasksError);
@@ -95,7 +249,8 @@ export const DailyTaskTracker: React.FC = () => {
           completedToday: !!completion,
           noteText: note?.note_text || '',
           alt_task: task.alt_task || undefined,
-          alt_task_done: parsedValue.alt === 'Done'
+          alt_task_done: parsedValue.alt === 'Done',
+          display_order: task.display_order
         };
       });
       
@@ -295,6 +450,7 @@ export const DailyTaskTracker: React.FC = () => {
   const handleMobileClose = () => {
     if (isMobile) {
       setIsExpanded(false);
+      setIsReorderMode(false);
     }
   };
 
@@ -308,6 +464,7 @@ export const DailyTaskTracker: React.FC = () => {
   const handleMouseLeave = () => {
     if (!isMobile) {
       setIsExpanded(false);
+      setIsReorderMode(false);
     }
   };
 
@@ -326,6 +483,43 @@ export const DailyTaskTracker: React.FC = () => {
           : task
       )
     );
+  };
+
+  // Drag-and-drop sensors for reorder mode
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for task reordering
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !user) return;
+
+    const oldIndex = customTasks.findIndex(t => t.id === active.id);
+    const newIndex = customTasks.findIndex(t => t.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Optimistic local update
+    const reordered = arrayMove(customTasks, oldIndex, newIndex);
+    setCustomTasks(reordered);
+
+    // Persist to Supabase
+    try {
+      const updates = reordered.map((task, index) =>
+        supabase
+          .from('custom_tasks')
+          .update({ display_order: index + 1 })
+          .eq('id', task.id)
+      );
+      await Promise.all(updates);
+    } catch (error) {
+      console.error('Error persisting task order:', error);
+      fetchCustomTasksAndCompletions();
+    }
   };
 
   // Swipe gesture handling for mobile
@@ -566,35 +760,64 @@ export const DailyTaskTracker: React.FC = () => {
                 </div>
               </div>
               
-              {/* Close button for mobile with better styling */}
-              {isMobile && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                {/* Reorder toggle button */}
                 <button
-                  onClick={handleMobileClose}
+                  onClick={() => setIsReorderMode(!isReorderMode)}
                   style={{
-                    backgroundColor: theme.colors.surface.glass,
-                    border: `1px solid ${theme.colors.border.light}`,
+                    backgroundColor: isReorderMode
+                      ? theme.colors.primary.dark
+                      : theme.colors.surface.glass,
+                    border: `1.5px solid ${isReorderMode ? theme.colors.primary.dark : theme.colors.border.light}`,
                     cursor: 'pointer',
                     padding: theme.spacing.sm,
                     borderRadius: theme.borderRadius.md,
-                    color: theme.colors.text.secondary,
+                    color: isReorderMode ? 'white' : theme.colors.text.secondary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                    transition: 'all 0.25s ease',
+                    boxShadow: isReorderMode
+                      ? '0 4px 12px rgba(102, 126, 234, 0.3)'
+                      : '0 2px 4px rgba(0, 0, 0, 0.05)',
+                    width: '36px',
+                    height: '36px',
                   }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.status.error.light;
-                    e.currentTarget.style.color = theme.colors.status.error.dark;
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.colors.surface.glass;
-                    e.currentTarget.style.color = theme.colors.text.secondary;
-                  }}
+                  title={isReorderMode ? 'Exit reorder mode' : 'Reorder tasks'}
                 >
-                  <X size={18} />
+                  <GripVertical size={18} />
                 </button>
-              )}
+
+                {/* Close button for mobile */}
+                {isMobile && (
+                  <button
+                    onClick={handleMobileClose}
+                    style={{
+                      backgroundColor: theme.colors.surface.glass,
+                      border: `1px solid ${theme.colors.border.light}`,
+                      cursor: 'pointer',
+                      padding: theme.spacing.sm,
+                      borderRadius: theme.borderRadius.md,
+                      color: theme.colors.text.secondary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.colors.status.error.light;
+                      e.currentTarget.style.color = theme.colors.status.error.dark;
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.colors.surface.glass;
+                      e.currentTarget.style.color = theme.colors.text.secondary;
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Date Toggle Tabs */}
@@ -605,7 +828,10 @@ export const DailyTaskTracker: React.FC = () => {
               padding: '4px',
               backgroundColor: 'rgba(0, 0, 0, 0.05)',
               borderRadius: theme.borderRadius.md,
-              width: 'fit-content'
+              width: 'fit-content',
+              opacity: isReorderMode ? 0.4 : 1,
+              pointerEvents: isReorderMode ? 'none' : 'auto',
+              transition: 'opacity 0.2s ease'
             }}>
               <button
                 onClick={() => setDateView('today')}
@@ -671,6 +897,26 @@ export const DailyTaskTracker: React.FC = () => {
               </div>
             )}
 
+            {/* Reorder mode banner */}
+            {isReorderMode && (
+              <div style={{
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                backgroundImage: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(139, 92, 246, 0.08))',
+                borderRadius: theme.borderRadius.md,
+                border: '1px solid rgba(102, 126, 234, 0.2)',
+                marginBottom: theme.spacing.md,
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing.sm,
+                fontSize: theme.typography.sizes.sm,
+                color: theme.colors.primary.dark,
+                fontWeight: 500
+              }}>
+                <GripVertical size={14} />
+                Drag tasks to reorder. Changes save automatically.
+              </div>
+            )}
+
             {/* Task list */}
             <div style={{
               flex: 1,
@@ -698,6 +944,25 @@ export const DailyTaskTracker: React.FC = () => {
                     Add custom daily tasks in Settings to track them here
                   </div>
                 </div>
+              ) : isReorderMode ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={customTasks.map(t => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {customTasks.map((task, index) => (
+                      <SortableDailyTaskCard
+                        key={task.id}
+                        task={task}
+                        index={index}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               ) : (
                 customTasks.map(task => {
                   const isCompleted = task.type === 'yes_no' 
@@ -1001,6 +1266,91 @@ export const DailyTaskTracker: React.FC = () => {
                           ))}
                         </select>
                       )}
+
+                      {task.type === 'multi_select' && task.options && (() => {
+                        const selectedValues = (task.currentValue || '').split(',').filter(v => v.trim() !== '');
+                        return (
+                          <div>
+                            <div style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: theme.spacing.sm,
+                            }}>
+                              {task.options.map(option => {
+                                const isSelected = selectedValues.includes(option);
+                                return (
+                                  <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => {
+                                      const newSelected = isSelected
+                                        ? selectedValues.filter(v => v !== option)
+                                        : [...selectedValues, option];
+                                      handleTaskValueChange(task.id, newSelected.join(','));
+                                    }}
+                                    style={{
+                                      padding: '8px 14px',
+                                      borderRadius: '20px',
+                                      border: `2px solid ${isSelected ? '#7c3aed' : theme.colors.border.light}`,
+                                      background: isSelected
+                                        ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.1) 100%)'
+                                        : 'rgba(255, 255, 255, 0.8)',
+                                      color: isSelected ? '#7c3aed' : theme.colors.text.secondary,
+                                      fontSize: theme.typography.sizes.sm,
+                                      fontWeight: isSelected ? 600 : 500,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s ease',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                    }}
+                                  >
+                                    <span style={{
+                                      width: '16px',
+                                      height: '16px',
+                                      borderRadius: '4px',
+                                      border: `2px solid ${isSelected ? '#7c3aed' : '#d1d5db'}`,
+                                      background: isSelected ? '#7c3aed' : 'transparent',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '10px',
+                                      color: 'white',
+                                      flexShrink: 0,
+                                    }}>
+                                      {isSelected && '✓'}
+                                    </span>
+                                    {option}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {selectedValues.length > 0 && (
+                              <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '4px',
+                                marginTop: theme.spacing.sm,
+                                paddingTop: theme.spacing.sm,
+                                borderTop: `1px solid ${theme.colors.border.light}`,
+                              }}>
+                                {selectedValues.map(val => (
+                                  <span key={val} style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '10px',
+                                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                                    color: 'white',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                  }}>
+                                    {val}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })

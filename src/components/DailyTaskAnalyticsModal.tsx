@@ -820,11 +820,15 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                             // Color assignment function for dropdown tasks based on option position
                             const getValueColor = (value: string) => {
                               if (task.type === 'yes_no') {
-                                return value === 'Done' 
-                                  ? theme.colors.status.success.dark 
-                                  : value === 'Not Done' 
-                                    ? '#ef4444' 
+                                return value === 'Done'
+                                  ? theme.colors.status.success.dark
+                                  : value === 'Not Done'
+                                    ? '#ef4444'
                                     : '#f3f4f6';
+                              } else if (task.type === 'multi_select') {
+                                // For multi-select, use purple if any selection exists
+                                if (!value || value.trim() === '') return '#f3f4f6';
+                                return getDropdownColor(value, task.options || []);
                               } else {
                                 return getDropdownColor(value, task.options || []);
                               }
