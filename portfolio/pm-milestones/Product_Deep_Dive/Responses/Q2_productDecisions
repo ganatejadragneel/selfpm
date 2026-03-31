@@ -1,0 +1,143 @@
+SelfPM Q2 
+
+Decisions and Tradeoffs 
+
+As I make an important pivot in my product focus, I make 3 decisions that characterize this pivot. 
+
+ Decision 1: WHAT — Move to execution mode, focus on 5 metrics                                                                                          
+ Decision 2: HOW — Remove voice-to-text for real-time awareness                                                                                         
+ Decision 3: BUILD — Custom code vs platform architecture
+
+This decision is about what to focus on. Decisions 2 and 3 are about how to implement that focus.
+
+Decision 1: 
+
+I built a system of no judgement, and now im creeping judgement back in. Here’s why. 
+
+Choosing to go into an Execution + Observation Phase, from purely observational 
+
+
+So far, all my learnings from SelfPM have directed me towards one thing. Don’t put pressure on yourself to perform.  NO goals. NO judgment. Just pure curiosity to learn about yourself, and get better at it. It will come naturally, dont force it. 
+
+Now, I am at a point, where I have to decide, if I want to Bring back an execution focus into my efforts. 
+
+The daily task tracking has done extremely well for me, in helping me realize and understand the root triggers of my ‘bad habits’, the root causes for why I dont function at the level I expect from myself. And, I continue to learn. 
+
+But, the time has also come, for me to put to the test, everything I’ve learnt so far, and get into a mode of executing these learnings. If I dont have proof of execution, a hypothesis is all they will remain as. 
+
+So, I needed to make a decision, If I want to test my learnings, and see if they held up. 
+
+Through the initial 145 days of data tracking and CPO analysis, I identified 5 key metrics, that would allow me to be my most successful self. Reduce all IP, and keep me productive and performant. So, I needed to choose, if these were all that I was going to track from here on out, but in much more specific detail, and under a stronger lens. 
+
+“Why now”? 
+
+After 145 days, the patterns stopped surprising me. The last 3 CPO reports identified the same root causes. I was no longer discovering — I was         
+confirming. That signal told me: the observation phase had done its job. Time to execute.
+
+Waking up in the morning early (4:30 am), so that I can do my morning routine {this consisted of ‘proven’ [from the 145 Tracking days, where I also tracked my body state based on various routines I followed, these items in my routine]  activities (meditation, reading / visualization) proved to be the most effective in setting me up for a good day to prevent general build up of IP. 
+
+Doing my Morning routine (to prevent build of IP, and to regulate my body from any pending discomfort from sleep / previous day) in preparation for the most important task of my day to follow 
+
+Finishing my highest Identity Pressure Task (finishing this task held the key to my success for the rest of the day — I felt ‘free’ when I did it first thing, with focus and vigor). 
+
+Going to the gym at a later time (60 minutes a day in the gym kept me in good shape, prepared for the cricket season, and feeling good about my physical and mental health, my aesthetic, and also, reinvigorating my confidence in myself that I AM WILLING to show up for me)
+
+And most important — the ANTHROPIC prep — the most important IP task I have right now, that determines if I have worth in my life or not (it shouldn’t, but it does). 
+
+
+I decided to track these 5 items, rigourously, with daily detailed notes (increased limit from 600 - 2500 characters for rich detail), and weekly goals for each. I crated a sprint dashboard that ti look at first thing when I open selfPM, and it shows me how im doing. 
+
+
+This was a tough decision to make. There’s few significant tradeoffs: 
+1. None more than — this is supposed to be an observation first system, result tracking(judgement) is the bane I was moving away from, how can I get back to it? —> yes, but also, no — Im learning that result tracking is not inherently bad — its only bad when you dont have the tools, or a map to get results, but you keep expecting them fro yourself. You need to have the tools, to get results. This way, you detach yourself from the result, I am only testing the tools. Not my ability to achieve them. I know that if I follow xyz (5) activities, which I’ve grown comfortable to do, I am able to achieve success. I have shown that I am able to do it. Now, I just want to see, that If I focus on them, how I am able to do. Even now, it is a hypothesis testing, not a worth determining event. I am still ‘observing’ the execution of these metrics. If they fail, or they cause higher IP, I will change metrics and move to another hypothesis. (If need be)
+2. Another significant tradeoff — I lose insight on the other 20 metrics I was tracking everyday. Some important — like my body state at various times of the day, other wins from the day, learnings from the day, financial discipline, urge control, urge mitigation, etc. these are all valuable metrics to track, and have served me very well over the last 5 months. But, they all, cumulatively, have helped me realize that these are the 5 most important metrics, and I am doing a service to this learning, by focusing on these. 
+
+
+I gain urgency in getting things done, I gain deep insight into important tasks, and I get to test my hypothesis, if the routine I have built really helps me get my main IP task done (I control sleep, morning routine, gym, and I depend on the outcome of anthropic. This is the key outcome I am looking for, and I am testing if the remaining controllable (that I have learnt to e the most effective) are able to influence it. 
+
+Good call so far. I am waiting to see the results. 
+
+Observation taught me what to do. Sprints test whether I actually do it. The philosophy hasn't changed — only the phase.
+
+￼
+
+Decision 2:
+
+Removing the ‘Voice to Text’ button for sprint Activity Observations: 
+<< Removing a feature that is not longer serving the current job>>
+
+As I move from an observation to one execution phase on selfPM, some things are changing. 
+I am bring back result oriented activities (sprints with goals), I need to be more aware of my daily progress on key activities (still observation first, no judgement, but with added impetus for success.). From the observation phase, I have learnt what works, and what is important to get right for execution success, and now im testing it. This brought about some changes…. 
+
+For the longest time, since the beginning of SelfPM, I had a voice to text button, that allowed the user (me) to update progress notes using voice, instead of having to type it out. My goal was simple - -to reduce friction as much as possible so the user can enter their notes with ease.. the goal is observation, so Im okay to let them ramble on for a bit, if that means I can capture more context. 
+
+This served me very well. I was able to capture lots of context — specifically on the days when I failed — the shame usually would cause friction I typing out notes, but the ‘speaking’ made it easy for me to just vent my feelings. It felt less like accounting for something I missed, and more of venting about something that happened. This was gold. 
+
+
+However, I realized with time, that, using the speech to text meant, that im not really thinking deeply about what it is im saying/ reporting. I am just rambling on about the thought is have on the matter, not focusing on what exactly happened — thinking the llm will find this in the CPO report and inform me. It was more about feeding the llm, than it was about me understanding in real time what was happening. 
+
+This needed to be flipped during sprints. Like I mentioned above, the sprints are about execution speed. They are about real time awareness, and course correction for execution success. This means, that I need to be vigilant about the situations I find myself in, and why / why not they are working. 
+
+So, while I increased the character limit to 2500 to give opportunity for additional rich context, I made a conscious decision to remove the speech to text button, because I wanted to user to be hyper aware of what update they were entering, and how it might affect them. When I enter notes saying that I didn’t sleep on time yesterday because I was watching TV, and that I felt tired and watch tv because of the release’s and this caused me to wake up late and not b able to do my IP task in full throttle, I want to feel that pain of typing it out. It’s not necessarily pain, but more so awareness. I am in the moment, understanding as I type out every letter. This is invaluable to me. The next time im in a position to release / miss gym / watch TV, I will remember this moment, I will manifest this awareness, and make the right call. This is the value I get from removing the voice to text button. It was an enhancement, until it stopped serving its purpose. I am now intrinsically motivated to provide updates. The friction has been removed. I dont need an additional tool to remove it. So, with no benefit, I am now only left with the detriments of it. 
+
+Here’s a fantastic real time example of how the friction from typing allowed for processing time, that allowed me to make an important realization. 
+  "Last Tuesday, I started typing 'I watched TV until 8:30 because I felt tired from—' and mid-sentence I realized: I wasn't tired. I was avoiding. Avoiding that I needed to go to the gym, and I was afraid I would fail at today’s ‘difficult’ routine. The act of typing forced me to confront the lie I was about to tell myself. Voice wouldn't have caught that."                                                
+
+The tradeoff, is that, on the days I might be tired, I might get to record as much context as before. I might miss out on some valuable information. That okay.  I made a workaround for that as well, by allowing the user to edit the current AND previous day’s entries. This way, even if im tired and I miss out, I allow myself a whole other day to get the context in. 
+
+I considered some alternatives — maybe I could have had voice for some metrics, and only text for others. Specifically, the ‘harder’ / ‘higher IP’ / ‘Higher risk of failure’ metric like Anthropic Prep. Historically, like I mentioned, the voice to text has been tremendously useful in getting context out of me, when I didn’t want to type it out. Whether contained for time, or the courage to admit my inadequacy to do something. This was particularly useful for these higher failure probability tasks. For me, now, that is anthropic. I have the most riding on it, and it is also currently the most ambiguous, because im not yet sure how exactly to get this done. This caused me a lot of anxiety to do it, and I need something like voice to text to ease my delivery of daily accounts. But, I decided not to, and to mitigate this instead. 
+
+First, I decided not to, and instead, to put more onus on myself to get the job done. I trust in myself, and my desire to accomplish this task, that I will definitely get the right accounts in there. To enable this, I added the next day feature, allowing me to edit the previous day’s entry the next day — and I have seen in practice that this task is the one I fill the most the next day - -so my sense was right. That the big IP tasks need the extra boost. 
+
+Also, I took time to demystify the task. I made specific outputs I need to get out of my anthropic prep everyday (answering one question each day about my flagship product, SelfPM), and this has made my work easier. Now I have less ambiguity, less uncertainty, and I’m able to get the job done! 
+
+This was hard because voice-to-text was directly responsible for capturing the 257K characters of context that enabled the CPO Analysis breakthrough. Removing the tool that generated my best insight felt risky. But the insight phase is over — now I need to act on what I learned, not gather more data.
+
+The tradeoff is significant in a way. The voice to text is the single reason I was able to get so many good faulty notes into my system, espcially once I increased the character limit to 600, and increased the number of metrics to 25. It gave me the flexibility of doing them quick, using my thoughts and my speech. But this is a comfort I have learned to let go of. For the better. 
+
+Voice-to-text was a friction-reduction tool. But I've realized: some friction is valuable. The friction of typing creates a processing moment that voice bypasses. I removed a feature not because it was broken, but because I no longer needed its benefit — and I did need its cost
+
+
+
+Decision 3: 
+
+The method of creating the sprint feature. 
+
+
+I made a decision to custom code the sprint features and its specifics (metrics tracked, goals for the week, duration of sprints, components for each activity (wake up time, sleep time, hours, duration, etc), notes) instead of building them as components that the user could configure to suit their specific sprint needs (choose the activities to track, what components to track for each (date / time component, duration component, free text component, etc) 
+
+
+I work at a software company that makes low code case management software for federal, state and local govt agencies across health and human services. We have a platform, with tools like page builder, workflow automation (n8n), business rules engine (Drools), and Microstrategy for custom reporting configurations. As a PM at this org, safe to say,I am a big believer in low code applications that give the user the flexibility to configure the platform based on their unique needs. 
+
+This is also how I built out the initial 2 features of SelfPM. The Task tracker (which I dont speak about much, because I dont use it) — it allows the user to create a task that they can track on a dashboard, add progress updates to, time estimates, and track dependencies. Users can classify a task as ‘Life Admin’, ‘Work’ or ‘Weekly’, and monitor their to-dos. Simple feature, but, configurable, based on what you need. 
+
+Same with the daily activity tracker (that we’ve been discussing). Users are able to ‘Add custom task’ (I realize that other being called ‘task’ is confusing, but you’ll get it from context), where they’ll fill out the task name, a description, and then whether they want to track it via a binary ‘Yes’ | ‘NO’ everyday, or have a configurable dropdown list where they add custom options to choose from as they track the task everyday. This allows the user to setup various different types of tasks to track everyday, to add and remove them as they please — a truly flexible architecture, giving maximum freedom for user choice and discretion. 
+
+Now, when I moved into the sprint methodology, I had a decision to make. Was I going to build the sprint feature also as a platform, and allow the user to configure it based on their specific (possible changing) needs, or just a custom sprint I can quickly hardcode, and make it work? 
+
+I chose the latter. I chose to believe, that these are the definitive FIVE activities, that are going to cause a massive drop in IP, spike in productivity, and hurl me towards my goals better than any other. I might have to increase the intensity of my weekly goals, but at the moment, im at least a couple weeks out from achievingg the current high standard I have set. 
+
+I eventually want to platformize and systemize and componentize it. But, for the moment, the custom sprint benefits me massively, in the first, 
+1. It’s a lot less work to develop and push out. As always, custom coding is quicker, and more suited for immediate use than building a system. For my level of coding expertise, it only took my a couple hours to create this sprint, but could have taken me significantly longer to create a system, and debug it. 
+2. It allows me to start tracking my sprints immediately. I was able to get started the very next day. I am in my second week onwards, and going strong. Getting valuable insights from my sprint tracker. 
+    1. This is useful because, when I get a sharp idea, I dont like to wait to test it out. If I had waited to systemize this feature, it might have taken me longer, maybe days to get all the bugs out. I dont like to wait when I hav new ideas waiting to be tested. 
+3. I used a platform like architecture, to build out the custom tasks (description below), so that I can eventually move to platforming it. 
+4. I am able to test the feature, see if it works, and provides the value I expect from it, before spending a bulk of resources into plarformizing for myself and other users in the future. Platform is definitely the way togo, but, I need to know it works first , and this is the easiest way I found how. 
+
+The Platformization-Ready Architecture:                                                                                                                                                                                                                                                                     
+  The system separates what I'm tracking from how tracking works. The core has three generic input types (sleep, boolean, duration) that can represent any 
+  metric. The five specific metrics (Sleep, Morning Routine, IP Attack, Gym, Anthropic Progress) are defined in a single configuration file — not scattered
+   through the codebase.                                                                                                                                                                                                                                                                           
+  To platformize later, I need to:                                                                                                                         
+  1. Replace the hardcoded FOCUS_METRICS array with a database table of user-defined metrics                                                               
+  2. Build a "Create Metric" UI that lets users choose name, type, and targets                                                                             
+  3. The existing input components (SleepInput, BooleanInput, DurationInput) work unchanged                                                                
+                                                                                                                                                           
+  This is the "hardcode at the edge, genericize at the core" pattern — custom code where users see it, platform architecture where the logic lives. I get  
+  speed now, and a clear path to platform later.
+
+The tradeoff is again significant. I need to write custom code again to update my goals if necessary. Custom code again if I want to add a new activity to track, custom code if I want to change the evaluation metric / threshold (from 180 minutes, to 5 hours). 
+
+All this considered, I still feel extremely comfortable in my decicion, because I am GETTING RESULTS. And that’s what I care about the most right now. Results. These results that will define my confidence in my ability to execute, and also, more relevantly, my confidence in this feature, so that I can platformize it with full conficdence behind its usefullness. 
+
+Good call so far. 

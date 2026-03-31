@@ -1,0 +1,25 @@
+1. lets move on to claude API integration. I am trying to think what could be a good place for us to start. lets talk design. im just thinking out loud. what could be the mostuseful           
+  feature for me right now. let me take a step back. i dont want to think in terms of features. let me think of business value. what problem am i facing right now that i wish i could         
+  solve instantly? hmmm.. I feel demotivated sometimes. I feel like i dont have a perfect plan, and that i have competing priorities in my mind. I have fought this off to a large extent,     
+  and now have priorities so well defined, that i literally am tracking only 5 focus metrics for a sprint, but still, i have some thoughts that kill my prioritization. for e.g. i can't       
+  decide how much effort to put in at work. i get mad when i think that they have not paid me in a while. i thought i was past this. actually, this is not somehting i want to get into        
+  right now. I am making this decision here and now. I will not think about the money i am owed. I will only focus on upskilling myself on SelfPM, technical fluency, and gaining users.       
+  that's that. \                                                                                                                                                                               
+  \                                                                                                                                                                                            
+  next problem -- I wish, i could get motivational notifications on ym phone / watch at different points of the day, with specific messges / insight onto what i should do then. so, the       
+  problem i have, is that, i am able to wake up early and everything, but i lose track at some point during the day, and get diverted / watch TV in the mornings, get bored, and do            
+  timepass as work with colleagues, or just start blaming the company for xyz reasons (all valid) and not doing work. this doesn't happen often, but it happens. The problem i have, is        
+  staying focused, and on task. I have built a good habit of plannign / visualizing my day in the morning, now i need help keep on track of that plan throughout the day. is there a way       
+  SelfPM, once it knows my plan for the day (it can either pull form the Morning routine Sprint Focus task notes (where i will enter it every morning before 5:30am), or, we can have a        
+  sepearet data field for it), and then send me a notifcation at differnt times to check in on me on whethere im doing that task? and remind me that nothing else matters for my happiness     
+  and success for the day, and this is what will lead me to happiness in life and a job at my dream company anthropic? I would also like to be ale to speak / text back to the                 
+  notification of my 'state' at the time. this is proably too much. im still brainstorming. I want notifications -- motivational notifications for my primary focus tasks (Anthropic / Gym     
+  / Cardy work -- this is not on the sprint this week, but it is a focus task, especially one that i need motivation for). I want cardy motivation at 9a and 11a, and Anthropic                
+  motivation at 2:30p. Ideally, i'd want these to be absed on notes from the prevoous day on how well / bad i did these tasks, so i can get context and do better this day. something like     
+  this. Im not 100% clear, but i want to rainstorm ideas on how i can bring myself to see specific notes / trends / statistics/ predictions/  other, through notificaitons on phone /          
+  watch, so that i am able to remember my 'why' and quickly change state from potentially 'troubled / bored' and get back to work. Can you help me rainstorm some ideas, specifically ones     
+  that might interate claude API into my app for this? First, help me summarize my problem statement in 4-8 lines, and then give me recommendations. the mode of delviery (watch / phone       
+  / email) is not super important, we can focus on that later. (i just realized we dont have to build a watch app / interface, but just have selfPM email me, which my watch will notify       
+  me about). is my prompt clear?
+
+  2. 

@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment
+.env
+
+# Personal data & documentation (local only, never commit)
+seekers/
+docs/
