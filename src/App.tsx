@@ -15,7 +15,8 @@ import { DailyTaskTracker } from './components/DailyTaskTracker';
 import { ModalRegistry } from './components/modals/ModalRegistry';
 // Lazy load analytics dashboard
 const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, FileText, LayoutDashboard } from 'lucide-react';
+import { QuickNotesPage } from './components/QuickNotes';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -56,6 +57,7 @@ function AppContent() {
     openDailyAnalyticsModal,
   } = useModal();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'notes'>('dashboard');
   const showAnalytics = useToggle(false);
   
   const sensors = useSensors(
@@ -363,104 +365,161 @@ function AppContent() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ 
-        maxWidth: '1280px', 
-        margin: '0 auto', 
-        padding: isMobile ? '16px 12px' : '24px' 
+      {/* Tab Navigation */}
+      <div style={{
+        background: theme.colors.surface.glass,
+        backdropFilter: theme.effects.blur,
+        borderBottom: `1px solid ${theme.colors.surface.glassBorder}`,
+        position: 'relative',
+        zIndex: 99,
       }}>
-        {/* Analytics Dashboard - Collapsible */}
-        {showAnalytics.value && (
-          <div style={{ marginBottom: '32px' }}>
-            <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
-          </div>
-        )}
-
-        {/* Weekly Summary */}
-        <div style={{ marginBottom: '32px' }}>
-          <WeeklySummary 
-            tasks={tasks} 
-            weekNumber={currentWeek} 
-            onTaskClick={(task) => openTaskModal(task)}
-          />
+        <div style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '8px 16px',
+          display: 'flex',
+          gap: '8px',
+        }}>
+          {([
+            { key: 'dashboard' as const, label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+            { key: 'notes' as const, label: 'Quick Notes', icon: <FileText className="w-4 h-4" /> },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: isMobile ? '8px 14px' : '10px 20px',
+                borderRadius: theme.borderRadius.full,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: theme.typography.sizes.base,
+                fontWeight: theme.typography.weights.semibold,
+                transition: 'all 0.2s ease',
+                ...(activeTab === tab.key
+                  ? {
+                      backgroundImage: theme.colors.primary.gradient,
+                      color: 'white',
+                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+                    }
+                  : {
+                      background: 'transparent',
+                      color: theme.colors.text.secondary,
+                    }
+                ),
+              }}
+            >
+              {tab.icon}
+              {!isMobile && tab.label}
+            </button>
+          ))}
         </div>
-
-        {/* Task Columns */}
-        {loading ? (
-          <LoadingSpinner size="lg" text="Loading tasks..." />
-        ) : (
-          <DndContext 
-            sensors={sensors}
-            collisionDetection={pointerWithin}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: isMobile 
-                ? '1fr' 
-                : 'repeat(auto-fit, minmax(350px, 1fr))', 
-              gap: isMobile ? '16px' : '24px',
-              minHeight: 'calc(100vh - 400px)'
-            }}>
-              <ModernCategoryColumn
-                category="life_admin"
-                tasks={tasksByCategory.life_admin}
-                onTaskClick={openTaskModal}
-                onTaskStatusToggle={handleStatusToggle}
-                onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => openAddTaskModal('life_admin')}
-              />
-              
-              <ModernCategoryColumn
-                category="work"
-                tasks={tasksByCategory.work}
-                onTaskClick={openTaskModal}
-                onTaskStatusToggle={handleStatusToggle}
-                onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => openAddTaskModal('work')}
-              />
-              
-              <ModernCategoryColumn
-                category="weekly_recurring"
-                tasks={tasksByCategory.weekly_recurring}
-                onTaskClick={openTaskModal}
-                onTaskStatusToggle={handleStatusToggle}
-                onDeleteTask={(task) => handleDelete(task.id)}
-                onAddTask={() => openAddTaskModal('weekly_recurring')}
-              />
-            </div>
-            
-            <DragOverlay>
-              {activeTask ? (
-                <div style={{
-                  opacity: 0.8,
-                  transform: 'rotate(5deg)',
-                  pointerEvents: 'none'
-                }}>
-                  <div style={{
-                    padding: theme.spacing.lg,
-                    background: theme.colors.surface.glass,
-                    borderRadius: theme.borderRadius.lg,
-                    border: '2px solid rgba(102, 126, 234, 0.5)',
-                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-                    backdropFilter: theme.effects.blur
-                  }}>
-                    <h3 style={{
-                      fontSize: theme.typography.sizes.lg,
-                      fontWeight: theme.typography.weights.semibold,
-                      color: theme.colors.text.primary,
-                      margin: 0
-                    }}>
-                      {activeTask.title}
-                    </h3>
-                  </div>
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        )}
       </div>
+
+      {/* Main Content */}
+      {activeTab === 'dashboard' ? (
+        <div style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: isMobile ? '16px 12px' : '24px'
+        }}>
+          {/* Analytics Dashboard - Collapsible */}
+          {showAnalytics.value && (
+            <div style={{ marginBottom: '32px' }}>
+              <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
+            </div>
+          )}
+
+          {/* Weekly Summary */}
+          <div style={{ marginBottom: '32px' }}>
+            <WeeklySummary
+              tasks={tasks}
+              weekNumber={currentWeek}
+              onTaskClick={(task) => openTaskModal(task)}
+            />
+          </div>
+
+          {/* Task Columns */}
+          {loading ? (
+            <LoadingSpinner size="lg" text="Loading tasks..." />
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={pointerWithin}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile
+                  ? '1fr'
+                  : 'repeat(auto-fit, minmax(350px, 1fr))',
+                gap: isMobile ? '16px' : '24px',
+                minHeight: 'calc(100vh - 400px)'
+              }}>
+                <ModernCategoryColumn
+                  category="life_admin"
+                  tasks={tasksByCategory.life_admin}
+                  onTaskClick={openTaskModal}
+                  onTaskStatusToggle={handleStatusToggle}
+                  onDeleteTask={(task) => handleDelete(task.id)}
+                  onAddTask={() => openAddTaskModal('life_admin')}
+                />
+
+                <ModernCategoryColumn
+                  category="work"
+                  tasks={tasksByCategory.work}
+                  onTaskClick={openTaskModal}
+                  onTaskStatusToggle={handleStatusToggle}
+                  onDeleteTask={(task) => handleDelete(task.id)}
+                  onAddTask={() => openAddTaskModal('work')}
+                />
+
+                <ModernCategoryColumn
+                  category="weekly_recurring"
+                  tasks={tasksByCategory.weekly_recurring}
+                  onTaskClick={openTaskModal}
+                  onTaskStatusToggle={handleStatusToggle}
+                  onDeleteTask={(task) => handleDelete(task.id)}
+                  onAddTask={() => openAddTaskModal('weekly_recurring')}
+                />
+              </div>
+
+              <DragOverlay>
+                {activeTask ? (
+                  <div style={{
+                    opacity: 0.8,
+                    transform: 'rotate(5deg)',
+                    pointerEvents: 'none'
+                  }}>
+                    <div style={{
+                      padding: theme.spacing.lg,
+                      background: theme.colors.surface.glass,
+                      borderRadius: theme.borderRadius.lg,
+                      border: '2px solid rgba(102, 126, 234, 0.5)',
+                      boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                      backdropFilter: theme.effects.blur
+                    }}>
+                      <h3 style={{
+                        fontSize: theme.typography.sizes.lg,
+                        fontWeight: theme.typography.weights.semibold,
+                        color: theme.colors.text.primary,
+                        margin: 0
+                      }}>
+                        {activeTask.title}
+                      </h3>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          )}
+        </div>
+      ) : (
+        <QuickNotesPage />
+      )}
 
       {/* Modals */}
       <ModalRegistry tasks={tasks} currentWeek={currentWeek} />
