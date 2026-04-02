@@ -381,8 +381,8 @@ function AppContent() {
           gap: '8px',
         }}>
           {([
-            { key: 'dashboard' as const, label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-            { key: 'notes' as const, label: 'Quick Notes', icon: <FileText className="w-4 h-4" /> },
+            { key: 'dashboard' as const, label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, isNew: false },
+            { key: 'notes' as const, label: 'Quick Notes', icon: <FileText className="w-4 h-4" />, isNew: true },
           ]).map(tab => (
             <button
               key={tab.key}
@@ -398,6 +398,7 @@ function AppContent() {
                 fontSize: theme.typography.sizes.base,
                 fontWeight: theme.typography.weights.semibold,
                 transition: 'all 0.2s ease',
+                position: 'relative',
                 ...(activeTab === tab.key
                   ? {
                       backgroundImage: theme.colors.primary.gradient,
@@ -413,6 +414,24 @@ function AppContent() {
             >
               {tab.icon}
               {!isMobile && tab.label}
+              {tab.isNew && activeTab !== tab.key && (
+                <span
+                  className="new-badge"
+                  style={{
+                    fontSize: '9px',
+                    fontWeight: '700',
+                    color: '#92400e',
+                    background: 'linear-gradient(135deg, #fde68a 0%, #facc15 100%)',
+                    padding: '1px 6px',
+                    borderRadius: '6px',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    lineHeight: '16px',
+                  }}
+                >
+                  New
+                </span>
+              )}
             </button>
           ))}
         </div>

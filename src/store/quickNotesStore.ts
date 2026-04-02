@@ -9,7 +9,7 @@ interface QuickNotesStore {
   error: string | null;
 
   fetchNotes: () => Promise<void>;
-  createNote: (title: string, content: string) => Promise<void>;
+  createNote: (title: string, content: string, tags?: string[]) => Promise<void>;
   updateNote: (id: string, title: string, content: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
 }
@@ -43,6 +43,7 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, get) => ({
       id: row.id,
       title: row.title,
       content: row.content,
+      tags: row.tags || [],
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -50,7 +51,7 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, get) => ({
     set({ notes, loading: false });
   },
 
-  createNote: async (title: string, content: string) => {
+  createNote: async (title: string, content: string, tags: string[] = []) => {
     const userId = useSupabaseAuthStore.getState().user?.id;
     if (!userId) {
       set({ error: 'User not authenticated' });
@@ -61,7 +62,7 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, get) => ({
 
     const { data, error } = await supabase
       .from('quick_notes')
-      .insert([{ new_user_id: userId, title, content }])
+      .insert([{ new_user_id: userId, title, content, tags }])
       .select()
       .single();
 
@@ -74,6 +75,7 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, get) => ({
       id: data.id,
       title: data.title,
       content: data.content,
+      tags: data.tags || [],
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
