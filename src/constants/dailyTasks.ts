@@ -14,7 +14,7 @@ export const NO_SELECTION_COLOR = '#ef4444'; // Red for empty dropdown selection
 
 // Daily task constraints
 export const MAX_DROPDOWN_OPTIONS = 30;
-export const MAX_NOTE_LENGTH = 200;
+export const MAX_NOTE_LENGTH = 2500;
 
 // Display value formatters
 export const getDisplayValue = (val: string, taskType: string): string => {
@@ -22,9 +22,12 @@ export const getDisplayValue = (val: string, taskType: string): string => {
   if (taskType === 'yes_no') {
     return val === 'Done' ? '✓ Done' : val === 'Not Done' ? '✗ Not Done' : val;
   }
-  // For dropdown tasks, show "No selection" if empty
+  // For dropdown/multi_select tasks, show "No selection" if empty
   if (!val || val.trim() === '') {
     return 'No selection';
+  }
+  if (taskType === 'multi_select') {
+    return val.split(',').filter(v => v.trim()).join(' + ');
   }
   return val;
 };
@@ -34,10 +37,20 @@ export const getDropdownColor = (value: string, options: string[]): string => {
   if (!value || value.trim() === '') {
     return NO_SELECTION_COLOR; // Red for no selection
   }
-  
+
+  // For multi-select (comma-separated), use color of the first selected option
+  if (value.includes(',')) {
+    const firstValue = value.split(',')[0].trim();
+    const optionIndex = options.indexOf(firstValue);
+    if (optionIndex >= 0 && optionIndex < DROPDOWN_COLORS.length) {
+      return DROPDOWN_COLORS[optionIndex];
+    }
+    return '#8b5cf6'; // Purple fallback for multi-select
+  }
+
   // Find the position of this value in the options array
   const optionIndex = options.indexOf(value);
-  
+
   if (optionIndex >= 0 && optionIndex < DROPDOWN_COLORS.length) {
     return DROPDOWN_COLORS[optionIndex];
   } else {

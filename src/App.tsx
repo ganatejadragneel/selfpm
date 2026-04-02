@@ -13,9 +13,12 @@ import { ModernCategoryColumn } from './components/ModernCategoryColumn';
 import { WeeklySummary } from './components/WeeklySummary';
 import { DailyTaskTracker } from './components/DailyTaskTracker';
 import { ModalRegistry } from './components/modals/ModalRegistry';
+import { SprintDashboard } from './components/Sprint';
+import { PrivacyPledge } from './components/PrivacyPledge';
+import { PrivacyPledgeModal, hasAcceptedPrivacyPledge } from './components/PrivacyPledgeModal';
 // Lazy load analytics dashboard
 const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, FileText, LayoutDashboard } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, FileText, LayoutDashboard, Shield, Target } from 'lucide-react';
 import { QuickNotesPage } from './components/QuickNotes';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
@@ -59,7 +62,10 @@ function AppContent() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'notes'>('dashboard');
   const showAnalytics = useToggle(false);
-  
+  const showSprintDashboard = useToggle(false);
+  const showPrivacyPledge = useToggle(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(() => !hasAcceptedPrivacyPledge());
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -99,14 +105,14 @@ function AppContent() {
 
     const activeTaskId = active.id as string;
     const overId = over.id as string;
-    
+
     // Find the active task
     const activeTask = tasks.find(t => t.id === activeTaskId);
     if (!activeTask) return;
 
     // Check if we're dropping over a category column or another task
     const isDroppedOnCategory = ['life_admin', 'work', 'weekly_recurring'].includes(overId);
-    
+
     if (isDroppedOnCategory) {
       // Moving to a different category (dropped on empty category area)
       const newCategory = overId as TaskCategory;
@@ -120,17 +126,15 @@ function AppContent() {
 
       const activeCategory = activeTask.category;
       const overCategory = overTask.category;
-      
+
       if (activeCategory === overCategory) {
         // Reordering within the same category
         const categoryTasks = tasksByCategory[activeCategory];
         const oldIndex = categoryTasks.findIndex(t => t.id === activeTaskId);
         const newIndex = categoryTasks.findIndex(t => t.id === overId);
-        
+
         if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-          // Create new order array
           const newTaskOrder = arrayMove(categoryTasks, oldIndex, newIndex);
-          // Update the local state immediately for smooth UX
           const updatedTasks = tasks.map(task => {
             const orderIndex = newTaskOrder.findIndex(t => t.id === task.id);
             if (orderIndex !== -1) {
@@ -138,16 +142,14 @@ function AppContent() {
             }
             return task;
           });
-          
-          // Sort tasks by order for display
+
           useMigratedTaskStore.setState({ tasks: updatedTasks });
-          
-          // Then update in database (will work when order column exists)
+
           try {
             await Promise.all(
-              newTaskOrder.map((task, index) => 
-                useMigratedTaskStore.getState().updateTask(task.id, { 
-                  order: index 
+              newTaskOrder.map((task, index) =>
+                useMigratedTaskStore.getState().updateTask(task.id, {
+                  order: index
                 })
               )
             );
@@ -156,7 +158,6 @@ function AppContent() {
           }
         }
       } else {
-        // Moving between categories
         await moveTaskToCategory(activeTaskId, overCategory);
       }
     }
@@ -180,8 +181,8 @@ function AppContent() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
+    <div style={{
+      minHeight: '100vh',
       backgroundImage: theme.currentTheme === 'dark'
         ? 'none'
         : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -192,9 +193,9 @@ function AppContent() {
     }}>
       {/* Daily Task Tracker */}
       <DailyTaskTracker />
-      
+
       {/* Header */}
-      <div style={{ 
+      <div style={{
         background: theme.colors.surface.glass,
         backdropFilter: theme.effects.blur,
         borderBottom: `1px solid ${theme.colors.surface.glassBorder}`,
@@ -202,22 +203,22 @@ function AppContent() {
         position: 'relative',
         zIndex: 100
       }}>
-        <div style={{ 
-          maxWidth: '1280px', 
-          margin: '0 auto', 
+        <div style={{
+          maxWidth: '1280px',
+          margin: '0 auto',
           padding: '12px 16px',
           position: 'relative'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '12px'
           }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: isMobile ? '12px' : '24px',
               minWidth: '0',
               flex: '1 1 auto'
@@ -249,10 +250,10 @@ function AppContent() {
                   SelfPM
                 </h1>
               </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: isMobile ? '4px' : '8px',
                 flex: isMobile ? '1 1 100%' : '0 0 auto',
                 order: isMobile ? 1 : 0,
@@ -265,11 +266,11 @@ function AppContent() {
                   onClick={() => handleWeekChange('prev')}
                   icon={<ChevronLeft className={isMobile ? "w-3 h-3" : "w-5 h-5"} />}
                 />
-                
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                   padding: isMobile ? '6px 10px' : '12px 20px',
                   backgroundImage: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
                   borderRadius: '12px',
@@ -286,13 +287,13 @@ function AppContent() {
                     fontSize: isMobile ? '11px' : '14px',
                     textAlign: 'center'
                   }}>
-                    {isSmallMobile 
+                    {isSmallMobile
                       ? `W${currentWeek} - ${format(weekStart, 'MMM d')}`
                       : `Week ${currentWeek} - ${format(weekStart, 'MMM d, yyyy')}`
                     }
                   </span>
                 </div>
-                
+
                 <Button
                   variant="navigation"
                   isMobile={isMobile}
@@ -301,10 +302,10 @@ function AppContent() {
                 />
               </div>
             </div>
-            
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: isMobile ? '8px' : '16px',
               flex: '0 0 auto',
               flexWrap: 'wrap'
@@ -316,7 +317,7 @@ function AppContent() {
               >
                 Add Task
               </Button>
-              
+
               {/* Bulk Upload Button - Hide on mobile */}
               {!isMobile && (
                 <Button
@@ -328,7 +329,7 @@ function AppContent() {
                   Bulk Upload
                 </Button>
               )}
-              
+
               {/* Activity Tracker Button - Hide on mobile */}
               {!isMobile && (
                 <Button
@@ -340,7 +341,19 @@ function AppContent() {
                   Activity
                 </Button>
               )}
-              
+
+              {/* Privacy Pledge Button */}
+              {!isMobile && (
+                <Button
+                  variant="primary"
+                  onClick={showPrivacyPledge.toggle}
+                  icon={<Shield className="w-4 h-4" />}
+                  title="Privacy Pledge"
+                >
+                  Privacy Pledge
+                </Button>
+              )}
+
               {/* Analytics Button */}
               <Button
                 variant="primary"
@@ -358,7 +371,19 @@ function AppContent() {
                 title="Daily Task Analytics"
               >
               </Button>
-              
+
+              {/* Sprint Focus Button */}
+              {!isMobile && (
+                <Button
+                  variant="primary"
+                  onClick={showSprintDashboard.toggle}
+                  icon={<Target className="w-4 h-4" />}
+                  title="Sprint Focus Dashboard"
+                >
+                  Sprint
+                </Button>
+              )}
+
               <UserMenu />
             </div>
           </div>
@@ -444,24 +469,40 @@ function AppContent() {
           margin: '0 auto',
           padding: isMobile ? '16px 12px' : '24px'
         }}>
+          {/* Privacy Pledge Page */}
+          {showPrivacyPledge.value && (
+            <div style={{ marginBottom: '32px' }}>
+              <PrivacyPledge onClose={showPrivacyPledge.toggle} />
+            </div>
+          )}
+
+          {/* Sprint Focus Dashboard */}
+          {showSprintDashboard.value && !showPrivacyPledge.value && (
+            <div style={{ marginBottom: '32px' }}>
+              <SprintDashboard />
+            </div>
+          )}
+
           {/* Analytics Dashboard - Collapsible */}
-          {showAnalytics.value && (
+          {showAnalytics.value && !showPrivacyPledge.value && (
             <div style={{ marginBottom: '32px' }}>
               <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
             </div>
           )}
 
           {/* Weekly Summary */}
-          <div style={{ marginBottom: '32px' }}>
-            <WeeklySummary
-              tasks={tasks}
-              weekNumber={currentWeek}
-              onTaskClick={(task) => openTaskModal(task)}
-            />
-          </div>
+          {!showPrivacyPledge.value && (
+            <div style={{ marginBottom: '32px' }}>
+              <WeeklySummary
+                tasks={tasks}
+                weekNumber={currentWeek}
+                onTaskClick={(task) => openTaskModal(task)}
+              />
+            </div>
+          )}
 
           {/* Task Columns */}
-          {loading ? (
+          {!showPrivacyPledge.value && (loading ? (
             <LoadingSpinner size="lg" text="Loading tasks..." />
           ) : (
             <DndContext
@@ -534,11 +575,17 @@ function AppContent() {
                 ) : null}
               </DragOverlay>
             </DndContext>
-          )}
+          ))}
         </div>
       ) : (
         <QuickNotesPage />
       )}
+
+      {/* Privacy Pledge First-Login Modal */}
+      <PrivacyPledgeModal
+        isOpen={showPrivacyModal}
+        onAccept={() => setShowPrivacyModal(false)}
+      />
 
       {/* Modals */}
       <ModalRegistry tasks={tasks} currentWeek={currentWeek} />

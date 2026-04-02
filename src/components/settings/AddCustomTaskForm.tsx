@@ -6,7 +6,7 @@ import { formStyles, getInputStyle, getButtonState, formIcons } from '../../styl
 import { Plus, Trash2, CheckCircle2, Target } from 'lucide-react';
 import { MAX_DROPDOWN_OPTIONS } from '../../constants/dailyTasks';
 
-type TaskType = 'yes_no' | 'dropdown';
+type TaskType = 'yes_no' | 'dropdown' | 'multi_select';
 
 export const AddCustomTaskForm: React.FC = () => {
   const { user } = useSupabaseAuthStore();
@@ -14,6 +14,7 @@ export const AddCustomTaskForm: React.FC = () => {
   const [description, setDescription] = useState('');
   const [type, setType] = useState<TaskType>('yes_no');
   const [options, setOptions] = useState<string[]>(['']);
+  const [allowMultiple, setAllowMultiple] = useState(false);
   const [altTask, setAltTask] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -46,13 +47,13 @@ export const AddCustomTaskForm: React.FC = () => {
       return;
     }
 
-    if (type === 'dropdown' && options.some(opt => !opt.trim())) {
-      setError('All dropdown options must be filled');
+    if ((type === 'dropdown' || type === 'multi_select') && options.some(opt => !opt.trim())) {
+      setError('All options must be filled');
       return;
     }
 
-    if (type === 'dropdown' && options.filter(opt => opt.trim()).length > MAX_DROPDOWN_OPTIONS) {
-      setError(`Dropdown tasks cannot have more than ${MAX_DROPDOWN_OPTIONS} options`);
+    if ((type === 'dropdown' || type === 'multi_select') && options.filter(opt => opt.trim()).length > MAX_DROPDOWN_OPTIONS) {
+      setError(`Tasks cannot have more than ${MAX_DROPDOWN_OPTIONS} options`);
       return;
     }
 
@@ -63,17 +64,36 @@ export const AddCustomTaskForm: React.FC = () => {
 
     setLoading(true);
     try {
+      // Get the next display_order for this user (graceful if column doesn't exist yet)
+      let nextOrder: number | undefined;
+      const { data: maxOrderData, error: orderError } = await supabase
+        .from('custom_tasks')
+        .select('display_order')
+        .eq('new_user_id', user.id)
+        .order('display_order', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!orderError) {
+        nextOrder = (maxOrderData?.display_order ?? 0) + 1;
+      }
+
       const now = new Date().toISOString();
-      const taskData = {
+      const effectiveType = type === 'dropdown' && allowMultiple ? 'multi_select' : type;
+      const taskData: Record<string, any> = {
         user_id: null, // Legacy field, set to null for Supabase Auth users
         new_user_id: user.id, // Use new_user_id for Supabase Auth
         name,
         description,
-        type,
-        options: type === 'dropdown' ? options.filter(opt => opt.trim()) : null,
+        type: effectiveType,
+        options: (effectiveType === 'dropdown' || effectiveType === 'multi_select') ? options.filter(opt => opt.trim()) : null,
         alt_task: altTask.trim() || null,
-        created_at: now
+        created_at: now,
       };
+
+      if (nextOrder !== undefined) {
+        taskData.display_order = nextOrder;
+      }
 
       const { error: insertError } = await supabase.from('custom_tasks').insert(taskData);
 
@@ -85,6 +105,7 @@ export const AddCustomTaskForm: React.FC = () => {
       setName('');
       setDescription('');
       setType('yes_no');
+      setAllowMultiple(false);
       setOptions(['']);
       setAltTask('');
     } catch (err) {
@@ -263,7 +284,7 @@ export const AddCustomTaskForm: React.FC = () => {
           </label>
           <div style={{ display: 'flex', gap: theme.spacing.md }}>
             <div
-              onClick={() => setType('yes_no')}
+              onClick={() => { setType('yes_no'); setAllowMultiple(false); }}
               style={{
                 ...taskTypeCardStyle,
                 border: type === 'yes_no' 
@@ -346,6 +367,57 @@ export const AddCustomTaskForm: React.FC = () => {
 
         {type === 'dropdown' && (
           <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: theme.spacing.md,
+            padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+            background: allowMultiple
+              ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
+              : 'rgba(248, 250, 252, 0.8)',
+            borderRadius: theme.borderRadius.md,
+            border: `1px solid ${allowMultiple ? 'rgba(139, 92, 246, 0.3)' : theme.colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}
+          onClick={() => setAllowMultiple(!allowMultiple)}
+          >
+            <div>
+              <div style={{
+                fontSize: theme.typography.sizes.sm,
+                fontWeight: theme.typography.weights.semibold,
+                color: allowMultiple ? '#7c3aed' : theme.colors.text.primary,
+              }}>Allow multiple selections</div>
+              <div style={{
+                fontSize: theme.typography.sizes.xs,
+                color: theme.colors.text.secondary,
+                marginTop: '2px',
+              }}>Users can pick more than one option per day</div>
+            </div>
+            <div style={{
+              width: '44px',
+              height: '24px',
+              borderRadius: '12px',
+              background: allowMultiple ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' : '#d1d5db',
+              padding: '2px',
+              transition: 'all 0.2s ease',
+              flexShrink: 0,
+            }}>
+              <div style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                background: 'white',
+                transition: 'all 0.2s ease',
+                transform: allowMultiple ? 'translateX(20px)' : 'translateX(0)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }} />
+            </div>
+          </div>
+        )}
+
+        {(type === 'dropdown') && (
+          <div style={{
             marginBottom: theme.spacing.xl,
             background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%)',
             borderRadius: theme.borderRadius.lg,
@@ -366,7 +438,7 @@ export const AddCustomTaskForm: React.FC = () => {
                 background: theme.colors.primary.gradient,
                 borderRadius: '2px'
               }} />
-              Dropdown Options ({options.filter(opt => opt.trim()).length}/{MAX_DROPDOWN_OPTIONS})
+              {allowMultiple ? 'Multi-Select' : 'Dropdown'} Options ({options.filter(opt => opt.trim()).length}/{MAX_DROPDOWN_OPTIONS})
             </label>
             <div style={{
               display: 'flex',

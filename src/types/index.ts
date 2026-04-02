@@ -195,7 +195,7 @@ export interface WeeklyTaskCompletion {
 }
 
 // Daily Task related types (shared across components)
-export type DailyTaskType = 'yes_no' | 'dropdown';
+export type DailyTaskType = 'yes_no' | 'dropdown' | 'multi_select';
 
 export interface CustomDailyTask {
   id: string;
@@ -208,6 +208,7 @@ export interface CustomDailyTask {
   noteText?: string;
   alt_task?: string;
   alt_task_done?: boolean;
+  display_order?: number;
 }
 
 export interface DailyTaskCompletion {
@@ -245,3 +246,6 @@ export interface QuickNote {
 
 // Phase 7A: Export additional shared interfaces (optional for components to adopt)
 export * from './shared';
+
+// Sprint Focus System types
+export * from './sprint';
