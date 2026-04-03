@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy } from 'react';
+import { useEffect, useState } from 'react';
 import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
@@ -16,9 +16,7 @@ import { ModalRegistry } from './components/modals/ModalRegistry';
 import { SprintDashboard } from './components/Sprint';
 import { PrivacyPledge } from './components/PrivacyPledge';
 import { PrivacyPledgeModal, hasAcceptedPrivacyPledge } from './components/PrivacyPledgeModal';
-// Lazy load analytics dashboard
-const ProgressAnalyticsDashboard = lazy(() => import('./components/analytics/ProgressAnalyticsDashboard').then(module => ({ default: module.ProgressAnalyticsDashboard })));
-import { ChevronLeft, ChevronRight, Calendar, Plus, BarChart3, Upload, Activity, FileText, LayoutDashboard, Shield, Target } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, FileText, LayoutDashboard, Shield, Target } from 'lucide-react';
 import { QuickNotesPage } from './components/QuickNotes';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
@@ -55,13 +53,10 @@ function AppContent() {
   const {
     openTaskModal,
     openAddTaskModal,
-    openBulkUploadModal,
-    openActivityTrackerModal,
     openDailyAnalyticsModal,
   } = useModal();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'notes'>('dashboard');
-  const showAnalytics = useToggle(false);
   const showSprintDashboard = useToggle(false);
   const showPrivacyPledge = useToggle(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(() => !hasAcceptedPrivacyPledge());
@@ -318,30 +313,6 @@ function AppContent() {
                 Add Task
               </Button>
 
-              {/* Bulk Upload Button - Hide on mobile */}
-              {!isMobile && (
-                <Button
-                  variant="primary"
-                  onClick={() => openBulkUploadModal()}
-                  icon={<Upload className="w-4 h-4" />}
-                  title="Bulk upload tasks from CSV"
-                >
-                  Bulk Upload
-                </Button>
-              )}
-
-              {/* Activity Tracker Button - Hide on mobile */}
-              {!isMobile && (
-                <Button
-                  variant="primary"
-                  onClick={() => openActivityTrackerModal()}
-                  icon={<Activity className="w-4 h-4" />}
-                  title="View activity history"
-                >
-                  Activity
-                </Button>
-              )}
-
               {/* Privacy Pledge Button */}
               {!isMobile && (
                 <Button
@@ -353,15 +324,6 @@ function AppContent() {
                   Privacy Pledge
                 </Button>
               )}
-
-              {/* Analytics Button */}
-              <Button
-                variant="primary"
-                onClick={showAnalytics.toggle}
-                icon={<BarChart3 className="w-4 h-4" />}
-                title="View Analytics"
-              >
-              </Button>
 
               {/* Daily Task Analytics Button */}
               <Button
@@ -480,13 +442,6 @@ function AppContent() {
           {showSprintDashboard.value && !showPrivacyPledge.value && (
             <div style={{ marginBottom: '32px' }}>
               <SprintDashboard />
-            </div>
-          )}
-
-          {/* Analytics Dashboard - Collapsible */}
-          {showAnalytics.value && !showPrivacyPledge.value && (
-            <div style={{ marginBottom: '32px' }}>
-              <ProgressAnalyticsDashboard tasks={tasks} currentWeek={currentWeek} />
             </div>
           )}
 
