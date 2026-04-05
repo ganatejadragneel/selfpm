@@ -1,8 +1,4 @@
-// Import only specific functions to reduce bundle size
-import { differenceInDays } from 'date-fns/differenceInDays';
-import { isPast } from 'date-fns/isPast';
-import { isToday } from 'date-fns/isToday';
-import { isTomorrow } from 'date-fns/isTomorrow';
+import { differenceInDays, isPast, isToday, isTomorrow } from 'date-fns';
 
 /**
  * Parse a date string (YYYY-MM-DD) into a Date object without timezone conversion

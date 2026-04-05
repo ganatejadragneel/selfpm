@@ -234,6 +234,16 @@ export interface BaseModalProps {
   onClose: () => void;
 }
 
+// Quick Notes
+export interface QuickNote {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Phase 7A: Export additional shared interfaces (optional for components to adopt)
 export * from './shared';
 

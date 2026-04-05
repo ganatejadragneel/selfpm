@@ -2,12 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Task } from '../types';
 import { TrendingUp, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight, Calendar, Circle, FileText, ArrowRight } from 'lucide-react';
 import { useResponsive } from '../hooks/useResponsive';
-// Import only specific functions to reduce bundle size
-import { startOfWeek } from 'date-fns/startOfWeek';
-import { endOfWeek } from 'date-fns/endOfWeek';
-import { format } from 'date-fns/format';
-import { addWeeks } from 'date-fns/addWeeks';
-import { getWeek } from 'date-fns/getWeek';
+import { startOfWeek, endOfWeek, format, addWeeks, getWeek } from 'date-fns';
 import { theme, priorityConfigs } from '../styles/theme';
 import { parseLocalDate, getDaysUntilDate, getDateUrgency } from '../utils/dateUtils';
 import { filterPendingTasks, sortTasksByDeadlinePriority, shouldShowDeadlineView as checkShouldShowDeadlineView } from '../utils/taskFilters';

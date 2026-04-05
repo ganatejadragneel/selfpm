@@ -5,7 +5,7 @@ import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { SpeechToTextButton } from './SpeechToTextButton';
 import { theme } from '../styles/theme';
 import { X, Save, Trash2, StickyNote } from 'lucide-react';
-import { format } from 'date-fns/format';
+import { format } from 'date-fns';
 import { formatLocalDateString } from '../utils/dateUtils';
 import type { BaseModalProps } from '../types';
 
