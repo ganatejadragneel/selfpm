@@ -14,7 +14,7 @@ interface QuickNotesStore {
   deleteNote: (id: string) => Promise<void>;
 }
 
-export const useQuickNotesStore = create<QuickNotesStore>((set, get) => ({
+export const useQuickNotesStore = create<QuickNotesStore>((set, _get) => ({
   notes: [],
   loading: false,
   error: null,

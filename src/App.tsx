@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import type { Task, TaskCategory } from './types';
 import { useMigratedTaskStore } from './store/migratedTaskStore';
 import { useTaskActions } from './hooks/useTaskActions';
@@ -16,8 +17,8 @@ import { ModalRegistry } from './components/modals/ModalRegistry';
 import { SprintDashboard } from './components/Sprint';
 import { PrivacyPledge } from './components/PrivacyPledge';
 import { PrivacyPledgeModal, hasAcceptedPrivacyPledge } from './components/PrivacyPledgeModal';
-import { ChevronLeft, ChevronRight, Calendar, Plus, FileText, LayoutDashboard, Shield, Target } from 'lucide-react';
-import { QuickNotesPage } from './components/QuickNotes';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Shield, Target } from 'lucide-react';
+import { QuickNotesPage, QuickNoteFAB } from './components/QuickNotes';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
 import { DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -55,9 +56,8 @@ function AppContent() {
     openAddTaskModal,
     openDailyAnalyticsModal,
   } = useModal();
+  const navigate = useNavigate();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'notes'>('dashboard');
-  const showSprintDashboard = useToggle(false);
   const showPrivacyPledge = useToggle(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(() => !hasAcceptedPrivacyPledge());
 
@@ -218,7 +218,10 @@ function AppContent() {
               minWidth: '0',
               flex: '1 1 auto'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+                onClick={() => navigate('/dashboard')}
+              >
                 <div style={{
                   width: isMobile ? '32px' : '40px',
                   height: isMobile ? '32px' : '40px',
@@ -338,7 +341,7 @@ function AppContent() {
               {!isMobile && (
                 <Button
                   variant="primary"
-                  onClick={showSprintDashboard.toggle}
+                  onClick={() => navigate('/sprints')}
                   icon={<Target className="w-4 h-4" />}
                   title="Sprint Focus Dashboard"
                 >
@@ -352,189 +355,118 @@ function AppContent() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div style={{
-        background: theme.colors.surface.glass,
-        backdropFilter: theme.effects.blur,
-        borderBottom: `1px solid ${theme.colors.surface.glassBorder}`,
-        position: 'relative',
-        zIndex: 99,
-      }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '8px 16px',
-          display: 'flex',
-          gap: '8px',
-        }}>
-          {([
-            { key: 'dashboard' as const, label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, isNew: false },
-            { key: 'notes' as const, label: 'Quick Notes', icon: <FileText className="w-4 h-4" />, isNew: true },
-          ]).map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: isMobile ? '8px 14px' : '10px 20px',
-                borderRadius: theme.borderRadius.full,
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: theme.typography.sizes.base,
-                fontWeight: theme.typography.weights.semibold,
-                transition: 'all 0.2s ease',
-                position: 'relative',
-                ...(activeTab === tab.key
-                  ? {
-                      backgroundImage: theme.colors.primary.gradient,
-                      color: 'white',
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
-                    }
-                  : {
-                      background: 'transparent',
-                      color: theme.colors.text.secondary,
-                    }
-                ),
-              }}
-            >
-              {tab.icon}
-              {!isMobile && tab.label}
-              {tab.isNew && activeTab !== tab.key && (
-                <span
-                  className="new-badge"
-                  style={{
-                    fontSize: '9px',
-                    fontWeight: '700',
-                    color: '#92400e',
-                    background: 'linear-gradient(135deg, #fde68a 0%, #facc15 100%)',
-                    padding: '1px 6px',
-                    borderRadius: '6px',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    lineHeight: '16px',
-                  }}
-                >
-                  New
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Main Content */}
-      {activeTab === 'dashboard' ? (
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: isMobile ? '16px 12px' : '24px'
-        }}>
-          {/* Privacy Pledge Page */}
-          {showPrivacyPledge.value && (
-            <div style={{ marginBottom: '32px' }}>
-              <PrivacyPledge onClose={showPrivacyPledge.toggle} />
-            </div>
-          )}
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={
+          <div style={{
+            maxWidth: '1280px',
+            margin: '0 auto',
+            padding: isMobile ? '16px 12px' : '24px'
+          }}>
+            {/* Privacy Pledge Page */}
+            {showPrivacyPledge.value && (
+              <div style={{ marginBottom: '32px' }}>
+                <PrivacyPledge onClose={showPrivacyPledge.toggle} />
+              </div>
+            )}
 
-          {/* Sprint Focus Dashboard */}
-          {showSprintDashboard.value && !showPrivacyPledge.value && (
-            <div style={{ marginBottom: '32px' }}>
-              <SprintDashboard />
-            </div>
-          )}
-
-          {/* Weekly Summary */}
-          {!showPrivacyPledge.value && (
-            <div style={{ marginBottom: '32px' }}>
-              <WeeklySummary
-                tasks={tasks}
-                weekNumber={currentWeek}
-                onTaskClick={(task) => openTaskModal(task)}
-              />
-            </div>
-          )}
-
-          {/* Task Columns */}
-          {!showPrivacyPledge.value && (loading ? (
-            <LoadingSpinner size="lg" text="Loading tasks..." />
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={pointerWithin}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile
-                  ? '1fr'
-                  : 'repeat(auto-fit, minmax(350px, 1fr))',
-                gap: isMobile ? '16px' : '24px',
-                minHeight: 'calc(100vh - 400px)'
-              }}>
-                <ModernCategoryColumn
-                  category="life_admin"
-                  tasks={tasksByCategory.life_admin}
-                  onTaskClick={openTaskModal}
-                  onTaskStatusToggle={handleStatusToggle}
-                  onDeleteTask={(task) => handleDelete(task.id)}
-                  onAddTask={() => openAddTaskModal('life_admin')}
-                />
-
-                <ModernCategoryColumn
-                  category="work"
-                  tasks={tasksByCategory.work}
-                  onTaskClick={openTaskModal}
-                  onTaskStatusToggle={handleStatusToggle}
-                  onDeleteTask={(task) => handleDelete(task.id)}
-                  onAddTask={() => openAddTaskModal('work')}
-                />
-
-                <ModernCategoryColumn
-                  category="weekly_recurring"
-                  tasks={tasksByCategory.weekly_recurring}
-                  onTaskClick={openTaskModal}
-                  onTaskStatusToggle={handleStatusToggle}
-                  onDeleteTask={(task) => handleDelete(task.id)}
-                  onAddTask={() => openAddTaskModal('weekly_recurring')}
+            {/* Weekly Summary */}
+            {!showPrivacyPledge.value && (
+              <div style={{ marginBottom: '32px' }}>
+                <WeeklySummary
+                  tasks={tasks}
+                  weekNumber={currentWeek}
+                  onTaskClick={(task) => openTaskModal(task)}
                 />
               </div>
+            )}
 
-              <DragOverlay>
-                {activeTask ? (
-                  <div style={{
-                    opacity: 0.8,
-                    transform: 'rotate(5deg)',
-                    pointerEvents: 'none'
-                  }}>
+            {/* Task Columns */}
+            {!showPrivacyPledge.value && (loading ? (
+              <LoadingSpinner size="lg" text="Loading tasks..." />
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={pointerWithin}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile
+                    ? '1fr'
+                    : 'repeat(auto-fit, minmax(350px, 1fr))',
+                  gap: isMobile ? '16px' : '24px',
+                  minHeight: 'calc(100vh - 400px)'
+                }}>
+                  <ModernCategoryColumn
+                    category="life_admin"
+                    tasks={tasksByCategory.life_admin}
+                    onTaskClick={openTaskModal}
+                    onTaskStatusToggle={handleStatusToggle}
+                    onDeleteTask={(task) => handleDelete(task.id)}
+                    onAddTask={() => openAddTaskModal('life_admin')}
+                  />
+
+                  <ModernCategoryColumn
+                    category="work"
+                    tasks={tasksByCategory.work}
+                    onTaskClick={openTaskModal}
+                    onTaskStatusToggle={handleStatusToggle}
+                    onDeleteTask={(task) => handleDelete(task.id)}
+                    onAddTask={() => openAddTaskModal('work')}
+                  />
+
+                  <ModernCategoryColumn
+                    category="weekly_recurring"
+                    tasks={tasksByCategory.weekly_recurring}
+                    onTaskClick={openTaskModal}
+                    onTaskStatusToggle={handleStatusToggle}
+                    onDeleteTask={(task) => handleDelete(task.id)}
+                    onAddTask={() => openAddTaskModal('weekly_recurring')}
+                  />
+                </div>
+
+                <DragOverlay>
+                  {activeTask ? (
                     <div style={{
-                      padding: theme.spacing.lg,
-                      background: theme.colors.surface.glass,
-                      borderRadius: theme.borderRadius.lg,
-                      border: '2px solid rgba(102, 126, 234, 0.5)',
-                      boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
-                      backdropFilter: theme.effects.blur
+                      opacity: 0.8,
+                      transform: 'rotate(5deg)',
+                      pointerEvents: 'none'
                     }}>
-                      <h3 style={{
-                        fontSize: theme.typography.sizes.lg,
-                        fontWeight: theme.typography.weights.semibold,
-                        color: theme.colors.text.primary,
-                        margin: 0
+                      <div style={{
+                        padding: theme.spacing.lg,
+                        background: theme.colors.surface.glass,
+                        borderRadius: theme.borderRadius.lg,
+                        border: '2px solid rgba(102, 126, 234, 0.5)',
+                        boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                        backdropFilter: theme.effects.blur
                       }}>
-                        {activeTask.title}
-                      </h3>
+                        <h3 style={{
+                          fontSize: theme.typography.sizes.lg,
+                          fontWeight: theme.typography.weights.semibold,
+                          color: theme.colors.text.primary,
+                          margin: 0
+                        }}>
+                          {activeTask.title}
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          ))}
-        </div>
-      ) : (
-        <QuickNotesPage />
-      )}
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            ))}
+          </div>
+        } />
+        <Route path="/allNotes" element={<QuickNotesPage />} />
+        <Route path="/sprints" element={
+          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '16px 12px' : '24px' }}>
+            <SprintDashboard />
+          </div>
+        } />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
 
       {/* Privacy Pledge First-Login Modal */}
       <PrivacyPledgeModal
@@ -544,6 +476,9 @@ function AppContent() {
 
       {/* Modals */}
       <ModalRegistry tasks={tasks} currentWeek={currentWeek} />
+
+      {/* Persistent Quick Notes FAB */}
+      <QuickNoteFAB />
     </div>
   );
 }
