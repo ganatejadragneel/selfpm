@@ -35,7 +35,7 @@ export const QuickNotesPage: React.FC = () => {
   const theme = useThemeColors();
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
-  const { notes, loading, error, fetchNotes, deleteNote } = useQuickNotesStore();
+  const { notes, loading, error, fetchNotes, deleteNote, fetchedFrom } = useQuickNotesStore();
 
   // Filter state
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -43,6 +43,7 @@ export const QuickNotesPage: React.FC = () => {
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [customActive, setCustomActive] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<import('../../types').QuickNote | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -50,6 +51,18 @@ export const QuickNotesPage: React.FC = () => {
   const isDark = theme.currentTheme === 'dark';
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
+
+  // Re-fetch when the user picks 'all' or a custom range that extends beyond the fetched window
+  const ensureRangeFetched = (from: Date | null, to?: Date) => {
+    if (from === null) {
+      // All time — only re-fetch if we don't already have all-time data
+      if (fetchedFrom !== null) fetchNotes(null);
+      return;
+    }
+    if (fetchedFrom !== null && from < fetchedFrom) {
+      fetchNotes(from, to);
+    }
+  };
 
   // Unique days that have notes (for quick jump)
   const noteDays = useMemo(() => {
@@ -63,20 +76,33 @@ export const QuickNotesPage: React.FC = () => {
       .slice(0, 7);
   }, [notes]);
 
+  // All unique tags across fetched notes
+  const allTags = useMemo(() => [...new Set(notes.flatMap(n => n.tags))].sort(), [notes]);
+
+  const toggleTag = (tag: string) =>
+    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+
   // Filtered notes
   const displayNotes = useMemo(() => {
+    let filtered: typeof notes;
+
     if (selectedDay) {
-      return notes.filter(n => format(new Date(n.createdAt), 'yyyy-MM-dd') === selectedDay);
-    }
-    if (customActive && customFrom && customTo) {
+      filtered = notes.filter(n => format(new Date(n.createdAt), 'yyyy-MM-dd') === selectedDay);
+    } else if (customActive && customFrom && customTo) {
       const from = startOfDay(new Date(customFrom));
       const to = new Date(new Date(customTo).setHours(23, 59, 59, 999));
-      return notes.filter(n => { const d = new Date(n.createdAt); return d >= from && d <= to; });
+      filtered = notes.filter(n => { const d = new Date(n.createdAt); return d >= from && d <= to; });
+    } else {
+      const threshold = getPresetThreshold(preset);
+      filtered = threshold ? notes.filter(n => new Date(n.createdAt) >= threshold) : notes;
     }
-    const threshold = getPresetThreshold(preset);
-    if (threshold) return notes.filter(n => new Date(n.createdAt) >= threshold);
-    return notes;
-  }, [notes, selectedDay, preset, customFrom, customTo, customActive]);
+
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(n => selectedTags.every(t => n.tags.includes(t)));
+    }
+
+    return filtered;
+  }, [notes, selectedDay, preset, customFrom, customTo, customActive, selectedTags]);
 
   // Subtitle label
   const subtitleLabel = useMemo(() => {
@@ -152,7 +178,10 @@ export const QuickNotesPage: React.FC = () => {
         const isActive = preset === p && !selectedDay && !customActive;
         return (
           <button key={p} style={{ ...sidebarItemBase, ...(isActive ? activeItem : {}) }}
-            onClick={() => { setPreset(p); setSelectedDay(null); setCustomActive(false); setMobileFilterOpen(false); }}
+            onClick={() => {
+              setPreset(p); setSelectedDay(null); setCustomActive(false); setMobileFilterOpen(false);
+              if (p === 'all') ensureRangeFetched(null);
+            }}
             onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'; e.currentTarget.style.color = textPrimary; } }}
             onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = textSecondary; } }}
           >
@@ -160,6 +189,36 @@ export const QuickNotesPage: React.FC = () => {
           </button>
         );
       })}
+
+      {/* Tags */}
+      {allTags.length > 0 && (<>
+        <span style={{ ...sectionLabel, marginTop: '4px' }}>Filter by Tag</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '2px 4px' }}>
+          {allTags.map(tag => {
+            const active = selectedTags.includes(tag);
+            return (
+              <button key={tag} onClick={() => toggleTag(tag)} style={{
+                background: active ? 'rgba(99,102,241,0.2)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(99,102,241,0.5)' : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)')}`,
+                color: active ? (isDark ? '#a5b4fc' : '#4f46e5') : textSecondary,
+                borderRadius: '20px', padding: '3px 10px', fontSize: '12px',
+                cursor: 'pointer', fontFamily: 'inherit', fontWeight: active ? 600 : 400,
+                transition: 'all 0.15s',
+              }}>
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+        {selectedTags.length > 0 && (
+          <button onClick={() => setSelectedTags([])} style={{
+            background: 'none', border: 'none', color: '#818cf8', fontSize: '11px',
+            cursor: 'pointer', fontFamily: 'inherit', padding: '2px 4px', textDecoration: 'underline',
+          }}>
+            Clear tags
+          </button>
+        )}
+      </>)}
 
       {/* Custom Range — redesigned */}
       <span style={{ ...sectionLabel, marginTop: '4px' }}>Custom Range</span>
@@ -210,7 +269,12 @@ export const QuickNotesPage: React.FC = () => {
             </div>
           ))}
           <button
-            onClick={() => { if (customFrom && customTo) { setCustomActive(true); setSelectedDay(null); setMobileFilterOpen(false); } }}
+            onClick={() => {
+              if (customFrom && customTo) {
+                setCustomActive(true); setSelectedDay(null); setMobileFilterOpen(false);
+                ensureRangeFetched(new Date(customFrom), new Date(new Date(customTo).setHours(23, 59, 59, 999)));
+              }
+            }}
             disabled={!customFrom || !customTo}
             style={{
               background: (customFrom && customTo)

@@ -3,12 +3,15 @@ import type { QuickNote } from '../types';
 import { supabase } from '../lib/supabase';
 import { useSupabaseAuthStore } from './supabaseAuthStore';
 
+const DEFAULT_FETCH_DAYS = 30;
+
 interface QuickNotesStore {
   notes: QuickNote[];
   loading: boolean;
   error: string | null;
+  fetchedFrom: Date | null; // null = all time fetched, Date = lower bound of fetched range
 
-  fetchNotes: () => Promise<void>;
+  fetchNotes: (from?: Date | null, to?: Date) => Promise<void>;
   createNote: (title: string, content: string, tags?: string[]) => Promise<void>;
   updateNote: (id: string, title: string, content: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
@@ -18,8 +21,12 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, _get) => ({
   notes: [],
   loading: false,
   error: null,
+  fetchedFrom: new Date(Date.now() - DEFAULT_FETCH_DAYS * 24 * 60 * 60 * 1000),
 
-  fetchNotes: async () => {
+  // from=undefined → default last 30 days
+  // from=null      → no lower bound (all time)
+  // from=Date      → custom lower bound
+  fetchNotes: async (from?: Date | null, to?: Date) => {
     const userId = useSupabaseAuthStore.getState().user?.id;
     if (!userId) {
       set({ error: 'User not authenticated' });
@@ -28,11 +35,20 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, _get) => ({
 
     set({ loading: true, error: null });
 
-    const { data, error } = await supabase
+    const lowerBound = from === undefined
+      ? new Date(Date.now() - DEFAULT_FETCH_DAYS * 24 * 60 * 60 * 1000)
+      : from; // null or specific Date
+
+    let query = supabase
       .from('quick_notes')
-      .select('*')
+      .select('id, title, content, tags, created_at, updated_at')
       .eq('new_user_id', userId)
       .order('created_at', { ascending: false });
+
+    if (lowerBound !== null) query = query.gte('created_at', lowerBound.toISOString());
+    if (to) query = query.lte('created_at', to.toISOString());
+
+    const { data, error } = await query;
 
     if (error) {
       set({ error: error.message, loading: false });
@@ -48,7 +64,11 @@ export const useQuickNotesStore = create<QuickNotesStore>((set, _get) => ({
       updatedAt: row.updated_at,
     }));
 
-    set({ notes, loading: false });
+    const resolvedFrom = from === undefined
+      ? new Date(Date.now() - DEFAULT_FETCH_DAYS * 24 * 60 * 60 * 1000)
+      : from;
+
+    set({ notes, loading: false, fetchedFrom: resolvedFrom });
   },
 
   createNote: async (title: string, content: string, tags: string[] = []) => {
