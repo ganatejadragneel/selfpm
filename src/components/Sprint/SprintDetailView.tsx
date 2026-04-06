@@ -1,11 +1,12 @@
-import { useMemo, memo } from 'react';
+import { useMemo, memo, useState, useCallback } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { SprintDashboardGrid } from './SprintDashboardGrid';
 import { SprintExportButton } from './SprintExportButton';
-import { ArrowLeft, Target, Calendar, Trophy, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Zap, Calendar, Trophy, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { SprintWithMetrics } from '../../types/sprint';
 import { calculateMetricWeeklyProgress, generateDayColumns } from '../../utils/sprintUtils';
+import { useSprintStore } from '../../store/sprintStore';
 
 interface SprintDetailViewProps {
   sprint: SprintWithMetrics;
@@ -21,6 +22,22 @@ export const SprintDetailView = memo(function SprintDetailView({
   onBack,
 }: SprintDetailViewProps) {
   const theme = useThemeColors();
+  const { reopenSprint } = useSprintStore();
+  const [reopening, setReopening] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
+
+  const handleReopen = useCallback(async () => {
+    setReopening(true);
+    setReopenError(null);
+    try {
+      await reopenSprint(sprint.id);
+      onBack(); // Navigate back — dashboard will now show the reopened sprint
+    } catch (e) {
+      setReopenError(e instanceof Error ? e.message : 'Failed to reopen sprint');
+    } finally {
+      setReopening(false);
+    }
+  }, [reopenSprint, sprint.id, onBack]);
 
   // Calculate date range
   const dateRange = useMemo(() => {
@@ -128,7 +145,7 @@ export const SprintDetailView = memo(function SprintDetailView({
                 >
                   <ArrowLeft size={20} />
                 </button>
-                <Target size={24} />
+                <Zap size={24} />
                 <h2 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>
                   {sprint.name}
                 </h2>
@@ -158,8 +175,23 @@ export const SprintDetailView = memo(function SprintDetailView({
               </div>
             </div>
 
-            {/* Right: Export + Score */}
+            {/* Right: Reopen + Export + Score */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Reopen button */}
+              <button
+                onClick={handleReopen}
+                disabled={reopening}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '10px 16px', borderRadius: theme.borderRadius.md,
+                  backgroundColor: 'rgba(255,255,255,0.15)', border: 'none',
+                  cursor: reopening ? 'default' : 'pointer', color: 'white',
+                  fontSize: '14px', fontWeight: 500, opacity: reopening ? 0.7 : 1,
+                }}
+              >
+                <RotateCcw size={15} />
+                {reopening ? 'Reopening…' : 'Reopen Sprint'}
+              </button>
               {/* Export button */}
               <SprintExportButton sprint={sprint} variant="primary" />
 
@@ -179,6 +211,13 @@ export const SprintDetailView = memo(function SprintDetailView({
           </div>
         </div>
       </div>
+
+      {/* Reopen error */}
+      {reopenError && (
+        <div style={{ padding: '10px 16px', borderRadius: theme.borderRadius.md, background: theme.colors.status.error.light, color: theme.colors.status.error.dark, fontSize: 13 }}>
+          {reopenError}
+        </div>
+      )}
 
       {/* Main Content */}
       <div

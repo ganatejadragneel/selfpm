@@ -47,6 +47,7 @@ export interface UseSprintReturn {
   createSprint: (startDate: string, endDate: string) => Promise<string>;
   cloneSprintMetrics: (fromId: string, toId: string) => Promise<number>;
   deleteSprint: (sprintId: string) => Promise<void>;
+  reopenSprint: (sprintId: string) => Promise<void>;
 
   // Metric operations
   addMetric: (sprintId: string, metric: {
@@ -114,6 +115,7 @@ export const useSprint = (): UseSprintReturn => {
     reorderMetrics: storeReorderMetrics,
     fetchCompletedSprintCount: storeFetchCompletedSprintCount,
     fetchSuggestions: storeFetchSuggestions,
+    reopenSprint: storeReopenSprint,
   } = useSprintStore();
 
   // Auto-fetch sprint when user is authenticated
@@ -325,6 +327,7 @@ export const useSprint = (): UseSprintReturn => {
     createSprint: storeCreateSprint,
     cloneSprintMetrics: storeCloneSprintMetrics,
     deleteSprint: storeDeleteSprint,
+    reopenSprint: storeReopenSprint,
 
     // Metric operations
     addMetric: storeAddMetric,

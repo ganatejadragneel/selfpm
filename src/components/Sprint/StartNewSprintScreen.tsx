@@ -1,10 +1,12 @@
 import React from 'react';
-import { Calendar, Copy, Plus } from 'lucide-react';
+import { Calendar, Copy, Plus, RotateCcw } from 'lucide-react';
 import { getCurrentSprintDates } from '../../constants/sprint';
 
 interface StartNewSprintScreenProps {
   onStartFresh: () => Promise<void>;
   onCloneLast: () => Promise<void>;
+  onReopenLast?: () => Promise<void>;
+  canReopenLast?: boolean; // true if last sprint is still within its week
   completedSprintCount: number;
   loading: boolean;
 }
@@ -12,6 +14,8 @@ interface StartNewSprintScreenProps {
 export const StartNewSprintScreen: React.FC<StartNewSprintScreenProps> = ({
   onStartFresh,
   onCloneLast,
+  onReopenLast,
+  canReopenLast,
   completedSprintCount,
   loading,
 }) => {
@@ -45,7 +49,25 @@ export const StartNewSprintScreen: React.FC<StartNewSprintScreenProps> = ({
       </div>
 
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {!isFirstSprint && (
+        {/* Reopen last sprint — only shown when still within the sprint's week */}
+        {canReopenLast && onReopenLast && (
+          <button
+            onClick={onReopenLast}
+            disabled={loading}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '14px 24px', borderRadius: '12px', border: 'none',
+              background: 'rgba(99,102,241,0.25)', color: '#c7d2fe',
+              fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            <RotateCcw size={18} />
+            Reopen Last Sprint
+          </button>
+        )}
+
+        {!isFirstSprint && !canReopenLast && !loading && (
           <button
             onClick={onCloneLast}
             disabled={loading}
@@ -61,21 +83,24 @@ export const StartNewSprintScreen: React.FC<StartNewSprintScreenProps> = ({
             Clone Last Sprint
           </button>
         )}
-        <button
-          onClick={onStartFresh}
-          disabled={loading}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '14px 24px', borderRadius: '12px', border: 'none',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: '#fff', fontSize: 15, fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.6 : 1,
-          }}
-        >
-          <Plus size={18} />
-          Start Fresh
-        </button>
+
+        {!canReopenLast && (
+          <button
+            onClick={onStartFresh}
+            disabled={loading}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '14px 24px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: '#fff', fontSize: 15, fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            <Plus size={18} />
+            Start Fresh
+          </button>
+        )}
       </div>
     </div>
   );

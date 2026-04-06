@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { useSprint } from '../../hooks/useSprint';
 import { SprintEntryPanel } from './SprintEntryPanel';
@@ -10,8 +11,8 @@ import { SprintCompleteButton } from './SprintCompleteButton';
 import { StartNewSprintScreen } from './StartNewSprintScreen';
 import { ManageMetricsPanel } from './ManageMetricsPanel';
 import { LoadingSpinner } from '../ui';
-import { Target, Calendar, AlertCircle, History } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { Zap, Calendar, AlertCircle, History, Clock } from 'lucide-react';
+import { format, parseISO, isAfter, startOfToday, isToday } from 'date-fns';
 import type { EntryData, SprintSuggestion, MetricType, DailyTarget, MetricComponents, WeeklyTarget } from '../../types/sprint';
 import { getCurrentSprintDates } from '../../constants/sprint';
 import { supabase } from '../../lib/supabase';
@@ -36,12 +37,14 @@ interface NotesPopupState {
  */
 export const SprintDashboard = () => {
   const theme = useThemeColors();
+  const navigate = useNavigate();
   const {
     loading,
     error,
     activeSprint,
     sprintProgress,
     saveEntry,
+    completeSprint,
     refreshActiveSprint,
     createSprint,
     cloneSprintMetrics,
@@ -53,15 +56,19 @@ export const SprintDashboard = () => {
     reorderMetrics,
     fetchCompletedSprintCount,
     fetchSuggestions,
+    reopenSprint,
   } = useSprint();
 
   const [saving, setSaving] = useState(false);
   const [notesPopup, setNotesPopup] = useState<NotesPopupState | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'metrics'>('overview');
+  const [triggerAddMetric, setTriggerAddMetric] = useState(false);
   const [creatingLoading, setCreatingLoading] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
   const [suggestions, setSuggestions] = useState<SprintSuggestion[]>([]);
   const [lastCompletedId, setLastCompletedId] = useState<string | null>(null);
+  const [lastCompletedEndDate, setLastCompletedEndDate] = useState<string | null>(null);
 
   // Fetch suggestions once on mount
   useEffect(() => {
@@ -78,14 +85,19 @@ export const SprintDashboard = () => {
         if (!userId) return;
         supabase
           .from('sprints')
-          .select('id')
+          .select('id, end_date')
           .eq('user_id', userId)
           .eq('status', 'completed')
           .order('end_date', { ascending: false })
           .order('created_at', { ascending: false })
           .limit(1)
           .single()
-          .then(({ data }) => data && setLastCompletedId(data.id));
+          .then(({ data }) => {
+            if (data) {
+              setLastCompletedId(data.id);
+              setLastCompletedEndDate((data as { id: string; end_date?: string }).end_date ?? null);
+            }
+          });
       }
     });
   }, [activeSprint, loading]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -118,6 +130,22 @@ export const SprintDashboard = () => {
       await refreshActiveSprint();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Clone failed');
+    } finally {
+      setCreatingLoading(false);
+    }
+  };
+
+  // Reopen last sprint — only valid if today is still within its week
+  const canReopenLast = !!(lastCompletedId && lastCompletedEndDate &&
+    !isAfter(startOfToday(), parseISO(lastCompletedEndDate)));
+
+  const handleReopenLast = async () => {
+    if (!lastCompletedId) return;
+    setCreatingLoading(true);
+    try {
+      await reopenSprint(lastCompletedId);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Reopen failed');
     } finally {
       setCreatingLoading(false);
     }
@@ -216,8 +244,10 @@ export const SprintDashboard = () => {
     );
   }
 
-  // Show error state
-  if (error && !activeSprint) {
+  // Show error state only for real load failures (not transient network errors after actions)
+  const isHardLoadError = error && !activeSprint && !loading &&
+    !error.includes('Failed to fetch') && !error.includes('NetworkError') && !error.includes('network');
+  if (isHardLoadError) {
     return (
       <div
         style={{
@@ -263,6 +293,8 @@ export const SprintDashboard = () => {
       <StartNewSprintScreen
         onStartFresh={handleStartFresh}
         onCloneLast={handleCloneLast}
+        onReopenLast={handleReopenLast}
+        canReopenLast={canReopenLast}
         completedSprintCount={completedCount}
         loading={creatingLoading}
       />
@@ -283,6 +315,19 @@ export const SprintDashboard = () => {
   const endDate = parseISO(activeSprint!.end_date);
   const dateRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
 
+  // Sprint is expired if today is strictly after end_date
+  const isExpired = isAfter(startOfToday(), endDate);
+  const isLastDay = isToday(endDate); // Sunday — last day of sprint
+
+  const handleCompleteAndStartNew = async () => {
+    try {
+      await completeSprint(activeSprint!.id);
+    } catch {
+      // ignore — completeSprint already has a direct-update fallback
+    }
+    navigate('/sprints');
+  };
+
   return (
     <div
       style={{
@@ -291,6 +336,40 @@ export const SprintDashboard = () => {
         gap: '20px',
       }}
     >
+      {/* Expired sprint banner */}
+      {isExpired && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '16px', flexWrap: 'wrap',
+          background: theme.currentTheme === 'dark' ? 'rgba(99,102,241,0.18)' : '#4f46e5',
+          border: theme.currentTheme === 'dark' ? '1px solid rgba(99,102,241,0.4)' : 'none',
+          borderRadius: theme.borderRadius.md,
+          padding: '14px 20px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <Clock size={18} color={theme.currentTheme === 'dark' ? '#a5b4fc' : 'rgba(255,255,255,0.85)'} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: theme.currentTheme === 'dark' ? '#c7d2fe' : '#fff' }}>
+              This sprint has ended ({format(endDate, 'MMM d, yyyy')})
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: theme.currentTheme === 'dark' ? '#a5b4fc' : 'rgba(255,255,255,0.8)' }}>
+              Complete it to start a new one.
+            </span>
+          </div>
+          <button
+            onClick={handleCompleteAndStartNew}
+            style={{
+              padding: '8px 18px', borderRadius: theme.borderRadius.sm,
+              background: theme.currentTheme === 'dark' ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.2)',
+              color: theme.currentTheme === 'dark' ? '#c7d2fe' : '#fff',
+              border: theme.currentTheme === 'dark' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.4)',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            Complete &amp; Start New Sprint
+          </button>
+        </div>
+      )}
+
       {/* Header Card */}
       <div
         style={{
@@ -305,7 +384,7 @@ export const SprintDashboard = () => {
         <div
           style={{
             backgroundImage: theme.colors.primary.gradient,
-            padding: '24px',
+            padding: '14px 20px',
             color: 'white',
           }}
         >
@@ -315,20 +394,20 @@ export const SprintDashboard = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
-              gap: '16px',
+              gap: '8px',
             }}
           >
             {/* Title and dates */}
             <div>
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}
               >
-                <Target size={28} />
-                <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>Sprint Focus</h2>
+                <Zap size={18} />
+                <h2 style={{ fontSize: '17px', fontWeight: 700, margin: 0 }}>Sprint Focus</h2>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.9 }}>
-                <Calendar size={16} />
-                <span style={{ fontSize: '14px' }}>{dateRange}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.9 }}>
+                <Calendar size={13} />
+                <span style={{ fontSize: '13px' }}>{dateRange}</span>
                 <span
                   style={{
                     background: 'rgba(255, 255, 255, 0.2)',
@@ -351,14 +430,14 @@ export const SprintDashboard = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '10px 16px',
+                  gap: '5px',
+                  padding: '6px 12px',
                   borderRadius: theme.borderRadius.md,
                   backgroundColor: 'rgba(255, 255, 255, 0.15)',
                   border: 'none',
                   cursor: 'pointer',
                   color: 'white',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 500,
                   transition: 'background-color 0.2s',
                 }}
@@ -369,7 +448,7 @@ export const SprintDashboard = () => {
                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
                 }}
               >
-                <History size={18} />
+                <History size={14} />
                 History
               </button>
 
@@ -379,12 +458,12 @@ export const SprintDashboard = () => {
                   style={{
                     background: 'rgba(255, 255, 255, 0.15)',
                     borderRadius: theme.borderRadius.md,
-                    padding: '12px 20px',
+                    padding: '6px 14px',
                     textAlign: 'center',
                   }}
                 >
-                  <div style={{ fontSize: '32px', fontWeight: 700 }}>{sprintProgress.overallScore}%</div>
-                  <div style={{ fontSize: '12px', opacity: 0.9 }}>On Track</div>
+                  <div style={{ fontSize: '22px', fontWeight: 700, lineHeight: 1.1 }}>{sprintProgress.overallScore}%</div>
+                  <div style={{ fontSize: '11px', opacity: 0.9 }}>On Track</div>
                 </div>
               )}
             </div>
@@ -398,13 +477,13 @@ export const SprintDashboard = () => {
           display: 'grid',
           gridTemplateColumns: '380px 1fr',
           gap: '20px',
-          minHeight: '500px',
+          alignItems: 'start',
         }}
       >
         {/* Left: Entry Panel */}
-        <SprintEntryPanel sprint={activeSprint!} onSaveEntry={handleSaveEntry} saving={saving} />
+        <SprintEntryPanel sprint={activeSprint!} onSaveEntry={handleSaveEntry} saving={saving} onGoToManageMetrics={() => { setActiveTab('metrics'); setTriggerAddMetric(true); }} />
 
-        {/* Right: Dashboard Grid */}
+        {/* Right: Tabbed panel — Weekly Overview | Manage Metrics */}
         <div
           style={{
             background: theme.colors.surface.glass,
@@ -412,126 +491,108 @@ export const SprintDashboard = () => {
             borderRadius: theme.borderRadius.lg,
             border: `1px solid ${theme.colors.surface.glassBorder}`,
             boxShadow: theme.effects.shadow.md,
-            padding: '20px',
-            overflow: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
         >
-          <h3
-            style={{
-              fontSize: '16px',
-              fontWeight: 600,
-              color: theme.colors.text.primary,
-              margin: 0,
-              marginBottom: '16px',
-            }}
-          >
-            Weekly Overview
-          </h3>
-
-          {/* Grid Component */}
-          <SprintDashboardGrid
-            sprint={activeSprint!}
-            onCellClick={handleCellClick}
-            onNotesClick={handleNotesClick}
-          />
-
-          {/* Legend */}
-          <div
-            style={{
-              marginTop: '16px',
-              display: 'flex',
-              gap: '16px',
-              flexWrap: 'wrap',
-              fontSize: '12px',
-              color: theme.colors.text.muted,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '2px',
-                  backgroundColor: theme.colors.status.success.light,
-                  border: `1px solid ${theme.colors.status.success.medium}`,
-                }}
-              />
-              Target met
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '2px',
-                  backgroundColor: theme.colors.status.warning.light,
-                  border: `1px solid ${theme.colors.status.warning.medium}`,
-                }}
-              />
-              Target not met
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '2px',
-                  backgroundColor: theme.colors.background.tertiary,
-                  border: `1px solid ${theme.colors.border.light}`,
-                }}
-              />
-              No entry
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '2px',
-                  border: `2px solid ${theme.colors.primary.dark}`,
-                }}
-              />
-              Today
-            </div>
+          {/* Tab bar */}
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            padding: '12px 16px 0',
+            borderBottom: `1px solid ${theme.colors.border.light}`,
+          }}>
+            {(['overview', 'metrics'] as const).map(tab => {
+              const active = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px 8px 0 0',
+                    border: `1px solid ${active ? theme.colors.border.light : 'transparent'}`,
+                    borderBottom: active ? `1px solid ${theme.colors.surface.glass}` : 'none',
+                    background: active ? theme.colors.surface.glass : 'transparent',
+                    color: active ? theme.colors.text.primary : theme.colors.text.muted,
+                    fontSize: '13px',
+                    fontWeight: active ? 600 : 400,
+                    cursor: 'pointer',
+                    marginBottom: active ? '-1px' : '0',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {tab === 'overview' ? 'Weekly Overview' : 'Manage Metrics'}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Actions */}
-          <div
-            style={{
-              marginTop: '20px',
-              paddingTop: '16px',
-              borderTop: `1px solid ${theme.colors.border.light}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '12px',
-                color: theme.colors.text.muted,
-              }}
-            >
-              Sprint Actions
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <SprintExportButton sprint={activeSprint!} />
-              <SprintCompleteButton sprintId={activeSprint!.id} />
-            </div>
+          {/* Tab content */}
+          <div style={{ padding: '20px', overflow: 'auto' }}>
+            {activeTab === 'overview' ? (
+              <>
+                <SprintDashboardGrid
+                  sprint={activeSprint!}
+                  onCellClick={handleCellClick}
+                  onNotesClick={handleNotesClick}
+                />
+
+                {/* Legend */}
+                <div style={{ marginTop: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: theme.colors.text.muted }}>
+                  {[
+                    { color: theme.colors.status.success.light, border: theme.colors.status.success.medium, label: 'Target met' },
+                    { color: theme.colors.status.warning.light, border: theme.colors.status.warning.medium, label: 'Target not met' },
+                    { color: theme.colors.background.tertiary, border: theme.colors.border.light, label: 'No entry' },
+                  ].map(({ color, border, label }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '2px', backgroundColor: color, border: `1px solid ${border}` }} />
+                      {label}
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '2px', border: `2px solid ${theme.colors.primary.dark}` }} />
+                    Today
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: `1px solid ${theme.colors.border.light}`, display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <SprintExportButton sprint={activeSprint!} />
+                  {(isLastDay || isExpired) && (
+                    <button
+                      onClick={handleCompleteAndStartNew}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        padding: '8px 14px', borderRadius: theme.borderRadius.md,
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        color: '#fff', fontSize: '14px', fontWeight: 500,
+                        border: 'none', cursor: 'pointer',
+                      }}
+                    >
+                      Start Next Sprint
+                    </button>
+                  )}
+                  <SprintCompleteButton sprintId={activeSprint!.id} />
+                </div>
+              </>
+            ) : (
+              <ManageMetricsPanel
+                sprintId={activeSprint!.id}
+                metrics={activeSprint!.metrics}
+                suggestions={suggestions}
+                onAdd={handleAddMetric}
+                onEdit={handleEditMetric}
+                onDelete={deleteMetric}
+                onReorder={reorderMetrics}
+                triggerAddOpen={triggerAddMetric}
+                onAddOpenHandled={() => setTriggerAddMetric(false)}
+              />
+            )}
           </div>
         </div>
       </div>
-
-      {/* Manage Metrics Panel */}
-      <ManageMetricsPanel
-        sprintId={activeSprint!.id}
-        metrics={activeSprint!.metrics}
-        suggestions={suggestions}
-        onAdd={handleAddMetric}
-        onEdit={handleEditMetric}
-        onDelete={deleteMetric}
-        onReorder={reorderMetrics}
-      />
 
       {/* Notes Popup */}
       {notesPopup && (

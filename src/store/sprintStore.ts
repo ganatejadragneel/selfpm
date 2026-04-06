@@ -43,6 +43,7 @@ interface SprintStore {
   fetchSprintById: (sprintId: string) => Promise<SprintWithMetrics | null>;
   fetchCompletedSprintCount: () => Promise<number>;
   deleteSprint: (sprintId: string) => Promise<void>;
+  reopenSprint: (sprintId: string) => Promise<void>;
 
   // Metric Operations
   addMetric: (sprintId: string, metric: {
@@ -224,8 +225,19 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     const { error } = await supabase.rpc('complete_sprint', {
       p_sprint_id: sprintId,
     });
-    if (error) throw new Error(error.message);
-    set({ activeSprint: null });
+    if (error) {
+      // RPC may fail for expired sprints (date constraint on entries).
+      // Fall back to directly marking the sprint completed.
+      const authStore = useSupabaseAuthStore.getState();
+      const userId = authStore.user?.id;
+      const { error: updateError } = await supabase
+        .from('sprints')
+        .update({ status: 'completed', updated_at: new Date().toISOString() })
+        .eq('id', sprintId)
+        .eq('user_id', userId);
+      if (updateError) throw new Error(updateError.message);
+    }
+    set({ activeSprint: null, error: null });
     return { completed_sprint_id: sprintId };
   },
 
@@ -342,6 +354,21 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     if (error) throw new Error(error.message);
   },
 
+  reopenSprint: async (sprintId) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    // Guard: only one active sprint allowed
+    const { data: existing } = await supabase
+      .from('sprints').select('id').eq('user_id', userId).eq('status', 'active').maybeSingle();
+    if (existing) throw new Error('You already have an active sprint. Complete it before reopening another.');
+    const { error } = await supabase
+      .from('sprints')
+      .update({ status: 'active', updated_at: new Date().toISOString() })
+      .eq('id', sprintId).eq('user_id', userId);
+    if (error) throw new Error(error.message);
+    await get().fetchActiveSprint();
+  },
+
   // =====================================================
   // METRIC OPERATIONS
   // =====================================================
@@ -349,9 +376,11 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
   addMetric: async (sprintId, metric) => {
     const userId = useSupabaseAuthStore.getState().user?.id;
     if (!userId) throw new Error('Not authenticated');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { typeChanged: _tc, ...metricFields } = metric as typeof metric & { typeChanged?: boolean };
     const { data, error } = await supabase
       .from('sprint_metrics')
-      .insert([{ sprint_id: sprintId, user_id: userId, ...metric }])
+      .insert([{ sprint_id: sprintId, user_id: userId, ...metricFields }])
       .select()
       .single();
     if (error) throw new Error(error.message);
@@ -388,13 +417,18 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       if (!state.activeSprint) return state;
       return { activeSprint: { ...state.activeSprint, metrics: state.activeSprint.metrics.filter(m => m.id !== metricId) } };
     });
-    const { error } = await supabase.from('sprint_metrics').delete().eq('id', metricId).eq('user_id', userId);
-    if (error) {
+    const { data: deleted, error } = await supabase
+      .from('sprint_metrics')
+      .delete()
+      .eq('id', metricId)
+      .eq('user_id', userId)
+      .select('id');
+    if (error || !deleted?.length) {
       set(state => {
         if (!state.activeSprint) return state;
         return { activeSprint: { ...state.activeSprint, metrics: [...snapshot].sort((a, b) => a.display_order - b.display_order) } };
       });
-      throw new Error(error.message);
+      throw new Error(error?.message ?? 'Delete failed — check Supabase RLS policies for sprint_metrics');
     }
   },
 
@@ -519,8 +553,8 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       }
 
       if (error) {
-        console.error('Database error:', error);
-        throw error;
+        console.error('Database error saving entry:', error);
+        throw new Error(error.message || JSON.stringify(error));
       }
 
       // Update cache

@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import type { SprintMetricWithEntries, SprintSuggestion } from '../../types/sprint';
 import { MetricRow } from './MetricRow';
 import { MetricFormModal } from './MetricFormModal';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 type SaveData = Parameters<React.ComponentProps<typeof MetricFormModal>['onSave']>[0];
 
@@ -21,6 +22,8 @@ interface ManageMetricsPanelProps {
   onEdit: (metricId: string, data: SaveData) => Promise<void>;
   onDelete: (metricId: string) => Promise<void>;
   onReorder: (orderedIds: string[]) => Promise<void>;
+  triggerAddOpen?: boolean;
+  onAddOpenHandled?: () => void;
 }
 
 export const ManageMetricsPanel: React.FC<ManageMetricsPanelProps> = ({
@@ -31,7 +34,10 @@ export const ManageMetricsPanel: React.FC<ManageMetricsPanelProps> = ({
   onEdit,
   onDelete,
   onReorder,
+  triggerAddOpen,
+  onAddOpenHandled,
 }) => {
+  const theme = useThemeColors();
   const [showForm, setShowForm] = useState(false);
   const [editingMetric, setEditingMetric] = useState<SprintMetricWithEntries | undefined>();
   const [localMetrics, setLocalMetrics] = useState(metrics);
@@ -40,6 +46,14 @@ export const ManageMetricsPanel: React.FC<ManageMetricsPanelProps> = ({
   useEffect(() => {
     setLocalMetrics([...metrics].sort((a, b) => a.display_order - b.display_order));
   }, [metrics]);
+
+  useEffect(() => {
+    if (triggerAddOpen) {
+      setEditingMetric(undefined);
+      setShowForm(true);
+      onAddOpenHandled?.();
+    }
+  }, [triggerAddOpen, onAddOpenHandled]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -68,15 +82,11 @@ export const ManageMetricsPanel: React.FC<ManageMetricsPanelProps> = ({
     : 0;
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.03)',
-      borderRadius: '14px', padding: '20px',
-      border: '1px solid rgba(255,255,255,0.07)',
-    }}>
+    <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#f1f5f9' }}>
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: theme.colors.text.primary }}>
           Manage Metrics
-          <span style={{ marginLeft: '8px', fontSize: 13, fontWeight: 400, color: '#64748b' }}>
+          <span style={{ marginLeft: '8px', fontSize: 13, fontWeight: 400, color: theme.colors.text.secondary }}>
             ({localMetrics.length})
           </span>
         </h3>
@@ -94,11 +104,11 @@ export const ManageMetricsPanel: React.FC<ManageMetricsPanelProps> = ({
       </div>
 
       {deleteError && (
-        <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 12px' }}>{deleteError}</p>
+        <p style={{ color: theme.colors.status.error.dark, fontSize: 13, margin: '0 0 12px' }}>{deleteError}</p>
       )}
 
       {localMetrics.length === 0 ? (
-        <p style={{ color: '#475569', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>
+        <p style={{ color: theme.colors.text.muted, fontSize: 14, textAlign: 'center', padding: '24px 0' }}>
           No metrics added yet.
         </p>
       ) : (

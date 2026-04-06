@@ -10,6 +10,7 @@ interface SprintEntryPanelProps {
   sprint: SprintWithMetrics;
   onSaveEntry: (metricId: string, entryDate: string, data: EntryData) => Promise<void>;
   saving?: boolean;
+  onGoToManageMetrics?: () => void;
 }
 
 /**
@@ -51,7 +52,7 @@ const isDateInSprintRange = (date: string, startDate: string, endDate: string): 
  * SprintEntryPanel - Left panel for data entry
  * Shows all metrics with today/yesterday toggle
  */
-export const SprintEntryPanel = ({ sprint, onSaveEntry, saving = false }: SprintEntryPanelProps) => {
+export const SprintEntryPanel = ({ sprint, onSaveEntry, saving = false, onGoToManageMetrics }: SprintEntryPanelProps) => {
   const theme = useThemeColors();
 
   // Selected date state
@@ -227,9 +228,23 @@ export const SprintEntryPanel = ({ sprint, onSaveEntry, saving = false }: Sprint
           }}
         >
           {sprint.metrics.length === 0 && (
-            <p style={{ color: '#475569', textAlign: 'center', padding: '32px 0', fontSize: 14 }}>
-              No metrics yet. Add some in the Manage Metrics panel.
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 0', gap: '16px' }}>
+              <p style={{ color: '#475569', textAlign: 'center', fontSize: 14, margin: 0 }}>
+                No metrics yet. Add some in the Manage Metrics panel.
+              </p>
+              {onGoToManageMetrics && (
+                <button
+                  onClick={onGoToManageMetrics}
+                  style={{
+                    padding: '8px 20px', borderRadius: '8px', border: 'none',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  Add Metric
+                </button>
+              )}
+            </div>
           )}
           {sprint.metrics
             .sort((a, b) => a.display_order - b.display_order)

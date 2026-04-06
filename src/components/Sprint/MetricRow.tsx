@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Edit2, Trash2 } from 'lucide-react';
 import type { SprintMetricWithEntries } from '../../types/sprint';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface MetricRowProps {
   metric: SprintMetricWithEntries;
@@ -31,6 +32,7 @@ const getTargetSummary = (metric: SprintMetricWithEntries): string => {
 
 export const MetricRow: React.FC<MetricRowProps> = ({ metric, onEdit, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: metric.id });
+  const theme = useThemeColors();
 
   return (
     <div
@@ -41,11 +43,11 @@ export const MetricRow: React.FC<MetricRowProps> = ({ metric, onEdit, onDelete }
         opacity: isDragging ? 0.5 : 1,
         display: 'flex', alignItems: 'center', gap: '12px',
         padding: '12px 14px', borderRadius: '10px',
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: theme.colors.background.tertiary,
+        border: `1px solid ${theme.colors.border.light}`,
       }}
     >
-      <span {...attributes} {...listeners} style={{ cursor: 'grab', color: '#475569', flexShrink: 0 }}>
+      <span {...attributes} {...listeners} style={{ cursor: 'grab', color: theme.colors.text.muted, flexShrink: 0 }}>
         <GripVertical size={16} />
       </span>
 
@@ -58,18 +60,18 @@ export const MetricRow: React.FC<MetricRowProps> = ({ metric, onEdit, onDelete }
       </span>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, color: '#f1f5f9', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontWeight: 600, color: theme.colors.text.primary, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {metric.name}
         </div>
-        <div style={{ fontSize: 12, color: '#64748b', marginTop: '2px' }}>
+        <div style={{ fontSize: 12, color: theme.colors.text.secondary, marginTop: '2px' }}>
           {getTargetSummary(metric)} · {metric.weekly_target.count}/week
         </div>
       </div>
 
-      <button onClick={() => onEdit(metric)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
+      <button onClick={() => onEdit(metric)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.text.secondary, padding: '4px' }}>
         <Edit2 size={15} />
       </button>
-      <button onClick={() => onDelete(metric.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
+      <button onClick={() => onDelete(metric.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.text.secondary, padding: '4px' }}>
         <Trash2 size={15} />
       </button>
     </div>

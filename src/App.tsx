@@ -17,7 +17,7 @@ import { ModalRegistry } from './components/modals/ModalRegistry';
 import { SprintDashboard } from './components/Sprint';
 import { PrivacyPledge } from './components/PrivacyPledge';
 import { PrivacyPledgeModal, hasAcceptedPrivacyPledge } from './components/PrivacyPledgeModal';
-import { ChevronLeft, ChevronRight, Calendar, Plus, Shield, Target } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Shield, Zap } from 'lucide-react';
 import { QuickNotesPage, QuickNoteFAB } from './components/QuickNotes';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
@@ -342,7 +342,7 @@ function AppContent() {
                 <Button
                   variant="primary"
                   onClick={() => navigate('/sprints')}
-                  icon={<Target className="w-4 h-4" />}
+                  icon={<Zap className="w-4 h-4" />}
                   title="Sprint Focus Dashboard"
                 >
                   Sprint

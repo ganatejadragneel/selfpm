@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
-import { Calendar, ChevronRight, Trophy, Target } from 'lucide-react';
+import { Calendar, ChevronRight, Trophy, Zap } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { SprintWithMetrics } from '../../types/sprint';
 import { calculateMetricWeeklyProgress, generateDayColumns } from '../../utils/sprintUtils';
@@ -91,7 +91,7 @@ export const SprintCard = memo(function SprintCard({ sprint, onClick }: SprintCa
             marginBottom: '8px',
           }}
         >
-          <Target size={18} color={theme.colors.primary.dark} />
+          <Zap size={18} color={theme.colors.primary.dark} />
           <span
             style={{
               fontSize: '16px',
