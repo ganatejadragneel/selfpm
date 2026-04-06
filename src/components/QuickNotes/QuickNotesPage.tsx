@@ -8,6 +8,7 @@ import { useResponsive } from '../../hooks/useResponsive';
 import { useQuickNotesStore } from '../../store/quickNotesStore';
 import { LoadingSpinner } from '../ui';
 import { QuickNoteAddModal } from './QuickNoteAddModal';
+import { QuickNoteEditModal } from './QuickNoteEditModal';
 
 type RangePreset = 'today' | '2days' | 'week' | 'month' | 'all' | 'custom';
 
@@ -46,6 +47,7 @@ export const QuickNotesPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<import('../../types').QuickNote | null>(null);
+  const [editingNote, setEditingNote] = useState<import('../../types').QuickNote | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const isDark = theme.currentTheme === 'dark';
@@ -444,16 +446,21 @@ export const QuickNotesPage: React.FC = () => {
             gridAutoRows: isMobile ? '220px' : '260px',
             gap: isMobile ? '12px' : '18px',
           }}>
-            {displayNotes.map((note, idx) => (
-              <NoteSquareCard
-                key={note.id}
-                note={note}
-                onDelete={deleteNote}
-                onOpen={() => setSelectedNote(note)}
-                accentColor={ACCENT_BORDER_COLORS[idx % ACCENT_BORDER_COLORS.length]}
-                isDark={isDark}
-              />
-            ))}
+            {displayNotes.map((note, idx) => {
+              const createdAt = new Date(note.createdAt);
+              const editable = isToday(createdAt) || isYesterday(createdAt);
+              return (
+                <NoteSquareCard
+                  key={note.id}
+                  note={note}
+                  onDelete={deleteNote}
+                  onOpen={() => setSelectedNote(note)}
+                  onEdit={editable ? () => setEditingNote(note) : undefined}
+                  accentColor={ACCENT_BORDER_COLORS[idx % ACCENT_BORDER_COLORS.length]}
+                  isDark={isDark}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -461,6 +468,19 @@ export const QuickNotesPage: React.FC = () => {
 
     {/* ── Add Note Modal ── */}
     {showAddModal && <QuickNoteAddModal onClose={() => setShowAddModal(false)} />}
+
+    {/* ── Edit Note Modal ── */}
+    {editingNote && (
+      <QuickNoteEditModal
+        note={editingNote}
+        onClose={() => {
+          // Sync the updated note into selectedNote if it's open
+          const updated = useQuickNotesStore.getState().notes.find(n => n.id === editingNote.id);
+          if (selectedNote?.id === editingNote.id && updated) setSelectedNote(updated);
+          setEditingNote(null);
+        }}
+      />
+    )}
 
     {/* ── Note Detail Modal ── */}
     {selectedNote && createPortal(
@@ -610,11 +630,12 @@ interface NoteSquareCardProps {
   note: import('../../types').QuickNote;
   onDelete: (id: string) => Promise<void>;
   onOpen: () => void;
+  onEdit?: () => void;
   accentColor: string;
   isDark: boolean;
 }
 
-const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen, accentColor, isDark }) => {
+const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen, onEdit, accentColor, isDark }) => {
   const [hovered, setHovered] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -625,8 +646,20 @@ const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen,
     try { await onDelete(note.id); } finally { setDeleting(false); }
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.();
+  };
+
   const createdAt = new Date(note.createdAt);
-  const dateLabel = format(createdAt, 'EEE, d MMM yyyy · h:mm a');
+  const dateLabel = format(createdAt, 'EEE, d MMM · h:mm a');
+
+  // Derive a soft tinted background from the accent colour
+  const cardBg = isDark
+    ? `linear-gradient(145deg, rgba(18,20,30,0.9) 0%, rgba(25,28,42,0.85) 100%)`
+    : `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,246,255,0.9) 100%)`;
+
+  const glowColor = accentColor + (isDark ? '22' : '18');
 
   return (
     <div
@@ -634,81 +667,122 @@ const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen,
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: isDark ? 'rgba(255,255,255,0.05)' : 'white',
+        background: cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         border: `1px solid ${hovered
-          ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)')
-          : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')}`,
-        borderLeft: `4px solid ${accentColor}`,
-        borderRadius: '16px',
-        padding: '20px',
+          ? accentColor + '55'
+          : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')}`,
+        borderRadius: '20px',
+        padding: '0',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         cursor: 'pointer',
-        transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
-        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-        boxShadow: hovered ? '0 12px 32px rgba(0,0,0,0.25)' : '0 2px 8px rgba(0,0,0,0.1)',
+        transition: 'transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s, border-color 0.2s',
+        transform: hovered ? 'translateY(-4px) scale(1.01)' : 'translateY(0) scale(1)',
+        boxShadow: hovered
+          ? `0 20px 48px rgba(0,0,0,${isDark ? '0.5' : '0.18'}), 0 0 0 1px ${glowColor}, 0 4px 16px ${accentColor}30`
+          : `0 2px 12px rgba(0,0,0,${isDark ? '0.3' : '0.08'})`,
         position: 'relative',
       }}
     >
-      {/* Delete button */}
-      {hovered && (
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          style={{
-            position: 'absolute', top: '12px', right: '12px',
-            background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-            color: '#f87171', borderRadius: '6px', padding: '4px 8px',
-            fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          {deleting ? '…' : 'Delete'}
-        </button>
-      )}
-
-      {/* Title */}
+      {/* Accent gradient top strip */}
       <div style={{
-        fontSize: '15px', fontWeight: 600,
-        color: isDark ? '#e2e8f0' : '#0f172a',
-        marginBottom: '10px', lineHeight: 1.3, paddingRight: hovered ? '60px' : '0',
-        transition: 'padding 0.15s',
-      }}>
-        {note.title}
-      </div>
-
-      {/* Content with fade */}
-      <div style={{
-        fontSize: '13px', color: isDark ? '#94a3b8' : '#334155',
-        lineHeight: 1.6, flex: 1, overflow: 'hidden',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
-        maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)',
-      }}>
-        {note.content}
-      </div>
-
-      {/* Footer */}
-      <div style={{
-        marginTop: '14px', paddingTop: '12px',
-        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        height: '3px',
+        background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)`,
         flexShrink: 0,
-      }}>
-        {/* Date */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: isDark ? '#64748b' : '#64748b', marginBottom: '8px' }}>
-          <Calendar size={11} style={{ opacity: 0.7, flexShrink: 0 }} />
-          {dateLabel}
+      }} />
+
+      {/* Card body */}
+      <div style={{ padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+
+        {/* Action buttons — visible on hover */}
+        <div style={{
+          position: 'absolute', top: '14px', right: '12px',
+          display: 'flex', gap: '6px',
+          opacity: hovered ? 1 : 0,
+          transform: hovered ? 'translateY(0)' : 'translateY(-4px)',
+          transition: 'opacity 0.15s, transform 0.15s',
+          pointerEvents: hovered ? 'all' : 'none',
+        }}>
+          {onEdit && (
+            <button
+              onClick={handleEdit}
+              style={{
+                background: isDark ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.12)',
+                border: '1px solid rgba(99,102,241,0.35)',
+                color: '#818cf8', borderRadius: '8px', padding: '4px 10px',
+                fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              Edit
+            </button>
+          )}
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            style={{
+              background: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              color: '#f87171', borderRadius: '8px', padding: '4px 10px',
+              fontSize: '11px', fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            {deleting ? '…' : 'Delete'}
+          </button>
         </div>
-        {/* Tags */}
-        {note.tags && note.tags.length > 0 && (
-          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-            {note.tags.map(tag => (
-              <span key={tag} style={{
-                background: 'rgba(99,102,241,0.12)', color: '#818cf8',
-                borderRadius: '10px', padding: '2px 9px', fontSize: '11px',
-              }}>{tag}</span>
-            ))}
+
+        {/* Title */}
+        <div style={{
+          fontSize: '15px', fontWeight: 700,
+          color: isDark ? '#f1f5f9' : '#0f172a',
+          marginBottom: '10px', lineHeight: 1.3,
+          paddingRight: hovered ? '110px' : '0',
+          transition: 'padding 0.15s',
+          letterSpacing: '-0.01em',
+        }}>
+          {note.title}
+        </div>
+
+        {/* Content with fade */}
+        <div style={{
+          fontSize: '13px', color: isDark ? '#94a3b8' : '#475569',
+          lineHeight: 1.65, flex: 1, overflow: 'hidden',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
+        }}>
+          {note.content}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '12px', paddingTop: '10px',
+          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+          flexShrink: 0,
+        }}>
+          {/* Tags row */}
+          {note.tags && note.tags.length > 0 && (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              {note.tags.map(tag => (
+                <span key={tag} style={{
+                  background: accentColor + '1a',
+                  border: `1px solid ${accentColor}40`,
+                  color: accentColor,
+                  borderRadius: '20px', padding: '2px 8px', fontSize: '10px', fontWeight: 600,
+                  letterSpacing: '0.02em',
+                }}>{tag}</span>
+              ))}
+            </div>
+          )}
+          {/* Date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: isDark ? '#475569' : '#94a3b8' }}>
+            <Calendar size={10} style={{ flexShrink: 0 }} />
+            {dateLabel}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
