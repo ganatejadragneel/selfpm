@@ -366,12 +366,41 @@ export const QuickNotesPage: React.FC = () => {
               </button>
             )}
             <div>
-              <h1 style={{ fontSize: isMobile ? '18px' : '22px', fontWeight: 700, color: textPrimary, margin: 0 }}>
+              <h1 style={{
+                fontSize: isMobile ? '24px' : '32px',
+                fontWeight: 900,
+                margin: 0,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.1,
+                color: isDark ? '#fb923c' : '#ffffff',
+                textShadow: isDark
+                  ? '0 0 32px rgba(251,146,60,0.5)'
+                  : '0 2px 16px rgba(99,102,241,0.4)',
+              }}>
                 Quick Notes
               </h1>
-              <p style={{ fontSize: '13px', color: textSecondary, margin: '3px 0 0' }}>
-                {subtitleLabel} · {displayNotes.length} {displayNotes.length === 1 ? 'note' : 'notes'}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  background: isDark ? 'rgba(251,146,60,0.2)' : 'rgba(255,255,255,0.75)',
+                  border: `1px solid ${isDark ? 'rgba(251,146,60,0.4)' : 'rgba(99,102,241,0.3)'}`,
+                  color: isDark ? '#fb923c' : '#4f46e5',
+                  borderRadius: '20px', padding: '3px 12px',
+                  fontSize: '12px', fontWeight: 600,
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  {subtitleLabel}
+                </span>
+                <span style={{
+                  background: isDark ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.75)',
+                  border: `1px solid ${isDark ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.3)'}`,
+                  color: isDark ? '#c084fc' : '#7c3aed',
+                  borderRadius: '20px', padding: '3px 12px',
+                  fontSize: '12px', fontWeight: 600,
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  {displayNotes.length} {displayNotes.length === 1 ? 'note' : 'notes'}
+                </span>
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -490,6 +519,10 @@ export const QuickNotesPage: React.FC = () => {
         onClose={() => setSelectedNote(null)}
         onDelete={async (id) => { await deleteNote(id); setSelectedNote(null); }}
         accentColor={ACCENT_BORDER_COLORS[displayNotes.findIndex(n => n.id === selectedNote.id) % ACCENT_BORDER_COLORS.length]}
+        onEdit={(() => {
+          const d = new Date(selectedNote.createdAt);
+          return (isToday(d) || isYesterday(d)) ? () => setEditingNote(selectedNote) : undefined;
+        })()}
       />,
       document.body
     )}
@@ -504,9 +537,10 @@ interface NoteDetailModalProps {
   accentColor: string;
   onClose: () => void;
   onDelete: (id: string) => Promise<void>;
+  onEdit?: () => void;
 }
 
-const NoteDetailModal: React.FC<NoteDetailModalProps> = ({ note, isDark, accentColor, onClose, onDelete }) => {
+const NoteDetailModal: React.FC<NoteDetailModalProps> = ({ note, isDark, accentColor, onClose, onDelete, onEdit }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -605,7 +639,7 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({ note, isDark, accentC
         <div style={{
           padding: '14px 24px',
           borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-          display: 'flex', justifyContent: 'flex-end',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
         }}>
           <button
             onClick={handleDelete}
@@ -619,6 +653,19 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({ note, isDark, accentC
           >
             {deleting ? 'Deleting…' : 'Delete Note'}
           </button>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              style={{
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                border: 'none', color: 'white', borderRadius: '10px', padding: '8px 18px',
+                fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+              }}
+            >
+              Edit Note
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -635,7 +682,7 @@ interface NoteSquareCardProps {
   isDark: boolean;
 }
 
-const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen, onEdit, accentColor, isDark }) => {
+const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen, onEdit, accentColor: _accentColor, isDark }) => {
   const [hovered, setHovered] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -654,12 +701,34 @@ const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen,
   const createdAt = new Date(note.createdAt);
   const dateLabel = format(createdAt, 'EEE, d MMM · h:mm a');
 
-  // Derive a soft tinted background from the accent colour
-  const cardBg = isDark
-    ? `linear-gradient(145deg, rgba(18,20,30,0.9) 0%, rgba(25,28,42,0.85) 100%)`
-    : `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,246,255,0.9) 100%)`;
-
-  const glowColor = accentColor + (isDark ? '22' : '18');
+  // Dark mode → Ember (amber), Light mode → Velvet (purple)
+  const theme = isDark
+    ? {
+        border:       { idle: 'rgba(249,115,22,0.2)',  hover: 'rgba(249,115,22,0.45)' },
+        shadow:       { hover: '0 20px 40px rgba(0,0,0,0.5), 0 0 32px rgba(249,115,22,0.15)' },
+        topBg:        'radial-gradient(ellipse at 100% 0%, rgba(249,115,22,0.45) 0%, #111318 65%)',
+        topBorder:    'rgba(249,115,22,0.35)',
+        titleColor:   '#fff7ed',
+        tagBg:        'rgba(249,115,22,0.25)',
+        tagBorder:    'rgba(249,115,22,0.4)',
+        tagColor:     '#fdba74',
+        bottomBg:     'linear-gradient(160deg, #1c1008, #211408)',
+        contentColor: '#d97706',
+        dateColor:    '#78350f',
+      }
+    : {
+        border:       { idle: 'rgba(168,85,247,0.2)', hover: 'rgba(168,85,247,0.45)' },
+        shadow:       { hover: '0 20px 40px rgba(168,85,247,0.2), 0 0 24px rgba(168,85,247,0.1)' },
+        topBg:        'linear-gradient(135deg, #fdf4ff, #fae8ff)',
+        topBorder:    'rgba(168,85,247,0.18)',
+        titleColor:   '#581c87',
+        tagBg:        'rgba(168,85,247,0.12)',
+        tagBorder:    'rgba(168,85,247,0.28)',
+        tagColor:     '#7c3aed',
+        bottomBg:     'linear-gradient(160deg, #f5f0ff, #faf4ff)',
+        contentColor: '#6b21a8',
+        dateColor:    '#a855f7',
+      };
 
   return (
     <div
@@ -667,121 +736,109 @@ const NoteSquareCard: React.FC<NoteSquareCardProps> = ({ note, onDelete, onOpen,
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: cardBg,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: `1px solid ${hovered
-          ? accentColor + '55'
-          : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')}`,
-        borderRadius: '20px',
-        padding: '0',
+        borderRadius: '16px',
+        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
         cursor: 'pointer',
+        border: `1px solid ${hovered ? theme.border.hover : theme.border.idle}`,
         transition: 'transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s, border-color 0.2s',
-        transform: hovered ? 'translateY(-4px) scale(1.01)' : 'translateY(0) scale(1)',
-        boxShadow: hovered
-          ? `0 20px 48px rgba(0,0,0,${isDark ? '0.5' : '0.18'}), 0 0 0 1px ${glowColor}, 0 4px 16px ${accentColor}30`
-          : `0 2px 12px rgba(0,0,0,${isDark ? '0.3' : '0.08'})`,
-        position: 'relative',
+        transform: hovered ? 'translateY(-5px)' : 'translateY(0)',
+        boxShadow: hovered ? theme.shadow.hover : (isDark ? '0 4px 16px rgba(0,0,0,0.3)' : '0 2px 12px rgba(168,85,247,0.1)'),
       }}
     >
-      {/* Accent gradient top strip */}
+      {/* ── Dark top ── */}
       <div style={{
-        height: '3px',
-        background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)`,
-        flexShrink: 0,
-      }} />
-
-      {/* Card body */}
-      <div style={{ padding: '18px 18px 14px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-
-        {/* Action buttons — visible on hover */}
+        background: theme.topBg,
+        padding: '14px 14px 12px',
+        borderBottom: `1px solid ${theme.topBorder}`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Action buttons */}
         <div style={{
-          position: 'absolute', top: '14px', right: '12px',
-          display: 'flex', gap: '6px',
+          position: 'absolute', top: '8px', right: '8px',
+          display: 'flex', gap: '5px',
           opacity: hovered ? 1 : 0,
           transform: hovered ? 'translateY(0)' : 'translateY(-4px)',
           transition: 'opacity 0.15s, transform 0.15s',
           pointerEvents: hovered ? 'all' : 'none',
         }}>
           {onEdit && (
-            <button
-              onClick={handleEdit}
-              style={{
-                background: isDark ? 'rgba(99,102,241,0.25)' : 'rgba(99,102,241,0.12)',
-                border: '1px solid rgba(99,102,241,0.35)',
-                color: '#818cf8', borderRadius: '8px', padding: '4px 10px',
-                fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              Edit
-            </button>
-          )}
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            style={{
-              background: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.3)',
-              color: '#f87171', borderRadius: '8px', padding: '4px 10px',
-              fontSize: '11px', fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            <button onClick={handleEdit} style={{
+              background: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(109,40,217,0.12)',
+              border: isDark ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(109,40,217,0.3)',
+              color: isDark ? '#fff' : '#5b21b6',
+              borderRadius: '6px', padding: '3px 9px',
+              fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
               backdropFilter: 'blur(8px)',
-            }}
-          >
-            {deleting ? '…' : 'Delete'}
-          </button>
+            }}>Edit</button>
+          )}
+          <button onClick={handleDelete} disabled={deleting} style={{
+            background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)',
+            color: isDark ? '#fca5a5' : '#dc2626', borderRadius: '6px', padding: '3px 9px',
+            fontSize: '11px', fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+            backdropFilter: 'blur(8px)',
+          }}>{deleting ? '…' : 'Delete'}</button>
         </div>
 
         {/* Title */}
         <div style={{
-          fontSize: '15px', fontWeight: 700,
-          color: isDark ? '#f1f5f9' : '#0f172a',
-          marginBottom: '10px', lineHeight: 1.3,
-          paddingRight: hovered ? '110px' : '0',
+          fontSize: '14px', fontWeight: 700,
+          color: theme.titleColor,
+          lineHeight: 1.35,
+          paddingRight: hovered ? '100px' : '0',
           transition: 'padding 0.15s',
           letterSpacing: '-0.01em',
         }}>
           {note.title}
         </div>
 
-        {/* Content with fade */}
+        {/* Tags */}
+        {note.tags && note.tags.length > 0 && (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {note.tags.map(tag => (
+              <span key={tag} style={{
+                background: theme.tagBg,
+                border: `1px solid ${theme.tagBorder}`,
+                color: theme.tagColor,
+                borderRadius: '20px', padding: '2px 8px',
+                fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em',
+              }}>{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Colored bottom ── */}
+      <div style={{
+        background: theme.bottomBg,
+        padding: '12px 14px 14px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}>
         <div style={{
-          fontSize: '13px', color: isDark ? '#94a3b8' : '#475569',
-          lineHeight: 1.65, flex: 1, overflow: 'hidden',
+          fontSize: '12px',
+          color: theme.contentColor,
+          lineHeight: 1.65,
+          flex: 1,
+          overflow: 'hidden',
           WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
           maskImage: 'linear-gradient(to bottom, black 55%, transparent 100%)',
         }}>
           {note.content}
         </div>
-
-        {/* Footer */}
         <div style={{
-          marginTop: '12px', paddingTop: '10px',
-          borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', gap: '5px',
+          fontSize: '10px', color: theme.dateColor, flexShrink: 0,
         }}>
-          {/* Tags row */}
-          {note.tags && note.tags.length > 0 && (
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-              {note.tags.map(tag => (
-                <span key={tag} style={{
-                  background: accentColor + '1a',
-                  border: `1px solid ${accentColor}40`,
-                  color: accentColor,
-                  borderRadius: '20px', padding: '2px 8px', fontSize: '10px', fontWeight: 600,
-                  letterSpacing: '0.02em',
-                }}>{tag}</span>
-              ))}
-            </div>
-          )}
-          {/* Date */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: isDark ? '#475569' : '#94a3b8' }}>
-            <Calendar size={10} style={{ flexShrink: 0 }} />
-            {dateLabel}
-          </div>
+          <Calendar size={10} style={{ flexShrink: 0 }} />
+          {dateLabel}
         </div>
       </div>
     </div>
