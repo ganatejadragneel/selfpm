@@ -1,4 +1,5 @@
 import { useState, useCallback, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { useSprint } from '../../hooks/useSprint';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
@@ -18,7 +19,8 @@ export const SprintCompleteButton = memo(function SprintCompleteButton({
   onComplete,
 }: SprintCompleteButtonProps) {
   const theme = useThemeColors();
-  const { completeSprint, refreshActiveSprint } = useSprint();
+  const { completeSprint } = useSprint();
+  const navigate = useNavigate();
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -43,16 +45,16 @@ export const SprintCompleteButton = memo(function SprintCompleteButton({
 
     try {
       await completeSprint(sprintId);
-      await refreshActiveSprint();
       setShowConfirm(false);
       onComplete?.();
+      navigate('/sprints');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to complete sprint';
       setError(message);
     } finally {
       setCompleting(false);
     }
-  }, [sprintId, completeSprint, refreshActiveSprint, onComplete]);
+  }, [sprintId, completeSprint, onComplete, navigate]);
 
   // Confirmation dialog
   if (showConfirm) {

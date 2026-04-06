@@ -13,11 +13,14 @@ import type {
   CompleteSprintResponse,
   MetricProgress,
   SprintProgress,
+  SprintMetric,
+  MetricType,
+  MetricComponents,
+  WeeklyTarget,
+  DailyTarget,
+  SprintSuggestion,
 } from '../types/sprint';
 import {
-  getCurrentSprintDates,
-  DURATION_TARGETS,
-  SLEEP_WAKE_TARGET,
   USER_TIMEZONE,
 } from '../constants/sprint';
 
@@ -33,10 +36,28 @@ interface SprintStore {
   error: string | null;
   // Sprint Operations
   fetchActiveSprint: () => Promise<SprintWithMetrics | null>;
-  ensureActiveSprint: () => Promise<SprintWithMetrics | null>;
+  createSprint: (startDate: string, endDate: string) => Promise<string>;
+  cloneSprintMetrics: (fromSprintId: string, toSprintId: string) => Promise<number>;
   completeSprint: (sprintId: string) => Promise<CompleteSprintResponse>;
   fetchCompletedSprints: () => Promise<Sprint[]>;
   fetchSprintById: (sprintId: string) => Promise<SprintWithMetrics | null>;
+  fetchCompletedSprintCount: () => Promise<number>;
+  deleteSprint: (sprintId: string) => Promise<void>;
+
+  // Metric Operations
+  addMetric: (sprintId: string, metric: {
+    name: string;
+    metric_type: MetricType;
+    components: MetricComponents;
+    daily_target: DailyTarget;
+    weekly_target: WeeklyTarget;
+    display_order: number;
+  }) => Promise<SprintMetric>;
+  updateMetric: (metricId: string, updates: Partial<Pick<SprintMetric, 'name' | 'daily_target' | 'weekly_target' | 'components' | 'metric_type'>>) => Promise<void>;
+  deleteMetric: (metricId: string) => Promise<void>;
+  updateMetricType: (metricId: string, newType: MetricType, newDailyTarget: DailyTarget, newComponents: MetricComponents) => Promise<void>;
+  reorderMetrics: (orderedIds: string[]) => Promise<void>;
+  fetchSuggestions: () => Promise<SprintSuggestion[]>;
 
   // Entry Operations
   saveEntry: (metricId: string, entryDate: string, data: EntryData) => Promise<SprintMetricEntry>;
@@ -61,27 +82,19 @@ interface SprintStore {
 /**
  * Check if a sleep entry meets the wake time target
  */
-const checkSleepTarget = (wakeAt: string): boolean => {
-  const wakeDate = new Date(wakeAt);
-  // Convert to local timezone
-  const wakeLocal = new Date(wakeDate.toLocaleString('en-US', { timeZone: USER_TIMEZONE }));
-  const wakeHours = wakeLocal.getHours();
-  const wakeMinutes = wakeLocal.getMinutes();
-
-  // Target: wake by 4:30am
-  const targetMinutes = SLEEP_WAKE_TARGET.hours * 60 + SLEEP_WAKE_TARGET.minutes;
-  const actualMinutes = wakeHours * 60 + wakeMinutes;
-
-  return actualMinutes <= targetMinutes;
+const checkSleepTarget = (wakeAt: string, targetEnd: string): boolean => {
+  const wake = new Date(wakeAt);
+  const [h, m] = targetEnd.split(':').map(Number);
+  if (wake.getHours() < h) return true;
+  if (wake.getHours() === h && wake.getMinutes() <= m) return true;
+  return false;
 };
 
 /**
  * Check if a duration entry meets its target
  */
-const checkDurationTarget = (metricName: string, durationMinutes: number): boolean => {
-  const target = DURATION_TARGETS[metricName as keyof typeof DURATION_TARGETS];
-  if (target === undefined) return false;
-  return durationMinutes >= target;
+const checkDurationTarget = (durationMinutes: number, targetValue: number): boolean => {
+  return durationMinutes >= targetValue;
 };
 
 /**
@@ -189,64 +202,31 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     }
   },
 
-  ensureActiveSprint: async () => {
-    const state = get();
-
-    set({ loading: true, error: null });
-
-    try {
-      // First check if we already have an active sprint
-      const existing = await state.fetchActiveSprint();
-      if (existing) {
-        return existing;
-      }
-
-      // No active sprint - create one
-      const { startDate, endDate } = getCurrentSprintDates();
-
-      const { error: createError } = await supabase
-        .rpc('create_sprint_with_metrics', {
-          p_start_date: startDate,
-          p_end_date: endDate,
-        });
-
-      if (createError) {
-        // Handle "already has active sprint" gracefully (race condition)
-        if (createError.message?.includes('already has an active sprint')) {
-          const sprint = await state.fetchActiveSprint();
-          if (sprint) return sprint;
-        }
-        throw createError;
-      }
-
-      // Fetch the newly created sprint
-      return await state.fetchActiveSprint();
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      set({ error: errorMessage, loading: false });
-      throw error;
-    }
+  createSprint: async (startDate, endDate) => {
+    const { data, error } = await supabase.rpc('create_sprint', {
+      p_start_date: startDate,
+      p_end_date: endDate,
+    });
+    if (error) throw new Error(error.message);
+    return data as string;
   },
 
-  completeSprint: async (sprintId: string) => {
-    set({ loading: true, error: null });
+  cloneSprintMetrics: async (fromSprintId, toSprintId) => {
+    const { data, error } = await supabase.rpc('clone_sprint_metrics', {
+      p_from_sprint_id: fromSprintId,
+      p_to_sprint_id: toSprintId,
+    });
+    if (error) throw new Error(error.message);
+    return data as number;
+  },
 
-    try {
-      const { data, error } = await supabase
-        .rpc('complete_sprint', { p_sprint_id: sprintId });
-
-      if (error) throw error;
-
-      // Refresh to get the new active sprint
-      await get()._refreshActiveSprint();
-
-      set({ loading: false });
-      return data as CompleteSprintResponse;
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      set({ error: errorMessage, loading: false });
-      throw error;
-    }
+  completeSprint: async (sprintId) => {
+    const { error } = await supabase.rpc('complete_sprint', {
+      p_sprint_id: sprintId,
+    });
+    if (error) throw new Error(error.message);
+    set({ activeSprint: null });
+    return { completed_sprint_id: sprintId };
   },
 
   fetchCompletedSprints: async () => {
@@ -341,6 +321,131 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
       set({ error: errorMessage, loading: false });
       throw error;
     }
+  },
+
+  fetchCompletedSprintCount: async () => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) return 0;
+    const { count, error } = await supabase
+      .from('sprints')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'completed');
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  },
+
+  deleteSprint: async (sprintId) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    const { error } = await supabase.from('sprints').delete().eq('id', sprintId).eq('user_id', userId).eq('status', 'active');
+    if (error) throw new Error(error.message);
+  },
+
+  // =====================================================
+  // METRIC OPERATIONS
+  // =====================================================
+
+  addMetric: async (sprintId, metric) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    const { data, error } = await supabase
+      .from('sprint_metrics')
+      .insert([{ sprint_id: sprintId, user_id: userId, ...metric }])
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    const newMetric: SprintMetricWithEntries = { ...data, entries: [] };
+    set(state => {
+      if (!state.activeSprint) return state;
+      return { activeSprint: { ...state.activeSprint, metrics: [...state.activeSprint.metrics, newMetric] } };
+    });
+    return data;
+  },
+
+  updateMetric: async (metricId, updates) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    const { data, error } = await supabase
+      .from('sprint_metrics')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', metricId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    set(state => {
+      if (!state.activeSprint) return state;
+      return { activeSprint: { ...state.activeSprint, metrics: state.activeSprint.metrics.map(m => m.id === metricId ? { ...m, ...data } : m) } };
+    });
+  },
+
+  deleteMetric: async (metricId) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    const snapshot = get().activeSprint?.metrics ?? [];
+    set(state => {
+      if (!state.activeSprint) return state;
+      return { activeSprint: { ...state.activeSprint, metrics: state.activeSprint.metrics.filter(m => m.id !== metricId) } };
+    });
+    const { error } = await supabase.from('sprint_metrics').delete().eq('id', metricId).eq('user_id', userId);
+    if (error) {
+      set(state => {
+        if (!state.activeSprint) return state;
+        return { activeSprint: { ...state.activeSprint, metrics: [...snapshot].sort((a, b) => a.display_order - b.display_order) } };
+      });
+      throw new Error(error.message);
+    }
+  },
+
+  updateMetricType: async (metricId, newType, newDailyTarget, newComponents) => {
+    const { error } = await supabase.rpc('update_metric_type', {
+      p_metric_id: metricId,
+      p_new_metric_type: newType,
+      p_new_daily_target: newDailyTarget,
+      p_new_components: newComponents,
+    });
+    if (error) throw new Error(error.message);
+    set(state => {
+      if (!state.activeSprint) return state;
+      return { activeSprint: { ...state.activeSprint, metrics: state.activeSprint.metrics.map(m => m.id === metricId ? { ...m, metric_type: newType, daily_target: newDailyTarget, components: newComponents, entries: [] } : m) } };
+    });
+  },
+
+  reorderMetrics: async (orderedIds) => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) throw new Error('Not authenticated');
+    set(state => {
+      if (!state.activeSprint) return state;
+      const metricsById = Object.fromEntries(state.activeSprint.metrics.map(m => [m.id, m]));
+      return { activeSprint: { ...state.activeSprint, metrics: orderedIds.map((id, i) => ({ ...metricsById[id], display_order: i })) } };
+    });
+    await Promise.all(orderedIds.map((id, i) => supabase.from('sprint_metrics').update({ display_order: i }).eq('id', id).eq('user_id', userId)));
+  },
+
+  fetchSuggestions: async () => {
+    const userId = useSupabaseAuthStore.getState().user?.id;
+    if (!userId) return [];
+    const { data: sprints, error: sprintsErr } = await supabase
+      .from('sprints').select('id').eq('user_id', userId).eq('status', 'completed')
+      .order('end_date', { ascending: false }).order('created_at', { ascending: false }).limit(4);
+    if (sprintsErr || !sprints?.length) return [];
+    const sprintIds = sprints.map(s => s.id);
+    const { data: metrics, error: metricsErr } = await supabase
+      .from('sprint_metrics').select('name, metric_type, components, daily_target, weekly_target, sprint_id').in('sprint_id', sprintIds);
+    if (metricsErr || !metrics?.length) return [];
+    const seen = new Map<string, SprintSuggestion>();
+    for (const sprintId of sprintIds) {
+      const sprintIndex = sprintIds.indexOf(sprintId);
+      const sprintMetrics = metrics.filter(m => m.sprint_id === sprintId);
+      for (const m of sprintMetrics) {
+        const key = m.name.toLowerCase();
+        if (!seen.has(key)) {
+          seen.set(key, { name: m.name, metric_type: m.metric_type, components: m.components, daily_target: m.daily_target, weekly_target: m.weekly_target, usedNSprintsAgo: sprintIndex + 1 });
+        }
+      }
+    }
+    return Array.from(seen.values());
   },
 
   // =====================================================
@@ -509,12 +614,12 @@ export const useSprintStore = create<SprintStore>((set, get) => ({
     for (const entry of metric.entries) {
       let met = false;
 
-      if (metric.metric_type === 'sleep' && entry.wake_at) {
-        met = checkSleepTarget(entry.wake_at);
+      if (metric.metric_type === 'sleep' && entry.wake_at && metric.daily_target.type === 'time_of_day') {
+        met = checkSleepTarget(entry.wake_at, metric.daily_target.target_end);
       } else if (metric.metric_type === 'boolean' && entry.completed !== null) {
         met = checkBooleanTarget(entry.completed);
-      } else if (metric.metric_type === 'duration' && entry.duration_minutes !== null) {
-        met = checkDurationTarget(metric.name, entry.duration_minutes);
+      } else if (metric.metric_type === 'duration' && entry.duration_minutes !== null && metric.daily_target.type === 'number') {
+        met = checkDurationTarget(entry.duration_minutes, metric.daily_target.value);
       }
 
       if (met) metCount++;

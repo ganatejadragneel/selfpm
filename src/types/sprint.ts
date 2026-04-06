@@ -98,12 +98,10 @@ export interface MetricComponents {
 /**
  * Daily target configuration stored in JSONB
  */
-export interface DailyTarget {
-  field: string;
-  operator: '<=' | '>=' | '==' | '<' | '>';
-  value: string | number | boolean;
-  type: 'time_of_day' | 'number' | 'boolean';
-}
+export type DailyTarget =
+  | { type: 'time_of_day'; target_start: string; target_end: string }
+  | { type: 'boolean'; value: true }
+  | { type: 'number'; value: number };
 
 /**
  * Weekly target configuration stored in JSONB
@@ -216,17 +214,14 @@ export interface UpdateEntryRequest {
 // =====================================================
 
 /**
- * Response from create_sprint_with_metrics RPC
+ * Response from create_sprint RPC
  */
 export type CreateSprintResponse = string; // Returns sprint UUID
 
 /**
  * Response from complete_sprint RPC
  */
-export interface CompleteSprintResponse {
-  completed_sprint_id: string;
-  new_sprint_id: string;
-}
+export type CompleteSprintResponse = { completed_sprint_id: string };
 
 // =====================================================
 // UI STATE TYPES
@@ -337,22 +332,12 @@ export const isDurationEntryData = (data: EntryData): data is DurationEntryData 
 // HELPER TYPES
 // =====================================================
 
-/**
- * The 5 focus metrics (hardcoded for v1)
- */
-export type FocusMetricName =
-  | 'Sleep'
-  | 'Morning Routine'
-  | 'IP Attack'
-  | 'Gym'
-  | 'Anthropic Progress';
-
-/**
- * Metric configuration for the 5 focus metrics
- */
-export interface FocusMetricConfig {
-  name: FocusMetricName;
-  type: MetricType;
-  dailyTargetDescription: string;
-  weeklyTargetCount: number;
+/** A metric suggestion drawn from a past sprint */
+export interface SprintSuggestion {
+  name: string;
+  metric_type: MetricType;
+  components: MetricComponents;
+  daily_target: DailyTarget;
+  weekly_target: WeeklyTarget;
+  usedNSprintsAgo: number; // 1 = most recent completed sprint
 }

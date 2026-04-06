@@ -3,7 +3,24 @@
 // Following DRY principle - single source of truth
 // =====================================================
 
-import type { FocusMetricConfig } from '../types/sprint';
+import type { MetricType, MetricComponents } from '../types/sprint';
+
+/**
+ * Static components descriptor for each metric type.
+ * Labels are defaults; for time_of_day they are user-editable.
+ */
+export const COMPONENTS_FOR_TYPE: Record<MetricType, MetricComponents> = {
+  sleep: {
+    bed_at:  { type: 'timestamp', label: 'Start Time' },
+    wake_at: { type: 'timestamp', label: 'End Time' },
+  },
+  boolean: {
+    completed: { type: 'boolean', label: 'Completed' },
+  },
+  duration: {
+    duration_minutes: { type: 'number', unit: 'min', label: 'Duration' },
+  },
+};
 
 // =====================================================
 // SPRINT TIMING
@@ -18,69 +35,6 @@ export const SPRINT_DURATION_DAYS = 7;
  * User timezone (hardcoded for v1)
  */
 export const USER_TIMEZONE = 'America/New_York';
-
-// =====================================================
-// THE 5 FOCUS METRICS
-// =====================================================
-
-/**
- * Configuration for the 5 hardcoded focus metrics
- * Matches what seed_sprint_metrics() creates in the database
- */
-export const FOCUS_METRICS: FocusMetricConfig[] = [
-  {
-    name: 'Sleep',
-    type: 'sleep',
-    dailyTargetDescription: 'Wake by 4:30am',
-    weeklyTargetCount: 3,
-  },
-  {
-    name: 'Morning Routine',
-    type: 'boolean',
-    dailyTargetDescription: 'Complete routine',
-    weeklyTargetCount: 6,
-  },
-  {
-    name: 'IP Attack',
-    type: 'duration',
-    dailyTargetDescription: '120+ minutes',
-    weeklyTargetCount: 6,
-  },
-  {
-    name: 'Gym',
-    type: 'duration',
-    dailyTargetDescription: '60+ minutes',
-    weeklyTargetCount: 5,
-  },
-  {
-    name: 'Anthropic Progress',
-    type: 'duration',
-    dailyTargetDescription: '120+ minutes',
-    weeklyTargetCount: 6,
-  },
-] as const;
-
-// =====================================================
-// DAILY TARGETS (for evaluation)
-// =====================================================
-
-/**
- * Wake time threshold for sleep target (4:30 AM)
- * Stored as hours and minutes for comparison
- */
-export const SLEEP_WAKE_TARGET = {
-  hours: 4,
-  minutes: 30,
-} as const;
-
-/**
- * Duration thresholds in minutes
- */
-export const DURATION_TARGETS = {
-  'IP Attack': 120,
-  'Gym': 60,
-  'Anthropic Progress': 120,
-} as const;
 
 // =====================================================
 // CHARACTER LIMITS
@@ -127,7 +81,7 @@ export const PROGRESS_COLORS = {
 export const UI_LABELS = {
   // Dashboard
   dashboardTitle: 'Sprint Focus',
-  dashboardSubtitle: 'Track your 5 core metrics',
+  dashboardSubtitle: '{n} metric{s}',
   progressColumn: 'Progress',
 
   // Entry panel

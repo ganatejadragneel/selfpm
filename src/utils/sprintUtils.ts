@@ -4,8 +4,6 @@
 
 import { format, parseISO, eachDayOfInterval, isFuture } from 'date-fns';
 import {
-  SLEEP_WAKE_TARGET,
-  DURATION_TARGETS,
   USER_TIMEZONE,
   DAY_ABBREVIATIONS,
 } from '../constants/sprint';
@@ -15,6 +13,7 @@ import type {
   DayColumn,
   CellDisplayValue,
   MetricType,
+  DailyTarget,
 } from '../types/sprint';
 
 // =====================================================
@@ -110,16 +109,16 @@ export const formatSleepDuration = (hours: number): string => {
 };
 
 /**
- * Check if wake time meets target (≤ 4:30am)
+ * Check if wake time meets the metric's target_end.
+ * target_end is "HH:MM" stored in daily_target.target_end.
  */
-export const checkWakeTimeTarget = (wakeAt: string): boolean => {
-  const date = new Date(wakeAt);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-
-  // Target: wake by 4:30am
-  if (hours < SLEEP_WAKE_TARGET.hours) return true;
-  if (hours === SLEEP_WAKE_TARGET.hours && minutes <= SLEEP_WAKE_TARGET.minutes) return true;
+export const checkWakeTimeTarget = (wakeAt: string, targetEnd: string): boolean => {
+  const wake = new Date(wakeAt);
+  const wakeHours = wake.getHours();
+  const wakeMinutes = wake.getMinutes();
+  const [targetHours, targetMinutes] = targetEnd.split(':').map(Number);
+  if (wakeHours < targetHours) return true;
+  if (wakeHours === targetHours && wakeMinutes <= targetMinutes) return true;
   return false;
 };
 
@@ -128,15 +127,10 @@ export const checkWakeTimeTarget = (wakeAt: string): boolean => {
 // =====================================================
 
 /**
- * Check if a duration entry meets target
+ * Check if duration meets the metric's target value.
  */
-export const checkDurationTarget = (
-  metricName: string,
-  durationMinutes: number
-): boolean => {
-  const target = DURATION_TARGETS[metricName as keyof typeof DURATION_TARGETS];
-  if (!target) return durationMinutes > 0;
-  return durationMinutes >= target;
+export const checkDurationTarget = (durationMinutes: number, targetValue: number): boolean => {
+  return durationMinutes >= targetValue;
 };
 
 /**
@@ -146,23 +140,24 @@ export const checkBooleanTarget = (completed: boolean): boolean => {
   return completed === true;
 };
 
-/**
- * Check if any entry meets its daily target
- */
 export const checkEntryMeetsTarget = (
   entry: SprintMetricEntry,
   metricType: MetricType,
-  metricName: string
+  dailyTarget: DailyTarget
 ): boolean => {
   switch (metricType) {
-    case 'sleep':
-      return entry.wake_at ? checkWakeTimeTarget(entry.wake_at) : false;
+    case 'sleep': {
+      if (!entry.wake_at) return false;
+      if (dailyTarget.type !== 'time_of_day') return false;
+      return checkWakeTimeTarget(entry.wake_at, dailyTarget.target_end);
+    }
     case 'boolean':
-      return entry.completed !== null ? checkBooleanTarget(entry.completed) : false;
-    case 'duration':
-      return entry.duration_minutes !== null
-        ? checkDurationTarget(metricName, entry.duration_minutes)
-        : false;
+      return entry.completed !== null ? entry.completed === true : false;
+    case 'duration': {
+      if (entry.duration_minutes === null) return false;
+      if (dailyTarget.type !== 'number') return false;
+      return checkDurationTarget(entry.duration_minutes, dailyTarget.value);
+    }
     default:
       return false;
   }
@@ -178,7 +173,7 @@ export const checkEntryMeetsTarget = (
 export const getCellDisplayValue = (
   entry: SprintMetricEntry | null,
   metricType: MetricType,
-  metricName: string,
+  dailyTarget: DailyTarget,
   isFuture: boolean
 ): CellDisplayValue => {
   // Future dates
@@ -211,7 +206,7 @@ export const getCellDisplayValue = (
       }
       const duration = calculateSleepDuration(entry.bed_at, entry.wake_at);
       const wakeTime = formatWakeTime(entry.wake_at);
-      const metTarget = checkWakeTimeTarget(entry.wake_at);
+      const metTarget = checkWakeTimeTarget(entry.wake_at, dailyTarget.type === 'time_of_day' ? dailyTarget.target_end : '06:00');
       return {
         hasEntry: true,
         displayText: `${formatSleepDuration(duration)} / ${wakeTime}`,
@@ -239,7 +234,7 @@ export const getCellDisplayValue = (
       if (entry.duration_minutes === null) {
         return { hasEntry: false, displayText: '—', metTarget: null, hasNotes: false, notes: null };
       }
-      const metTarget = checkDurationTarget(metricName, entry.duration_minutes);
+      const metTarget = checkDurationTarget(entry.duration_minutes, dailyTarget.type === 'number' ? dailyTarget.value : 0);
       return {
         hasEntry: true,
         displayText: `${entry.duration_minutes}`,
@@ -282,7 +277,7 @@ export const calculateMetricWeeklyProgress = (
     if (day.isFuture) continue;
 
     const entry = getEntryForDate(metric.entries, day.date);
-    if (entry && checkEntryMeetsTarget(entry, metric.metric_type, metric.name)) {
+    if (entry && checkEntryMeetsTarget(entry, metric.metric_type, metric.daily_target)) {
       metCount++;
     }
   }

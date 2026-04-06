@@ -40,6 +40,14 @@ export const SprintDashboardGrid = ({ sprint, onCellClick, onNotesClick }: Sprin
     [sprint.metrics]
   );
 
+  if (sprint.metrics.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 0', color: '#475569' }}>
+        No metrics to display.
+      </div>
+    );
+  }
+
   return (
     <div
       style={{

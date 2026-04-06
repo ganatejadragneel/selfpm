@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { useSprint } from '../../hooks/useSprint';
 import { SprintEntryPanel } from './SprintEntryPanel';
@@ -7,10 +7,15 @@ import { SprintNotesPopup } from './SprintNotesPopup';
 import { SprintHistoryPanel } from './SprintHistoryPanel';
 import { SprintExportButton } from './SprintExportButton';
 import { SprintCompleteButton } from './SprintCompleteButton';
+import { StartNewSprintScreen } from './StartNewSprintScreen';
+import { ManageMetricsPanel } from './ManageMetricsPanel';
 import { LoadingSpinner } from '../ui';
 import { Target, Calendar, AlertCircle, History } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import type { EntryData } from '../../types/sprint';
+import type { EntryData, SprintSuggestion, MetricType, DailyTarget, MetricComponents, WeeklyTarget } from '../../types/sprint';
+import { getCurrentSprintDates } from '../../constants/sprint';
+import { supabase } from '../../lib/supabase';
+import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 
 // State type for notes popup
 interface NotesPopupState {
@@ -23,10 +28,11 @@ interface NotesPopupState {
  * SprintDashboard - Main sprint tracking interface
  *
  * Phase 5: Full dashboard with grid view
- * - Auto-creates sprint on mount for authenticated users
+ * - Shows StartNewSprintScreen when no active sprint
  * - Displays sprint header with dates and progress overview
  * - SprintEntryPanel for entering daily data
  * - SprintDashboardGrid for viewing the week
+ * - ManageMetricsPanel for metric CRUD
  */
 export const SprintDashboard = () => {
   const theme = useThemeColors();
@@ -37,11 +43,85 @@ export const SprintDashboard = () => {
     sprintProgress,
     saveEntry,
     refreshActiveSprint,
+    createSprint,
+    cloneSprintMetrics,
+    deleteSprint,
+    addMetric,
+    updateMetric,
+    deleteMetric,
+    updateMetricType,
+    reorderMetrics,
+    fetchCompletedSprintCount,
+    fetchSuggestions,
   } = useSprint();
 
   const [saving, setSaving] = useState(false);
   const [notesPopup, setNotesPopup] = useState<NotesPopupState | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [creatingLoading, setCreatingLoading] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [suggestions, setSuggestions] = useState<SprintSuggestion[]>([]);
+  const [lastCompletedId, setLastCompletedId] = useState<string | null>(null);
+
+  // Fetch suggestions once on mount
+  useEffect(() => {
+    fetchSuggestions().then(setSuggestions);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch completed count + last sprint ID when no active sprint
+  useEffect(() => {
+    if (activeSprint || loading) return;
+    fetchCompletedSprintCount().then(count => {
+      setCompletedCount(count);
+      if (count > 0) {
+        const userId = useSupabaseAuthStore.getState().user?.id;
+        if (!userId) return;
+        supabase
+          .from('sprints')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('status', 'completed')
+          .order('end_date', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          .then(({ data }) => data && setLastCompletedId(data.id));
+      }
+    });
+  }, [activeSprint, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle Start Fresh
+  const handleStartFresh = async () => {
+    const { startDate, endDate } = getCurrentSprintDates();
+    setCreatingLoading(true);
+    try {
+      await createSprint(startDate, endDate);
+      await refreshActiveSprint();
+    } finally {
+      setCreatingLoading(false);
+    }
+  };
+
+  // Handle Clone Last Sprint
+  const handleCloneLast = async () => {
+    if (!lastCompletedId) return;
+    const { startDate, endDate } = getCurrentSprintDates();
+    setCreatingLoading(true);
+    try {
+      const newId = await createSprint(startDate, endDate);
+      try {
+        await cloneSprintMetrics(lastCompletedId, newId);
+      } catch (e) {
+        await deleteSprint(newId);
+        throw e;
+      }
+      await refreshActiveSprint();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Clone failed');
+    } finally {
+      setCreatingLoading(false);
+    }
+  };
 
   // Handle saving an entry
   const handleSaveEntry = useCallback(
@@ -91,6 +171,31 @@ export const SprintDashboard = () => {
   const handleBackFromHistory = useCallback(() => {
     setShowHistory(false);
   }, []);
+
+  // Handle adding a metric
+  const handleAddMetric = async (data: Parameters<typeof addMetric>[1]) => {
+    if (!activeSprint) return;
+    await addMetric(activeSprint.id, data);
+  };
+
+  // Handle editing a metric
+  const handleEditMetric = async (metricId: string, data: {
+    typeChanged: boolean;
+    metric_type: MetricType;
+    daily_target: DailyTarget;
+    components: MetricComponents;
+    name: string;
+    weekly_target: WeeklyTarget;
+    display_order: number;
+  }) => {
+    const { typeChanged, metric_type, daily_target, components, name, weekly_target } = data;
+    if (typeChanged) {
+      await updateMetricType(metricId, metric_type, daily_target, components);
+      await updateMetric(metricId, { name, weekly_target });
+    } else {
+      await updateMetric(metricId, { name, metric_type, daily_target, components, weekly_target });
+    }
+  };
 
   // Show loading state
   if (loading && !activeSprint) {
@@ -152,22 +257,15 @@ export const SprintDashboard = () => {
     );
   }
 
-  // No sprint yet (shouldn't happen with auto-creation, but handle gracefully)
-  if (!activeSprint) {
+  // No active sprint - show start screen
+  if (!loading && !activeSprint) {
     return (
-      <div
-        style={{
-          background: theme.colors.surface.glass,
-          backdropFilter: theme.effects.blur,
-          borderRadius: theme.borderRadius.lg,
-          border: `1px solid ${theme.colors.surface.glassBorder}`,
-          boxShadow: theme.effects.shadow.md,
-          padding: '32px',
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ color: theme.colors.text.secondary }}>Initializing sprint...</p>
-      </div>
+      <StartNewSprintScreen
+        onStartFresh={handleStartFresh}
+        onCloneLast={handleCloneLast}
+        completedSprintCount={completedCount}
+        loading={creatingLoading}
+      />
     );
   }
 
@@ -176,9 +274,13 @@ export const SprintDashboard = () => {
     return <SprintHistoryPanel onBack={handleBackFromHistory} />;
   }
 
+  // At this point activeSprint is guaranteed non-null
+  const metricCount = activeSprint!.metrics.length;
+  const subtitle = `${metricCount} metric${metricCount !== 1 ? 's' : ''}`;
+
   // Format dates for display
-  const startDate = parseISO(activeSprint.start_date);
-  const endDate = parseISO(activeSprint.end_date);
+  const startDate = parseISO(activeSprint!.start_date);
+  const endDate = parseISO(activeSprint!.end_date);
   const dateRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
 
   return (
@@ -236,7 +338,7 @@ export const SprintDashboard = () => {
                     fontWeight: 600,
                   }}
                 >
-                  {activeSprint.name}
+                  {subtitle}
                 </span>
               </div>
             </div>
@@ -300,7 +402,7 @@ export const SprintDashboard = () => {
         }}
       >
         {/* Left: Entry Panel */}
-        <SprintEntryPanel sprint={activeSprint} onSaveEntry={handleSaveEntry} saving={saving} />
+        <SprintEntryPanel sprint={activeSprint!} onSaveEntry={handleSaveEntry} saving={saving} />
 
         {/* Right: Dashboard Grid */}
         <div
@@ -328,7 +430,7 @@ export const SprintDashboard = () => {
 
           {/* Grid Component */}
           <SprintDashboardGrid
-            sprint={activeSprint}
+            sprint={activeSprint!}
             onCellClick={handleCellClick}
             onNotesClick={handleNotesClick}
           />
@@ -413,12 +515,23 @@ export const SprintDashboard = () => {
               Sprint Actions
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <SprintExportButton sprint={activeSprint} />
-              <SprintCompleteButton sprintId={activeSprint.id} />
+              <SprintExportButton sprint={activeSprint!} />
+              <SprintCompleteButton sprintId={activeSprint!.id} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Manage Metrics Panel */}
+      <ManageMetricsPanel
+        sprintId={activeSprint!.id}
+        metrics={activeSprint!.metrics}
+        suggestions={suggestions}
+        onAdd={handleAddMetric}
+        onEdit={handleEditMetric}
+        onDelete={deleteMetric}
+        onReorder={reorderMetrics}
+      />
 
       {/* Notes Popup */}
       {notesPopup && (

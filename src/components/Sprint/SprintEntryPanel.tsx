@@ -226,6 +226,11 @@ export const SprintEntryPanel = ({ sprint, onSaveEntry, saving = false }: Sprint
             gap: '12px',
           }}
         >
+          {sprint.metrics.length === 0 && (
+            <p style={{ color: '#475569', textAlign: 'center', padding: '32px 0', fontSize: 14 }}>
+              No metrics yet. Add some in the Manage Metrics panel.
+            </p>
+          )}
           {sprint.metrics
             .sort((a, b) => a.display_order - b.display_order)
             .map((metric) => (

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Moon, Sun, Clock } from 'lucide-react';
 import { UI_LABELS } from '../../../constants/sprint';
+import type { SprintMetricWithEntries } from '../../../types/sprint';
 
 interface SleepInputProps {
   bedAt: string | null;
@@ -9,6 +10,7 @@ interface SleepInputProps {
   onChange: (bedAt: string | null, wakeAt: string | null) => void;
   disabled?: boolean;
   entryDate: string; // YYYY-MM-DD format
+  metric: SprintMetricWithEntries;
 }
 
 /**
@@ -52,12 +54,19 @@ export const SleepInput = ({
   onChange,
   disabled = false,
   entryDate,
+  metric,
 }: SleepInputProps) => {
   const theme = useThemeColors();
 
+  const defaultBed  = metric.daily_target.type === 'time_of_day' ? metric.daily_target.target_start : '22:00';
+  const defaultWake = metric.daily_target.type === 'time_of_day' ? metric.daily_target.target_end   : '06:00';
+
+  const startLabel = metric.components.bed_at?.label  ?? 'Start Time';
+  const endLabel   = metric.components.wake_at?.label ?? 'End Time';
+
   // Local state for time inputs (HH:MM format)
-  const [bedTime, setBedTime] = useState('22:00');
-  const [wakeTime, setWakeTime] = useState('04:30');
+  const [bedTime, setBedTime] = useState(defaultBed);
+  const [wakeTime, setWakeTime] = useState(defaultWake);
   const [initialized, setInitialized] = useState(false);
 
   // Parse existing values on mount/change
@@ -80,12 +89,12 @@ export const SleepInput = ({
   useEffect(() => {
     // Only initialize once per entryDate, and only if parent has no values
     if (!bedAt && !wakeAt && entryDate && !initialized) {
-      const defaultBedTimestamp = createTimestamp('22:00', false, entryDate);
-      const defaultWakeTimestamp = createTimestamp('04:30', true, entryDate);
+      const defaultBedTimestamp = createTimestamp(defaultBed, false, entryDate);
+      const defaultWakeTimestamp = createTimestamp(defaultWake, true, entryDate);
       onChange(defaultBedTimestamp, defaultWakeTimestamp);
       setInitialized(true);
     }
-  }, [bedAt, wakeAt, entryDate, onChange, initialized]);
+  }, [bedAt, wakeAt, entryDate, onChange, initialized, defaultBed, defaultWake]);
 
   // Reset initialized flag when entryDate changes
   useEffect(() => {
@@ -160,7 +169,7 @@ export const SleepInput = ({
       <div>
         <label style={labelStyle}>
           <Moon size={14} />
-          {UI_LABELS.sleepBedtime}
+          {startLabel}
         </label>
         <input
           type="time"
@@ -184,7 +193,7 @@ export const SleepInput = ({
       <div>
         <label style={labelStyle}>
           <Sun size={14} />
-          {UI_LABELS.sleepWakeTime}
+          {endLabel}
         </label>
         <input
           type="time"

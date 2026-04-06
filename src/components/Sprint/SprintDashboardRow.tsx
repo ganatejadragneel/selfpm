@@ -7,7 +7,6 @@ import {
   getCellDisplayValue,
   calculateMetricWeeklyProgress,
 } from '../../utils/sprintUtils';
-import { FOCUS_METRICS } from '../../constants/sprint';
 import type { SprintMetricWithEntries, DayColumn } from '../../types/sprint';
 
 interface SprintDashboardRowProps {
@@ -40,12 +39,6 @@ export const SprintDashboardRow = memo(function SprintDashboardRow({
   onNotesClick,
 }: SprintDashboardRowProps) {
   const theme = useThemeColors();
-
-  // Get metric config for target description (memoized)
-  const metricConfig = useMemo(
-    () => FOCUS_METRICS.find((m) => m.name === metric.name),
-    [metric.name]
-  );
 
   // Calculate weekly progress (memoized)
   const progress = useMemo(
@@ -138,7 +131,7 @@ export const SprintDashboardRow = memo(function SprintDashboardRow({
               textOverflow: 'ellipsis',
             }}
           >
-            {metricConfig?.dailyTargetDescription || ''}
+            {''}
           </div>
         </div>
       </div>
@@ -149,7 +142,7 @@ export const SprintDashboardRow = memo(function SprintDashboardRow({
         const displayValue = getCellDisplayValue(
           entry,
           metric.metric_type,
-          metric.name,
+          metric.daily_target,
           day.isFuture
         );
 

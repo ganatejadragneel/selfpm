@@ -5,7 +5,6 @@ import { SleepInput, BooleanInput, DurationInput } from './inputs';
 import {
   UI_LABELS,
   MAX_NOTES_LENGTH,
-  FOCUS_METRICS,
 } from '../../constants/sprint';
 import type {
   SprintMetricWithEntries,
@@ -62,9 +61,6 @@ export const SprintMetricCard = ({
   const theme = useThemeColors();
   const [expanded, setExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-
-  // Get metric config for target description
-  const metricConfig = FOCUS_METRICS.find((m) => m.name === metric.name);
 
   // Get existing entry
   const existingEntry = getEntryForDate(metric.entries, entryDate);
@@ -239,7 +235,7 @@ export const SprintMetricCard = ({
                 color: theme.colors.text.muted,
               }}
             >
-              {metricConfig?.dailyTargetDescription || ''}
+              {''}
             </div>
           </div>
         </div>
@@ -298,6 +294,7 @@ export const SprintMetricCard = ({
               onChange={handleSleepChange}
               entryDate={entryDate}
               disabled={saving}
+              metric={metric}
             />
           )}
 

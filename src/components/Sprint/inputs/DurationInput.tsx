@@ -1,6 +1,6 @@
 import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Timer, Plus, Minus } from 'lucide-react';
-import { UI_LABELS, DURATION_TARGETS } from '../../../constants/sprint';
+import { UI_LABELS } from '../../../constants/sprint';
 
 interface DurationInputProps {
   durationMinutes: number | null;
@@ -23,10 +23,9 @@ export const DurationInput = ({
 
   const value = durationMinutes ?? 0;
 
-  // Get target for this metric
-  const target = metricName
-    ? DURATION_TARGETS[metricName as keyof typeof DURATION_TARGETS] ?? 60
-    : 60;
+  // Default target fallback (60 minutes)
+  void metricName;
+  const target = 60;
 
   const isMetTarget = value >= target;
 

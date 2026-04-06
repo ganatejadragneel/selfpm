@@ -4,11 +4,17 @@ import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import type {
   SprintWithMetrics,
   Sprint,
+  SprintMetric,
   SprintMetricEntry,
   EntryData,
   CompleteSprintResponse,
   SprintProgress,
   MetricProgress,
+  MetricType,
+  MetricComponents,
+  DailyTarget,
+  WeeklyTarget,
+  SprintSuggestion,
 } from '../types/sprint';
 
 // =====================================================
@@ -24,7 +30,6 @@ export interface UseSprintReturn {
   sprintProgress: SprintProgress | null;
 
   // Sprint Operations
-  ensureActiveSprint: () => Promise<SprintWithMetrics | null>;
   refreshActiveSprint: () => Promise<void>;
   completeSprint: (sprintId: string) => Promise<CompleteSprintResponse>;
   fetchCompletedSprints: () => Promise<Sprint[]>;
@@ -38,6 +43,29 @@ export interface UseSprintReturn {
   // Progress
   getMetricProgress: (metricId: string) => MetricProgress | null;
 
+  // Sprint creation
+  createSprint: (startDate: string, endDate: string) => Promise<string>;
+  cloneSprintMetrics: (fromId: string, toId: string) => Promise<number>;
+  deleteSprint: (sprintId: string) => Promise<void>;
+
+  // Metric operations
+  addMetric: (sprintId: string, metric: {
+    name: string;
+    metric_type: MetricType;
+    components: MetricComponents;
+    daily_target: DailyTarget;
+    weekly_target: WeeklyTarget;
+    display_order: number;
+  }) => Promise<SprintMetric>;
+  updateMetric: (metricId: string, updates: Partial<Pick<SprintMetric, 'name' | 'daily_target' | 'weekly_target' | 'components' | 'metric_type'>>) => Promise<void>;
+  deleteMetric: (metricId: string) => Promise<void>;
+  updateMetricType: (metricId: string, newType: MetricType, newDailyTarget: DailyTarget, newComponents: MetricComponents) => Promise<void>;
+  reorderMetrics: (orderedIds: string[]) => Promise<void>;
+
+  // Data fetching
+  fetchCompletedSprintCount: () => Promise<number>;
+  fetchSuggestions: () => Promise<SprintSuggestion[]>;
+
   // Utility
   clearError: () => void;
 }
@@ -48,7 +76,7 @@ export interface UseSprintReturn {
 
 /**
  * Custom hook for managing sprints
- * Handles feature gating and auto-creation on mount
+ * Handles feature gating and auto-fetch on mount
  */
 export const useSprint = (): UseSprintReturn => {
   // Local state
@@ -66,7 +94,6 @@ export const useSprint = (): UseSprintReturn => {
     completedSprints,
     loading: storeLoading,
     error: storeError,
-    ensureActiveSprint: storeEnsureActiveSprint,
     fetchActiveSprint: storeFetchActiveSprint,
     completeSprint: storeCompleteSprint,
     fetchCompletedSprints: storeFetchCompletedSprints,
@@ -77,31 +104,26 @@ export const useSprint = (): UseSprintReturn => {
     calculateSprintProgress,
     calculateMetricProgress,
     clearError: storeClearError,
+    createSprint: storeCreateSprint,
+    cloneSprintMetrics: storeCloneSprintMetrics,
+    deleteSprint: storeDeleteSprint,
+    addMetric: storeAddMetric,
+    updateMetric: storeUpdateMetric,
+    deleteMetric: storeDeleteMetric,
+    updateMetricType: storeUpdateMetricType,
+    reorderMetrics: storeReorderMetrics,
+    fetchCompletedSprintCount: storeFetchCompletedSprintCount,
+    fetchSuggestions: storeFetchSuggestions,
   } = useSprintStore();
 
-  // Auto-fetch/create sprint when user is authenticated
+  // Auto-fetch sprint when user is authenticated
   useEffect(() => {
-    if (!user?.id || initialized) {
-      return;
-    }
-
-    const initializeSprint = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        await storeEnsureActiveSprint();
-        setInitialized(true);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to initialize sprint';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeSprint();
-  }, [user?.id, initialized, storeEnsureActiveSprint]);
+    if (!user?.id || initialized) return;
+    setLoading(true);
+    storeFetchActiveSprint()
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load sprint'))
+      .finally(() => { setLoading(false); setInitialized(true); });
+  }, [user?.id, initialized, storeFetchActiveSprint]);
 
   // Calculate progress when activeSprint changes
   useEffect(() => {
@@ -116,22 +138,6 @@ export const useSprint = (): UseSprintReturn => {
   // =====================================================
   // SPRINT OPERATIONS
   // =====================================================
-
-  const ensureActiveSprint = useCallback(async (): Promise<SprintWithMetrics | null> => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const sprint = await storeEnsureActiveSprint();
-      return sprint;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to ensure active sprint';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [storeEnsureActiveSprint]);
 
   const refreshActiveSprint = useCallback(async (): Promise<void> => {
 
@@ -302,7 +308,6 @@ export const useSprint = (): UseSprintReturn => {
     sprintProgress,
 
     // Sprint operations
-    ensureActiveSprint,
     refreshActiveSprint,
     completeSprint,
     fetchCompletedSprints,
@@ -315,6 +320,22 @@ export const useSprint = (): UseSprintReturn => {
 
     // Progress
     getMetricProgress,
+
+    // Sprint creation
+    createSprint: storeCreateSprint,
+    cloneSprintMetrics: storeCloneSprintMetrics,
+    deleteSprint: storeDeleteSprint,
+
+    // Metric operations
+    addMetric: storeAddMetric,
+    updateMetric: storeUpdateMetric,
+    deleteMetric: storeDeleteMetric,
+    updateMetricType: storeUpdateMetricType,
+    reorderMetrics: storeReorderMetrics,
+
+    // Data fetching
+    fetchCompletedSprintCount: storeFetchCompletedSprintCount,
+    fetchSuggestions: storeFetchSuggestions,
 
     // Utility
     clearError,

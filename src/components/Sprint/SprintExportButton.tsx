@@ -51,7 +51,7 @@ export const SprintExportButton = memo(function SprintExportButton({
         const displayValue = getCellDisplayValue(
           entry || null,
           metric.metric_type,
-          metric.name,
+          metric.daily_target,
           day.isFuture
         );
 
