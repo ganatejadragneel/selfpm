@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { Download, Check, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
 import type { SprintWithMetrics, SprintExport, WeeklyTarget } from '../../types/sprint';
 import { useSprintStore } from '../../store/sprintStore';
 import {
