@@ -28,8 +28,12 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
   const handleSave = async () => {
     if (!canSave) return;
     setSaving(true);
+    // Flush any uncommitted tag text (typed but not confirmed with Enter)
+    const finalTags = tagInput.trim()
+      ? [...new Set([...tags, tagInput.trim().toLowerCase()])]
+      : tags;
     try {
-      await onSave(title.trim(), content.trim(), tags);
+      await onSave(title.trim(), content.trim(), finalTags);
       setTitle('');
       setContent('');
       setTags([]);

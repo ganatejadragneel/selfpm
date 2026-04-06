@@ -35,8 +35,12 @@ export const QuickNoteAddModal: React.FC<QuickNoteAddModalProps> = ({ onClose })
   const handleSave = async () => {
     if (!canSave) return;
     setSaving(true);
+    // Flush any uncommitted tag text (typed but not confirmed with Enter)
+    const finalTags = tagInput.trim()
+      ? [...new Set([...tags, tagInput.trim().toLowerCase()])]
+      : tags;
     try {
-      await createNote(title.trim(), content.trim(), tags);
+      await createNote(title.trim(), content.trim(), finalTags);
       onClose();
     } finally {
       setSaving(false);
