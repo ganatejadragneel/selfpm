@@ -32,9 +32,9 @@ export const COMPONENTS_FOR_TYPE: Record<MetricType, MetricComponents> = {
 export const SPRINT_DURATION_DAYS = 7;
 
 /**
- * User timezone (hardcoded for v1)
+ * User timezone — derived from the browser so dates match local time
  */
-export const USER_TIMEZONE = 'America/New_York';
+export const USER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 // =====================================================
 // CHARACTER LIMITS
