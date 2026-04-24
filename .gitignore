@@ -23,3 +23,31 @@ dist-ssr
 *.sln
 *.sw?
 .dual-graph/
+
+# Environment / secrets (NEVER push)
+.env
+.env.local
+.env.*.local
+
+# Personal / private working files (local only — do NOT push)
+.claude/
+code-audit-archive/
+docs/
+golden-data/
+job-apps/
+seekers/
+specs/
+supabase/.temp/
+supabase/migrations/
+
+# Personal analysis scripts (local only — do NOT push)
+scripts/analyze_core_practices.js
+scripts/browser_export_habits.js
+scripts/fetch_data.js
+scripts/import_adhoc_notes.js
+scripts/migrate_note_column.js
+scripts/pull_habit_data.js
+scripts/pull_habit_data_v2.js
+scripts/verify_blueprint_migration.js
+scripts/verify_detailed_migration.js
+scripts/verify_note_column.js

@@ -9,6 +9,7 @@ import { useQuickNotesStore } from '../../store/quickNotesStore';
 import { LoadingSpinner } from '../ui';
 import { QuickNoteAddModal } from './QuickNoteAddModal';
 import { QuickNoteEditModal } from './QuickNoteEditModal';
+import { QuickNotesExportButton } from './QuickNotesExportButton';
 
 type RangePreset = 'today' | '2days' | 'week' | 'month' | 'all' | 'custom';
 
@@ -404,6 +405,7 @@ export const QuickNotesPage: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <QuickNotesExportButton notes={displayNotes} />
             <button
               onClick={() => setShowAddModal(true)}
               style={{
