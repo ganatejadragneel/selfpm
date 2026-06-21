@@ -1,8 +1,9 @@
 // Edge Function: generate-focus-brief
-// Runs nightly (pg_cron). For each seeker with a Focus ORE, it reads their
-// 7-day window from the daily-task tables + focus-log quick notes, calls Claude
-// Sonnet with the Analysis + Today's-Focus prompts, and upserts the result into
-// focus_briefs (one row per seeker per day). The dashboard then just READS it.
+// Runs nightly (pg_cron). For each seeker with a Charter page, it parses their
+// config (ORE name / tag / goal / unit), reads their 7-day window from the
+// daily-task tables + tagged quick notes, calls Claude Sonnet with the Analysis
+// + Today's-Focus prompts, and upserts the result into focus_briefs (one row per
+// seeker per day). The dashboard then just READS it.
 //
 // Deploy:   supabase functions deploy generate-focus-brief
 // Secrets:  supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   (and optionally CRON_SECRET)
@@ -84,8 +85,32 @@ function buildMessages(box: FocusBox, p: FocusPayload): { system: string; user: 
   return { system: FOCUS_SYSTEM(p), user: FOCUS_USER(p) };
 }
 
-// v1 charter is a constant (becomes per-seeker config later — see ADR work).
-const CHARTER = { focusOreName: "Hard Focus Hours", unit: "hrs", goal: 6, notesTag: "focus log" };
+// Per-seeker config, parsed from each user's Charter page (kb_documents, role
+// 'charter'). Parser MIRRORS src/components/Focus/charterConfig.ts — change both.
+interface CharterCfg { focusOreName: string; unit: string; goal: number; notesTag: string }
+const DEFAULT_CHARTER: CharterCfg = { focusOreName: "Hard Focus Hours", unit: "hrs", goal: 6, notesTag: "focus log" };
+
+function parseCharter(content: string | null | undefined): CharterCfg {
+  const cfg: CharterCfg = { ...DEFAULT_CHARTER };
+  if (!content) return cfg;
+  for (const rawLine of content.split("\n")) {
+    const line = rawLine.replace(/^\s*[-*]\s+/, "").trim();
+    const m = line.match(/^([a-z_ ]+):\s*(.+)$/i);
+    if (!m) continue;
+    const key = m[1].trim().toLowerCase().replace(/\s+/g, "_");
+    const value = m[2].trim();
+    if (!value || /^<.*>$/.test(value)) continue; // unset placeholder
+    if (key === "ore" || key === "focus_ore") cfg.focusOreName = value;
+    else if (key === "notes_tag" || key === "tag") cfg.notesTag = value;
+    else if (key === "unit") cfg.unit = value;
+    else if (key === "goal") {
+      const n = parseFloat(value.replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(n) && n > 0) cfg.goal = n;
+    }
+  }
+  return cfg;
+}
+
 const MODEL = "claude-sonnet-4-6";
 
 const corsHeaders = {
@@ -156,11 +181,20 @@ async function callClaude(apiKey: string, msgs: { system: string; user: string }
 type DB = ReturnType<typeof createClient>;
 
 async function generateForUser(admin: DB, anthropicKey: string, uid: string, date: string) {
+  // per-user Charter config (ORE name / tag / goal / unit)
+  const { data: charterRows } = await admin
+    .from("kb_documents")
+    .select("content")
+    .eq("new_user_id", uid)
+    .eq("metadata->>role", "charter")
+    .limit(1);
+  const cfg = parseCharter((charterRows?.[0] as { content?: string } | undefined)?.content);
+
   const { data: oreRows } = await admin
     .from("custom_tasks")
     .select("id")
     .eq("new_user_id", uid)
-    .eq("name", CHARTER.focusOreName)
+    .ilike("name", cfg.focusOreName) // case-insensitive exact match
     .limit(1);
   const ore = oreRows?.[0];
   if (!ore) return { skipped: "no Focus ORE" };
@@ -172,7 +206,7 @@ async function generateForUser(admin: DB, anthropicKey: string, uid: string, dat
   const [compsRes, notesRes, qnotesRes] = await Promise.all([
     admin.from("daily_task_completions").select("completion_date, value").eq("new_user_id", uid).eq("custom_task_id", ore.id).in("completion_date", dateStrs),
     admin.from("daily_task_notes").select("note_date, note_text").eq("new_user_id", uid).eq("custom_task_id", ore.id).in("note_date", dateStrs),
-    admin.from("quick_notes").select("content, created_at").eq("new_user_id", uid).contains("tags", [CHARTER.notesTag]).gte("created_at", windowStart),
+    admin.from("quick_notes").select("content, created_at").eq("new_user_id", uid).contains("tags", [cfg.notesTag]).gte("created_at", windowStart),
   ]);
 
   const compByDate = new Map((compsRes.data ?? []).map((c: { completion_date: string; value: unknown }) => [c.completion_date, c.value]));
@@ -195,13 +229,13 @@ async function generateForUser(admin: DB, anthropicKey: string, uid: string, dat
   const total = round1(focusDays.reduce((s, d) => s + d.hours, 0));
   const average = round1(total / focusDays.length);
   const priorTotal = round1(focusDays.filter((d) => d.offset !== 0).reduce((s, d) => s + d.hours, 0));
-  const targetToday = Math.max(0, round1(CHARTER.goal * focusDays.length - priorTotal));
+  const targetToday = Math.max(0, round1(cfg.goal * focusDays.length - priorTotal));
   const y = focusDays.find((d) => d.offset === 1);
 
   const payload: FocusPayload = {
-    focusOreName: CHARTER.focusOreName,
-    unit: CHARTER.unit,
-    goal: CHARTER.goal,
+    focusOreName: cfg.focusOreName,
+    unit: cfg.unit,
+    goal: cfg.goal,
     yesterday: { dateLabel: y ? labelOf(y.str) : "yesterday", hours: y?.hours ?? 0, note: y?.note },
     focusLog,
     weekTotal: total,
@@ -250,7 +284,8 @@ Deno.serve(async (req: Request) => {
     if (body.user_id) {
       userIds = [body.user_id];
     } else {
-      const { data } = await admin.from("custom_tasks").select("new_user_id").eq("name", CHARTER.focusOreName);
+      // every seeker with a Charter page; each carries their own ORE/tag/goal
+      const { data } = await admin.from("kb_documents").select("new_user_id").eq("metadata->>role", "charter");
       userIds = [...new Set((data ?? []).map((r: { new_user_id: string }) => r.new_user_id))];
     }
 

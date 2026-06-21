@@ -3,7 +3,8 @@
 // When Supabase is wired, only `getWindow` changes — everything below is reusable.
 
 import { subDays, format } from 'date-fns';
-import { charter, type FocusDay } from './sampleData';
+import { type FocusDay } from './sampleData';
+import { DEFAULT_CHARTER } from './charterConfig';
 
 export interface WindowDay {
   date: Date;
@@ -68,9 +69,13 @@ export interface FocusMetrics {
   yesterday?: WindowDay;
 }
 
-export function computeMetrics(focusDays: FocusDay[], days = 7, now: Date = new Date()): FocusMetrics {
+export function computeMetrics(
+  focusDays: FocusDay[],
+  days = 7,
+  now: Date = new Date(),
+  goal: number = DEFAULT_CHARTER.weeklyAverageGoal,
+): FocusMetrics {
   const window = getWindow(focusDays, days, now);
-  const goal = charter.weeklyAverageGoal;
 
   const total = round1(window.reduce((s, d) => s + d.hours, 0));
   const average = round1(total / window.length);

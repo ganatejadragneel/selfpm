@@ -8,7 +8,8 @@ import { subDays, format } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import { computeMetrics, type FocusMetrics } from './focusLogic';
-import { charter, type FocusDay } from './sampleData';
+import { type FocusDay } from './sampleData';
+import { parseCharter, DEFAULT_CHARTER, type CharterConfig } from './charterConfig';
 
 const userId = () => useSupabaseAuthStore.getState().user?.id ?? null;
 
@@ -26,6 +27,7 @@ interface FocusBrief {
 interface FocusDataStore {
   metrics: FocusMetrics | null;
   brief: FocusBrief | null;
+  config: CharterConfig;
   oreConfigured: boolean;
   loading: boolean;
   initialized: boolean;
@@ -36,6 +38,7 @@ interface FocusDataStore {
 export const useFocusDataStore = create<FocusDataStore>((set) => ({
   metrics: null,
   brief: null,
+  config: DEFAULT_CHARTER,
   oreConfigured: true,
   loading: false,
   initialized: false,
@@ -47,16 +50,27 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
     set({ loading: true, error: null });
     const now = new Date();
 
-    // 1) find the Focus ORE (a custom_task whose name matches the charter)
+    // 0) read this user's Charter page and parse their config (ORE name, tag,
+    //    goal, unit). Falls back to DEFAULT_CHARTER when unset.
+    const { data: charterRow } = await supabase
+      .from('kb_documents')
+      .select('content')
+      .eq('new_user_id', uid)
+      .eq('metadata->>role', 'charter')
+      .maybeSingle();
+    const config = parseCharter(charterRow?.content);
+
+    // 1) find the Focus ORE (a custom_task whose name matches the charter,
+    //    case-insensitive so "hard focus hours" === "Hard Focus Hours")
     const { data: oreRows } = await supabase
       .from('custom_tasks')
       .select('id, name')
       .eq('new_user_id', uid)
-      .eq('name', charter.focusOreName)
+      .ilike('name', config.focusOreName)
       .limit(1);
     const ore = oreRows?.[0];
     if (!ore) {
-      return set({ oreConfigured: false, loading: false, initialized: true, metrics: computeMetrics([], 7, now) });
+      return set({ config, oreConfigured: false, loading: false, initialized: true, metrics: computeMetrics([], 7, now, config.weeklyAverageGoal) });
     }
 
     // 2) the 7-day window of dates (offset 0 = today … 6)
@@ -98,7 +112,8 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
       .maybeSingle();
 
     set({
-      metrics: computeMetrics(focusDays, 7, now),
+      metrics: computeMetrics(focusDays, 7, now, config.weeklyAverageGoal),
+      config,
       brief: briefRow
         ? { analysis: briefRow.analysis_text ?? null, focus: briefRow.focus_text ?? null, model: briefRow.model ?? null }
         : null,

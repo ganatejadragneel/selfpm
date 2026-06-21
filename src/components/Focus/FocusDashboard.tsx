@@ -10,12 +10,12 @@ import { useThemeColors } from '../../hooks/useThemeColors';
 import { type WindowDay, type FocusMetrics } from './focusLogic';
 import { useDailyGoalsStore } from './dailyGoalsStore';
 import { useFocusDataStore } from './focusDataStore';
-import { charter, type DailyGoal } from './sampleData';
+import { type DailyGoal } from './sampleData';
 
 export function FocusDashboard() {
   const t = useThemeColors();
   const c = t.colors;
-  const { metrics: m, brief, oreConfigured, loading, initialized, init } = useFocusDataStore();
+  const { metrics: m, brief, config, oreConfigured, loading, initialized, init } = useFocusDataStore();
 
   useEffect(() => {
     if (!initialized) init();
@@ -49,7 +49,7 @@ export function FocusDashboard() {
     return shell(
       <div style={{ color: muted, fontSize: 14, padding: 40, textAlign: 'center', lineHeight: 1.6 }}>
         No Focus ORE yet. Create a daily task named{' '}
-        <strong style={{ color: ink }}>“{charter.focusOreName}”</strong> to light up this dashboard.
+        <strong style={{ color: ink }}>“{config.focusOreName}”</strong> (or set your ORE on the Charter page) to light up this dashboard.
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function FocusDashboard() {
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 22 }}>
         <h1 style={{ fontSize: 30, fontWeight: 700, color: ink, margin: 0, letterSpacing: '-0.02em' }}>
-          {charter.focusOreName}
+          {config.focusOreName}
         </h1>
         <span style={{ fontSize: 14, color: muted }}>· last 7 days</span>
       </div>

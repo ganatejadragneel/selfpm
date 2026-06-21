@@ -5,6 +5,8 @@
 // PRIVACY: every value here is generic and work-neutral. No personal content.
 // This file is committed; never seed it with real journal text.
 
+import { DEFAULT_CHARTER } from './charterConfig';
+
 export interface FocusDay {
   /** 0 = today, 1 = yesterday, 2 = two days ago ... */
   offset: number;
@@ -30,14 +32,9 @@ export interface DailyGoal {
   carriedOver?: boolean;
 }
 
-// ── Charter-driven config (the bits the dashboard reads from charter.md) ──
-export const charter = {
-  focusOreName: 'Hard Focus Hours',
-  unit: 'hrs',
-  // north-star goal: hold a weekly average of N per day
-  weeklyAverageGoal: 6,
-  notesTag: 'focus log',
-};
+// ── Charter-driven config defaults (the live dashboard parses these from the
+// user's Charter page; this constant is the fallback + the sample/CLI source). ──
+export const charter = DEFAULT_CHARTER;
 
 // ── Focus ORE values, newest first (offset 0 = today, in progress) ──
 export const focusDays: FocusDay[] = [

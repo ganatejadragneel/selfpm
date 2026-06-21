@@ -238,20 +238,24 @@ export const usePagesStore = create<PagesStore>((set, get) => ({
   },
 }));
 
-// Generic seed content (no personal data).
+// Generic seed content (no personal data). The dashboard + nightly brief read
+// the `ore` / `goal` / `notes_tag` / `unit` lines below straight off this page —
+// edit the values and they take effect (ORE name matches your daily task,
+// case-insensitive). Leave a `<placeholder>` and the default is used instead.
 const CHARTER_SEED = `# Charter
 
-## Focus ORE (shared by daily + weekly)
-- ore: <ORE name>
-- goal: weekly average >= <N>
-- notes_tag: <tag>
+Edit the values below — the Focus dashboard and the nightly brief read them
+from this page. Use your daily-task ORE's exact name.
 
-## [daily] — Daily AI job
-Analyzes the Focus ORE outcomes + its notes + quick notes tagged <tag>.
+## Focus ORE
+- ore: <your ORE name>
+- unit: hrs
+- goal: weekly average >= 6
+- notes_tag: <your quick-note tag>
 
-## [weekly] — CPO Report
-- history: <authored prose>
-- focus: <what to watch this period>`;
+## How it's used
+The daily brief analyzes this ORE's outcomes + its per-day notes + any quick
+notes tagged with the notes_tag above.`;
 
 const HISTORY_SEED = `# History (curated)
 

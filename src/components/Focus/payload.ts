@@ -8,7 +8,7 @@ import { charter, focusDays, focusLog } from './sampleData';
 import type { FocusPayload } from './prompts';
 
 export function buildSamplePayload(now: Date = new Date()): FocusPayload {
-  const m = computeMetrics(focusDays, 7, now);
+  const m = computeMetrics(focusDays, 7, now, charter.weeklyAverageGoal);
   const y = m.yesterday;
 
   const yLog = focusLog.filter((e) => e.offset === 1).map((e) => e.text);
