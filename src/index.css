@@ -1,15 +1,111 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Global Typography */
+/* ============================================================================
+   SelfPM Design System — Canonical Tokens (Tailwind v4 @theme)
+   ----------------------------------------------------------------------------
+   This is the SINGLE SOURCE OF TRUTH for the visual language.
+   Everything defined here becomes a Tailwind utility automatically:
+     --color-brand-500   -> bg-brand-500 / text-brand-500 / border-brand-500
+     --shadow-card       -> shadow-card
+     --radius-card       -> rounded-card
+     --font-sans         -> font-sans
+
+   NOTE: Tailwind v4 already ships full palettes (gray, red, blue, emerald,
+   amber, violet, ...) and a clean modular type scale (text-xs … text-9xl,
+   base = 16px) by default. We only define what is genuinely *custom* to
+   SelfPM below; everything else inherits v4's excellent defaults.
+
+   Migration status (see docs/design-system/README.md):
+     - theme.ts            (44 importers) — legacy JS tokens, being retired
+     - styles/designTokens (3 importers)  — legacy, fold into theme.ts/CSS vars
+     - components/ui        (2 importers)  — keep, restyle onto these tokens
+     - design-system-simple (0 importers)  — DELETED (was dead code)
+   ============================================================================ */
+
+@theme {
+  /* ---- Brand (indigo) — anchor brand-500 = legacy #667eea, preserved exactly */
+  --color-brand-50:  #eef0fd;
+  --color-brand-100: #dde1fb;
+  --color-brand-200: #c0c7f6;
+  --color-brand-300: #9ba6f0;
+  --color-brand-400: #8088ee;
+  --color-brand-500: #667eea;
+  --color-brand-600: #4f5fd6;
+  --color-brand-700: #4149b0;
+  --color-brand-800: #373e8c;
+  --color-brand-900: #2f3570;
+
+  /* ---- Accent (violet) — matches legacy #8b5cf6 / #7c3aed (Tailwind violet) */
+  --color-accent-50:  #f5f3ff;
+  --color-accent-100: #ede9fe;
+  --color-accent-200: #ddd6fe;
+  --color-accent-300: #c4b5fd;
+  --color-accent-400: #a78bfa;
+  --color-accent-500: #8b5cf6;
+  --color-accent-600: #7c3aed;
+  --color-accent-700: #6d28d9;
+  --color-accent-800: #5b21b6;
+  --color-accent-900: #4c1d95;
+
+  /* ---- Semantic text (ink) — replaces hand-typed #1f2937 / #6b7280 / #9ca3af */
+  --color-ink:       #1f2937;  /* primary copy        -> text-ink */
+  --color-ink-soft:  #6b7280;  /* secondary / labels  -> text-ink-soft */
+  --color-ink-muted: #9ca3af;  /* hints / disabled    -> text-ink-muted */
+
+  /* ---- Surfaces & lines — replaces #ffffff/#f8fafc/#f1f5f9 + #e5e7eb/#d1d5db */
+  --color-surface:        #ffffff;  /* cards, modals     -> bg-surface */
+  --color-surface-subtle: #f8fafc;  /* app background    -> bg-surface-subtle */
+  --color-surface-sunken: #f1f5f9;  /* wells, insets     -> bg-surface-sunken */
+  --color-line:           #e5e7eb;  /* default border    -> border-line */
+  --color-line-strong:    #d1d5db;  /* emphasized border -> border-line-strong */
+
+  /* ---- Status — semantic names aliasing the standard palette anchors */
+  --color-success: #10b981;  /* emerald-500 */
+  --color-info:    #3b82f6;  /* blue-500    */
+  --color-warning: #f59e0b;  /* amber-500   */
+  --color-danger:  #ef4444;  /* red-500     */
+
+  /* ---- Radius — SEMANTIC names (legacy md=12 / lg=16 / sm=8) */
+  --radius-card:    16px;  /* cards, panels   -> rounded-card */
+  --radius-control: 12px;  /* buttons, inputs -> rounded-control */
+  --radius-chip:     8px;  /* chips, badges   -> rounded-chip */
+
+  /* ---- Elevation — SEMANTIC soft shadows (legacy values preserved) */
+  --shadow-card:    0 2px 16px rgba(0, 0, 0, 0.04);    /* shadow-card */
+  --shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.10);    /* shadow-popover */
+  --shadow-modal:   0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-modal */
+
+  /* ---- Type — Inter (already preloaded in index.html) */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* The two signature gradients, as reusable utilities so they stay identical
+   everywhere (legacy: linear-gradient(135deg, #667eea 0%, #764ba2 100%)). */
+@layer utilities {
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  .text-brand-gradient {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Global typography
+   --------------------------------------------------------------------------- */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Quick Notes animations */
+/* ---------------------------------------------------------------------------
+   Quick Notes animations
+   --------------------------------------------------------------------------- */
 @keyframes fadeInUp {
   from {
     opacity: 0;

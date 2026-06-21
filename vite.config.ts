@@ -1,11 +1,50 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv, type PluginOption, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 
+// Dev-only middleware: holds the Anthropic key server-side and proxies the
+// Focus dashboard's generate calls. The key is NEVER bundled (no VITE_ prefix).
+function focusApiPlugin(apiKey: string): PluginOption {
+  return {
+    name: 'focus-api',
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use('/api/focus/generate', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          return res.end('Method Not Allowed');
+        }
+        let body = '';
+        req.on('data', (c) => (body += c));
+        req.on('end', async () => {
+          res.setHeader('Content-Type', 'application/json');
+          try {
+            const { box, model } = JSON.parse(body || '{}');
+            if (!apiKey) {
+              res.statusCode = 500;
+              return res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set in .env.local' }));
+            }
+            // Load the Node-only module through Vite's SSR loader so the SDK is
+            // transpiled correctly and stays out of the client bundle.
+            const mod = await server.ssrLoadModule('/src/server/focus.ts');
+            const result = await mod.generateFocusBox({ box, model, apiKey });
+            res.end(JSON.stringify(result));
+          } catch (e) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
+          }
+        });
+      });
+    },
+  };
+}
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
   plugins: [
     react(),
+    focusApiPlugin(env.ANTHROPIC_API_KEY || ''),
     // Bundle analyzer - generates stats.html after build
     visualizer({
       filename: 'dist/bundle-analysis.html',
@@ -195,4 +234,5 @@ export default defineConfig({
     // Enable compression in dev
     middlewareMode: false,
   },
+  };
 })
