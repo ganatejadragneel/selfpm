@@ -9,9 +9,13 @@
     "build:analyze": "tsc -b && vite build && node scripts/bundle-analysis.js",
     "analyze": "node scripts/bundle-analysis.cjs",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "focus:gen": "tsx scripts/focus/generate.ts",
+    "focus:compare": "tsx scripts/focus/compare.ts",
+    "focus:eval": "tsx scripts/focus/eval.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -22,7 +26,9 @@
     "papaparse": "^5.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.14.0",
+    "remark-gfm": "^4.0.1",
     "zod": "^4.1.8",
     "zustand": "^5.0.8"
   },
@@ -43,6 +49,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^4.1.12",
     "terser": "^5.44.0",
+    "tsx": "^4.22.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2"
