@@ -51,7 +51,7 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
 
   return (
     <div
-      className="note-card-enter"
+      className="note-card-enter flex overflow-hidden cursor-pointer"
       onClick={() => setExpanded(!expanded)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -68,11 +68,8 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
         boxShadow: hovered
           ? `0 8px 28px rgba(0,0,0,${isDark ? '0.4' : '0.1'}), 0 0 0 1px ${accent.bar}15`
           : `0 2px 12px rgba(0,0,0,${isDark ? '0.3' : '0.05'})`,
-        cursor: 'pointer',
         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        overflow: 'hidden',
-        display: 'flex',
       }}
     >
       {/* Accent bar */}
@@ -83,51 +80,37 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
         transition: 'width 0.2s ease',
       }} />
 
-      <div style={{ flex: 1, padding: '16px' }}>
+      <div className="flex-1 p-4">
         {/* Header row */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: '8px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: 1, minWidth: 0 }}>
-            <div style={{
-              marginTop: '3px',
-              flexShrink: 0,
-              color: expanded ? accent.bar : (isDark ? '#8b949e' : '#475569'),
-              transition: 'color 0.2s ease',
-            }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            <div
+              className="mt-[3px] shrink-0"
+              style={{
+                color: expanded ? accent.bar : (isDark ? '#8b949e' : '#475569'),
+                transition: 'color 0.2s ease',
+              }}
+            >
               {expanded
                 ? <ChevronDown className="w-4 h-4" />
                 : <ChevronRight className="w-4 h-4" />
               }
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h3 style={{
-                fontSize: '15px',
-                fontWeight: '600',
-                color: isDark ? '#e6edf3' : '#0f172a',
-                margin: 0,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: expanded ? 'normal' : 'nowrap',
-                letterSpacing: '-0.01em',
-              }}>
+            <div className="min-w-0 flex-1">
+              <h3
+                className="text-[15px] font-semibold m-0 overflow-hidden text-ellipsis tracking-[-0.01em]"
+                style={{
+                  color: isDark ? '#e6edf3' : '#0f172a',
+                  whiteSpace: expanded ? 'normal' : 'nowrap',
+                }}
+              >
                 {note.title}
               </h3>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                marginTop: '4px',
-              }}>
+              <div className="flex items-center gap-1 mt-1">
                 <Clock className="w-3 h-3" style={{ color: isDark ? '#6e7681' : '#334155' }} />
                 <span
-                  style={{
-                    fontSize: '11px',
-                    color: isDark ? '#6e7681' : '#334155',
-                  }}
+                  className="text-[11px]"
+                  style={{ color: isDark ? '#6e7681' : '#334155' }}
                   title={fullDate}
                 >
                   {relativeTime}
@@ -140,16 +123,13 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
             <button
               onClick={handleDelete}
               disabled={deleting}
+              className="p-1 shrink-0 rounded-[6px] transition-all duration-[150ms]"
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: deleting ? 'not-allowed' : 'pointer',
-                padding: '4px',
                 color: theme.colors.status.error.dark,
                 opacity: deleting ? 0.5 : 0.6,
-                flexShrink: 0,
-                borderRadius: '6px',
-                transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = theme.colors.status.error.light; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.background = 'none'; }}
@@ -162,22 +142,13 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
 
         {/* Tags */}
         {note.tags && note.tags.length > 0 && (
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '4px',
-            marginTop: '8px',
-          }}>
+          <div className="flex flex-wrap gap-1 mt-2">
             {note.tags.map(tag => (
-              <span key={tag} style={{
-                fontSize: '10px',
-                fontWeight: '500',
-                color: accent.bar,
-                background: accent.tag,
-                padding: '2px 8px',
-                borderRadius: '10px',
-                letterSpacing: '0.02em',
-              }}>
+              <span
+                key={tag}
+                className="text-[10px] font-medium py-0.5 px-2 rounded-[10px] tracking-[0.02em]"
+                style={{ color: accent.bar, background: accent.tag }}
+              >
                 {tag}
               </span>
             ))}
@@ -186,32 +157,23 @@ export const QuickNoteCard: React.FC<QuickNoteCardProps> = ({ note, onDelete, in
 
         {/* Content preview (collapsed) */}
         {!expanded && (
-          <p style={{
-            marginTop: '8px',
-            fontSize: '13px',
-            color: isDark ? '#8b949e' : '#1e293b',
-            lineHeight: '1.5',
-            overflow: 'hidden',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-          }}>
+          <p
+            className="mt-2 text-[13px] leading-[1.5] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]"
+            style={{ color: isDark ? '#8b949e' : '#1e293b' }}
+          >
             {contentPreview}
           </p>
         )}
 
         {/* Full content (expanded) */}
         {expanded && (
-          <div style={{
-            marginTop: '12px',
-            paddingTop: '12px',
-            borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-            fontSize: '14px',
-            color: isDark ? '#c9d1d9' : '#1e293b',
-            lineHeight: '1.7',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-          }}>
+          <div
+            className="mt-3 pt-3 text-[14px] leading-[1.7] whitespace-pre-wrap break-words"
+            style={{
+              borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+              color: isDark ? '#c9d1d9' : '#1e293b',
+            }}
+          >
             {note.content}
           </div>
         )}
