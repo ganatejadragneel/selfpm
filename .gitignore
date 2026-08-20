@@ -29,9 +29,13 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Focus model-eval outputs (local only)
+scripts/focus/out/
+
 # Personal / private working files (local only — do NOT push)
 .claude/
 code-audit-archive/
+demo-apps/
 docs/
 golden-data/
 job-apps/
@@ -39,6 +43,18 @@ seekers/
 specs/
 supabase/.temp/
 supabase/migrations/
+
+# Personal working files kept at the repo root (local only — do NOT push)
+CONTEXT.md
+ORE_Deep_Dives/
+INTERVIEW-POSTMORTEM-*.md
+Provider_Brief_*.md
+Provider_Outreach_Kit_*.md
+[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_*.md
+health-meter-mockup.*
+
+# Vite dev cache
+.vite/
 
 # Personal analysis scripts (local only — do NOT push)
 scripts/analyze_core_practices.js
@@ -51,3 +67,6 @@ scripts/pull_habit_data_v2.js
 scripts/verify_blueprint_migration.js
 scripts/verify_detailed_migration.js
 scripts/verify_note_column.js
+
+# Local Netlify folder
+.netlify
