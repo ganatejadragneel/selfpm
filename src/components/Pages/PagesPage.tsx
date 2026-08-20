@@ -7,6 +7,7 @@ import { usePagesStore, UNFILED } from './pagesStore';
 import { FolderList } from './FolderList';
 import { DocumentList } from './DocumentList';
 import { DocumentEditor } from './DocumentEditor';
+import { PagesExportButton } from './PagesExportButton';
 
 export function PagesPage() {
   const {
@@ -91,6 +92,15 @@ export function PagesPage() {
           folderName={folderName}
           documents={folderDocs}
           activeDocId={activeDocId}
+          headerAction={
+            <PagesExportButton
+              documents={documents}
+              folders={folders}
+              activeFolderId={activeFolderId}
+              folderDocs={folderDocs}
+              folderName={folderName}
+            />
+          }
           onSelect={setActiveDoc}
           onCreate={() => activeFolderId && createDocument(activeFolderId)}
           onDelete={deleteDocument}

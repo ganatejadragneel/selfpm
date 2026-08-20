@@ -26,6 +26,7 @@ export function DocumentList({
   folderName,
   documents,
   activeDocId,
+  headerAction,
   onSelect,
   onCreate,
   onDelete,
@@ -34,6 +35,8 @@ export function DocumentList({
   folderName: string;
   documents: KbDocument[]; // already in display order
   activeDocId: string | null;
+  /** rendered in the column header, left of "New page" (e.g. the export button) */
+  headerAction?: React.ReactNode;
   onSelect: (id: string) => void;
   onCreate: () => void;
   onDelete: (id: string) => void;
@@ -65,9 +68,12 @@ export function DocumentList({
         >
           {folderName}
         </h3>
-        <button onClick={onCreate} title="New page" style={newBtnStyle}>
-          <Plus size={16} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {headerAction}
+          <button onClick={onCreate} title="New page" style={newBtnStyle}>
+            <Plus size={16} />
+          </button>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
