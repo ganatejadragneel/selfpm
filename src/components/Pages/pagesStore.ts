@@ -248,10 +248,11 @@ Edit the values below — the Focus dashboard and the nightly brief read them
 from this page. Use your daily-task ORE's exact name.
 
 ## Focus ORE
-- ore: <your ORE name>
+Replace the value after each colon. Match your daily task's name exactly.
+- ore: Hard Focus Hours
 - unit: hrs
 - goal: weekly average >= 6
-- notes_tag: <your quick-note tag>
+- notes_tag: focus log
 
 ## How it's used
 The daily brief analyzes this ORE's outcomes + its per-day notes + any quick

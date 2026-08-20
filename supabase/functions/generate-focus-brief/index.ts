@@ -90,6 +90,17 @@ function buildMessages(box: FocusBox, p: FocusPayload): { system: string; user: 
 interface CharterCfg { focusOreName: string; unit: string; goal: number; notesTag: string }
 const DEFAULT_CHARTER: CharterCfg = { focusOreName: "Hard Focus Hours", unit: "hrs", goal: 6, notesTag: "focus log" };
 
+// Names are compared loosely — free-text task names routinely carry stray
+// whitespace that HTML collapses, so it is invisible in the UI.
+const normalizeName = (v: string): string => v.trim().replace(/\s+/g, " ").toLowerCase();
+
+// The seed Charter ships hint text in angle brackets; users type *inside* them.
+const unwrap = (v: string): string => {
+  const m = v.trim().match(/^<\s*(.*?)\s*>$/);
+  return m ? m[1] : v.trim();
+};
+const SEED_HINT = /^(your\s+)?(ore\s+name|quick[-\s]note\s+tag|tag|name)$/i;
+
 function parseCharter(content: string | null | undefined): CharterCfg {
   const cfg: CharterCfg = { ...DEFAULT_CHARTER };
   if (!content) return cfg;
@@ -98,8 +109,8 @@ function parseCharter(content: string | null | undefined): CharterCfg {
     const m = line.match(/^([a-z_ ]+):\s*(.+)$/i);
     if (!m) continue;
     const key = m[1].trim().toLowerCase().replace(/\s+/g, "_");
-    const value = m[2].trim();
-    if (!value || /^<.*>$/.test(value)) continue; // unset placeholder
+    const value = unwrap(m[2]);
+    if (!value || SEED_HINT.test(value)) continue; // still the seed's own hint text
     if (key === "ore" || key === "focus_ore") cfg.focusOreName = value;
     else if (key === "notes_tag" || key === "tag") cfg.notesTag = value;
     else if (key === "unit") cfg.unit = value;
@@ -190,14 +201,17 @@ async function generateForUser(admin: DB, anthropicKey: string, uid: string, dat
     .limit(1);
   const cfg = parseCharter((charterRows?.[0] as { content?: string } | undefined)?.content);
 
-  const { data: oreRows } = await admin
+  // Matched in memory over the user's own task list rather than with a SQL
+  // `ilike`: task names carry stray whitespace an exact comparison would miss.
+  const { data: taskRows } = await admin
     .from("custom_tasks")
-    .select("id")
-    .eq("new_user_id", uid)
-    .ilike("name", cfg.focusOreName) // case-insensitive exact match
-    .limit(1);
-  const ore = oreRows?.[0];
+    .select("id, name")
+    .eq("new_user_id", uid);
+  const target = normalizeName(cfg.focusOreName);
+  const ore = ((taskRows ?? []) as { id: string; name: string }[])
+    .find((t) => normalizeName(t.name) === target);
   if (!ore) return { skipped: "no Focus ORE" };
+  cfg.focusOreName = ore.name.trim(); // canonical name for the prompts
 
   const dates = windowDates(date, 7);
   const dateStrs = dates.map((d) => d.str);

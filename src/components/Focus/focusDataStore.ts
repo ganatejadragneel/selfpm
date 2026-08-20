@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
 import { computeMetrics, type FocusMetrics } from './focusLogic';
 import { type FocusDay } from './sampleData';
-import { parseCharter, DEFAULT_CHARTER, type CharterConfig } from './charterConfig';
+import { parseCharter, normalizeName, DEFAULT_CHARTER, type CharterConfig } from './charterConfig';
 
 const userId = () => useSupabaseAuthStore.getState().user?.id ?? null;
 
@@ -29,6 +29,7 @@ interface FocusDataStore {
   brief: FocusBrief | null;
   config: CharterConfig;
   oreConfigured: boolean;
+  availableOres: string[];
   loading: boolean;
   initialized: boolean;
   error: string | null;
@@ -40,6 +41,7 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
   brief: null,
   config: DEFAULT_CHARTER,
   oreConfigured: true,
+  availableOres: [],
   loading: false,
   initialized: false,
   error: null,
@@ -60,17 +62,27 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
       .maybeSingle();
     const config = parseCharter(charterRow?.content);
 
-    // 1) find the Focus ORE (a custom_task whose name matches the charter,
-    //    case-insensitive so "hard focus hours" === "Hard Focus Hours")
-    const { data: oreRows } = await supabase
+    // 1) find the Focus ORE — the custom_task whose name matches the charter.
+    //    Matched client-side on the user's own task list (a dozen rows at most)
+    //    rather than with a SQL `ilike`: task names are free text and routinely
+    //    carry stray whitespace ("Hard Focus Hours ") that HTML collapses, so an
+    //    exact server-side comparison silently misses the row the user can see.
+    const { data: taskRows } = await supabase
       .from('custom_tasks')
       .select('id, name')
-      .eq('new_user_id', uid)
-      .ilike('name', config.focusOreName)
-      .limit(1);
-    const ore = oreRows?.[0];
+      .eq('new_user_id', uid);
+    const tasks = (taskRows ?? []) as { id: string; name: string }[];
+    const target = normalizeName(config.focusOreName);
+    const ore = tasks.find((t) => normalizeName(t.name) === target);
     if (!ore) {
-      return set({ config, oreConfigured: false, loading: false, initialized: true, metrics: computeMetrics([], 7, now, config.weeklyAverageGoal) });
+      return set({
+        config,
+        oreConfigured: false,
+        availableOres: tasks.map((t) => t.name.trim()).filter(Boolean),
+        loading: false,
+        initialized: true,
+        metrics: computeMetrics([], 7, now, config.weeklyAverageGoal),
+      });
     }
 
     // 2) the 7-day window of dates (offset 0 = today … 6)
@@ -113,11 +125,14 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
 
     set({
       metrics: computeMetrics(focusDays, 7, now, config.weeklyAverageGoal),
-      config,
+      // surface the ORE's own stored name, so the dashboard title reads exactly
+      // like the task card the user already knows (minus the stray whitespace)
+      config: { ...config, focusOreName: ore.name.trim() },
       brief: briefRow
         ? { analysis: briefRow.analysis_text ?? null, focus: briefRow.focus_text ?? null, model: briefRow.model ?? null }
         : null,
       oreConfigured: true,
+      availableOres: tasks.map((t) => t.name.trim()).filter(Boolean),
       loading: false,
       initialized: true,
     });

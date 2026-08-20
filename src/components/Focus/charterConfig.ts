@@ -18,8 +18,23 @@ export const DEFAULT_CHARTER: CharterConfig = {
   unit: 'hrs',
 };
 
-// A value is "unset" when it's still the seed placeholder (e.g. "<ORE name>").
-const isPlaceholder = (v: string) => !v || /^<.*>$/.test(v.trim());
+// Names are compared loosely: trailing/leading whitespace and repeated inner
+// spaces are invisible in the UI (HTML collapses them), so a task saved as
+// "Hard Focus Hours " must still match a charter that says "hard focus hours".
+export const normalizeName = (v: string): string =>
+  v.trim().replace(/\s+/g, ' ').toLowerCase();
+
+// The seed Charter ships hint text wrapped in angle brackets. Users naturally
+// type *inside* those brackets ("<hard focus hours>") rather than replacing
+// them, so strip the wrapper and keep what's inside.
+const unwrap = (v: string): string => {
+  const m = v.trim().match(/^<\s*(.*?)\s*>$/);
+  return m ? m[1] : v.trim();
+};
+
+// Still-unset means empty, or the seed's own hint text left untouched.
+const SEED_HINT = /^(your\s+)?(ore\s+name|quick[-\s]note\s+tag|tag|name)$/i;
+const isUnset = (v: string): boolean => !v || SEED_HINT.test(v);
 
 // Tolerant line parser. Reads `key: value` lines anywhere in the Charter markdown
 // (a leading "- "/"* " bullet and surrounding prose are ignored). Unknown keys are
@@ -34,8 +49,8 @@ export function parseCharter(content: string | null | undefined): CharterConfig 
     const m = line.match(/^([a-z_ ]+):\s*(.+)$/i);
     if (!m) continue;
     const key = m[1].trim().toLowerCase().replace(/\s+/g, '_');
-    const value = m[2].trim();
-    if (isPlaceholder(value)) continue;
+    const value = unwrap(m[2]);
+    if (isUnset(value)) continue;
 
     if (key === 'ore' || key === 'focus_ore') cfg.focusOreName = value;
     else if (key === 'notes_tag' || key === 'tag') cfg.notesTag = value;

@@ -83,8 +83,10 @@ export const AddCustomTaskForm: React.FC = () => {
       const taskData: Record<string, any> = {
         user_id: null, // Legacy field, set to null for Supabase Auth users
         new_user_id: user.id, // Use new_user_id for Supabase Auth
-        name,
-        description,
+        // trimmed on the way in: stray whitespace is invisible in the UI but
+        // breaks every exact-name lookup (e.g. the Focus ORE on the dashboard)
+        name: name.trim(),
+        description: description.trim(),
         type: effectiveType,
         options: (effectiveType === 'dropdown' || effectiveType === 'multi_select') ? options.filter(opt => opt.trim()) : null,
         alt_task: altTask.trim() || null,
