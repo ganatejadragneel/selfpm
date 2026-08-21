@@ -14,6 +14,16 @@
 /* Dark mode specific styles */
 [data-theme="dark"] {
   color-scheme: dark;
+
+  /* Subtle fills, as variables rather than literals.
+     Many components hardcode a light slate (rgba(248,250,252,…)) for fields and
+     panels, and some import the static light theme object outright — so they
+     cannot respond to the theme at all. Inline styles CAN read a custom
+     property, so routing those fills through these two variables fixes every one
+     of them without having to make each component theme-aware first. */
+  --spm-field: rgba(167, 139, 250, 0.07);
+  --spm-field-strong: rgba(167, 139, 250, 0.11);
+  --spm-panel: linear-gradient(135deg, rgba(40, 31, 63, 0.82) 0%, rgba(23, 18, 37, 0.86) 100%);
 }
 
 /* ── The canvas ──────────────────────────────────────────────────────────────

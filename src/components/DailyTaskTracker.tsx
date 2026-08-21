@@ -64,7 +64,7 @@ const SortableDailyTaskCard: React.FC<{
           ? 'none'
           : isCompleted
             ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+            : 'var(--spm-panel)',
         backgroundColor: isDragging ? 'rgba(102, 126, 234, 0.12)' : undefined,
         borderRadius: theme.borderRadius.lg,
         border: `${isDragging ? '2px dashed' : isCompleted ? '2px solid' : '1px solid'} ${
@@ -589,7 +589,7 @@ export const DailyTaskTracker: React.FC = () => {
             ? `3px solid transparent`
             : `2px solid ${theme.colors.border.light}`,
           backgroundImage: isExpanded
-            ? `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%), linear-gradient(90deg, ${theme.colors.primary.light}, ${theme.colors.status.success.light})`
+            ? `var(--spm-panel), linear-gradient(90deg, ${theme.colors.primary.light}, ${theme.colors.status.success.light})`
             : 'none',
           backgroundClip: isExpanded ? 'padding-box, border-box' : 'padding-box',
           backgroundOrigin: isExpanded ? 'border-box' : 'border-box',
@@ -700,7 +700,7 @@ export const DailyTaskTracker: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             padding: theme.spacing.lg,
-            backgroundImage: 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            backgroundImage: 'var(--spm-panel)',
             backdropFilter: 'blur(10px)'
           }}>
             {/* Header with gradient accent */}
@@ -983,7 +983,7 @@ export const DailyTaskTracker: React.FC = () => {
                           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)'
                           : isExplicitlyNotDone
                             ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)'
-                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+                            : 'var(--spm-panel)',
                         borderRadius: theme.borderRadius.lg,
                         border: isCompleted 
                           ? `2px solid ${theme.colors.status.success.light}`
@@ -1128,7 +1128,7 @@ export const DailyTaskTracker: React.FC = () => {
                           padding: theme.spacing.md,
                           backgroundImage: task.alt_task_done
                             ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
-                            : 'linear-gradient(135deg, rgba(241, 245, 249, 0.9) 0%, rgba(248, 250, 252, 0.7) 100%)',
+                            : 'var(--spm-panel)',
                           borderRadius: theme.borderRadius.md,
                           border: task.alt_task_done 
                             ? `2px solid ${theme.colors.status.purple.light}`
