@@ -19,6 +19,7 @@ export const theme = {
 
       // Light does not use depth gradients; these are flat so consumers can read
       // the same keys on either theme.
+      grid: 'none',
       card: '#ffffff',
       cardLive: '#ffffff',
     },

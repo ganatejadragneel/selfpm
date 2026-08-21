@@ -26,14 +26,29 @@ export const darkTheme = {
       // away to the bottom-right, so a wall of cards reads as surfaces at
       // different depths instead of identical rectangles. Same hue throughout —
       // only luminance moves.
-      card: 'linear-gradient(155deg, rgba(38, 30, 59, 0.92) 0%, rgba(23, 18, 37, 0.92) 55%, rgba(16, 12, 27, 0.94) 100%)',
+      //
+      // A faint grid sits over the gradient. It is deliberately near the
+      // threshold of visibility: you should feel that the surface has a texture
+      // without being able to read the lines. Anything stronger turns a card
+      // into graph paper and competes with the data drawn on it.
+      grid:
+        'repeating-linear-gradient(0deg, rgba(167, 139, 250, 0.055) 0 1px, transparent 1px 32px), ' +
+        'repeating-linear-gradient(90deg, rgba(167, 139, 250, 0.055) 0 1px, transparent 1px 32px)',
+
+      card:
+        'repeating-linear-gradient(0deg, rgba(167, 139, 250, 0.055) 0 1px, transparent 1px 32px), ' +
+        'repeating-linear-gradient(90deg, rgba(167, 139, 250, 0.055) 0 1px, transparent 1px 32px), ' +
+        'linear-gradient(155deg, rgba(38, 30, 59, 0.92) 0%, rgba(23, 18, 37, 0.92) 55%, rgba(16, 12, 27, 0.94) 100%)',
 
       // The ONE card that is live right now (today's target, a running action).
-      // A violet bloom in the upper area lifts it above its neighbours without a
-      // border, a badge, or a second colour. Use once per screen.
+      // The bloom lifts it above its neighbours without a border, a badge, or a
+      // second colour — so it is carried hard enough to be unmistakable at a
+      // glance. Use once per screen.
       cardLive:
-        'radial-gradient(130% 95% at 62% -15%, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0.06) 42%, transparent 72%), ' +
-        'linear-gradient(155deg, rgba(40, 31, 63, 0.92) 0%, rgba(20, 15, 33, 0.94) 100%)',
+        'radial-gradient(140% 110% at 60% -20%, rgba(167, 139, 250, 0.55) 0%, rgba(139, 92, 246, 0.30) 28%, rgba(124, 58, 237, 0.12) 52%, transparent 78%), ' +
+        'repeating-linear-gradient(0deg, rgba(196, 181, 253, 0.07) 0 1px, transparent 1px 32px), ' +
+        'repeating-linear-gradient(90deg, rgba(196, 181, 253, 0.07) 0 1px, transparent 1px 32px), ' +
+        'linear-gradient(155deg, rgba(46, 36, 72, 0.94) 0%, rgba(22, 17, 36, 0.94) 100%)',
     },
     background: {
       primary: '#0a0711',
