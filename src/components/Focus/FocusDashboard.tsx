@@ -13,6 +13,7 @@ import { useFocusDataStore } from './focusDataStore';
 import { FocusTrendChart } from './FocusTrendChart';
 import { SeekerTitle } from './SeekerTitle';
 import { type DailyGoal } from './sampleData';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
 export function FocusDashboard() {
   const t = useThemeColors();
@@ -31,11 +32,19 @@ export function FocusDashboard() {
   const canvas = t.currentTheme === 'dark' ? c.background.primary : '#f6f7f9';
   const hairline = t.currentTheme === 'dark' ? c.surface.glassBorder : '#ececef';
 
+  // Cards carry depth rather than a flat fill — see darkTheme surface.card.
   const card: React.CSSProperties = {
-    background: surface,
+    background: t.currentTheme === 'dark' ? c.surface.card : surface,
     border: `1px solid ${hairline}`,
     borderRadius: 18,
     padding: 22,
+  };
+
+  // Exactly one card on this screen is "live": today's target. It gets the bloom
+  // so it lifts without needing a badge or a second colour.
+  const cardLive: React.CSSProperties = {
+    ...card,
+    background: t.currentTheme === 'dark' ? c.surface.cardLive : surface,
   };
 
   const shell = (children: React.ReactNode) => (
@@ -100,7 +109,7 @@ export function FocusDashboard() {
         }}
       >
         <WeekStrip w={week} card={card} accent={accent} muted={muted} ink={ink} />
-        <TargetStat m={week} card={card} accent={accent} sub={sub} muted={muted} ink={ink} />
+        <TargetStat m={week} card={cardLive} accent={accent} sub={sub} muted={muted} ink={ink} />
       </div>
 
       {/* ── Trend ── */}
@@ -266,6 +275,7 @@ function Bar({
   accent: string;
   muted: string;
 }) {
+  const { dataFill, glow } = useSurfacePalette();
   const emphasized = day.isYesterday;
   const today = day.isToday;
   // 4px rounded data-end, square at the baseline; capped width so the slot keeps its air
@@ -285,7 +295,10 @@ function Bar({
   }
 
   const h = Math.max(3, (day.hours / max) * chartH);
-  const fill = emphasized ? accent : today ? 'transparent' : 'rgba(102, 126, 234, 0.22)';
+  // Magnitude reads as light: every bar is brightest at its top and falls away to
+  // its base. The emphasised bar is the exception — solid accent, so the eye
+  // lands on it first.
+  const fill = emphasized ? dataFill.barActive : today ? 'transparent' : dataFill.bar;
 
   return (
     <div
@@ -322,6 +335,7 @@ function Bar({
           ...barStyle,
           height: h,
           background: fill,
+          boxShadow: emphasized ? glow.accent : 'none',
           border: today ? `1.5px dashed ${accent}88` : 'none',
         }}
       />

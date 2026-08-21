@@ -16,6 +16,11 @@ export const theme = {
       glass: 'rgba(255, 255, 255, 0.95)',
       glassBorder: 'rgba(255, 255, 255, 0.3)',
       white: 'white',
+
+      // Light does not use depth gradients; these are flat so consumers can read
+      // the same keys on either theme.
+      card: '#ffffff',
+      cardLive: '#ffffff',
     },
     status: {
       success: {
@@ -63,6 +68,11 @@ export const theme = {
   effects: {
     // Present so consumers can read `effects.glow.*` on either theme. Light does
     // not glow — these are deliberately no-ops rather than absent keys.
+    dataFill: {
+      bar: 'rgba(102, 126, 234, 0.22)',
+      barActive: '#667eea',
+      area: 'linear-gradient(180deg, rgba(102,126,234,0.28) 0%, rgba(102,126,234,0.02) 100%)',
+    },
     glow: {
       accent: 'none',
       accentStrong: 'none',

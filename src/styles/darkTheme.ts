@@ -20,6 +20,20 @@ export const darkTheme = {
       glass: 'rgba(24, 19, 38, 0.82)',
       glassBorder: 'rgba(167, 139, 250, 0.14)',
       white: '#171225',
+
+      // ── Depth ────────────────────────────────────────────────────────────
+      // Cards are gradients, not flat fills. Lit from the top-left and falling
+      // away to the bottom-right, so a wall of cards reads as surfaces at
+      // different depths instead of identical rectangles. Same hue throughout —
+      // only luminance moves.
+      card: 'linear-gradient(155deg, rgba(38, 30, 59, 0.92) 0%, rgba(23, 18, 37, 0.92) 55%, rgba(16, 12, 27, 0.94) 100%)',
+
+      // The ONE card that is live right now (today's target, a running action).
+      // A violet bloom in the upper area lifts it above its neighbours without a
+      // border, a badge, or a second colour. Use once per screen.
+      cardLive:
+        'radial-gradient(130% 95% at 62% -15%, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0.06) 42%, transparent 72%), ' +
+        'linear-gradient(155deg, rgba(40, 31, 63, 0.92) 0%, rgba(20, 15, 33, 0.94) 100%)',
     },
     background: {
       primary: '#0a0711',
@@ -73,6 +87,16 @@ export const darkTheme = {
     blur: 'blur(16px)',
     // Glow marks the ONE live element on a screen. If more than one thing glows,
     // nothing does.
+    // Data gradients: a bar or an area is brightest where the value is and
+    // falls to almost nothing at its base, so magnitude reads as light.
+    dataFill: {
+      /** Bars: bright at the top, fading toward the baseline. */
+      bar: 'linear-gradient(180deg, rgba(167, 139, 250, 0.80) 0%, rgba(139, 92, 246, 0.38) 55%, rgba(109, 40, 217, 0.16) 100%)',
+      /** The single emphasised bar — full accent, not a ramp. */
+      barActive: 'linear-gradient(180deg, #c4b5fd 0%, #8b5cf6 100%)',
+      /** Area charts: accent fading to transparent at the axis. */
+      area: 'linear-gradient(180deg, rgba(139, 92, 246, 0.34) 0%, rgba(139, 92, 246, 0.02) 100%)',
+    },
     glow: {
       accent: '0 0 24px rgba(139, 92, 246, 0.35)',
       accentStrong: '0 0 36px rgba(139, 92, 246, 0.55)',

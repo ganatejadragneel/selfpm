@@ -30,8 +30,14 @@ export function useSurfacePalette() {
       accentMedium: c.primary.medium,
       /** Hairline rules and card borders. */
       hair: c.border.light,
-      /** Card background. */
+      /** Card background — flat. Prefer `surfaceCard` for actual cards. */
       surface: c.surface.white,
+      /** Card background with depth: lit top-left, falling away bottom-right. */
+      surfaceCard: c.surface.card,
+      /** The one live card on a screen. Use once, or it stops meaning anything. */
+      surfaceCardLive: c.surface.cardLive,
+      /** Gradients for data marks (bars, areas). */
+      dataFill: t.effects.dataFill,
       /** The page behind the cards. */
       page: c.background.primary,
       danger: c.status.error.dark,

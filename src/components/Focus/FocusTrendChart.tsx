@@ -193,7 +193,15 @@ export function FocusTrendChart({
             </text>
 
             {/* area wash + line */}
-            <path d={areaPath} fill={accent} opacity={0.1} />
+            {/* The area fades to nothing at the axis, so height reads as light
+                rather than as a flat wash of colour. */}
+            <defs>
+              <linearGradient id="focus-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={accent} stopOpacity={0.38} />
+                <stop offset="100%" stopColor={accent} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <path d={areaPath} fill="url(#focus-area)" />
             <path d={linePath} fill="none" stroke={accent} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
 
             {/* endpoint marker with a surface ring, direct-labelled */}

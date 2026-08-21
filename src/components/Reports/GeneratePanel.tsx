@@ -13,7 +13,7 @@ export function GeneratePanel({
   generating: boolean;
   onGenerate: (days: number) => void;
 }) {
-  const { ink: INK, muted: MUTED, accent: ACCENT, accentMedium: ACCENT_MED, hair: HAIR, danger: DANGER, surface: SURFACE, label: LABEL } = useSurfacePalette();
+  const { ink: INK, muted: MUTED, accent: ACCENT, accentMedium: ACCENT_MED, hair: HAIR, danger: DANGER, surfaceCardLive: SURFACE, label: LABEL } = useSurfacePalette();
   const [raw, setRaw] = useState(String(DEFAULT_PERIOD_DAYS));
   const [touched, setTouched] = useState(false);
   const v = validatePeriodInput(raw);

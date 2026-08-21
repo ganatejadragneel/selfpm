@@ -32,7 +32,7 @@ export function PagesPage() {
     reorderDocument,
   } = usePagesStore();
 
-  const { hair: HAIR, surface: SURFACE, muted: MUTED } = useSurfacePalette();
+  const { hair: HAIR, surfaceCard: SURFACE, muted: MUTED } = useSurfacePalette();
 
   // ?doc=<id> deep-link: the CPO Reports tab opens a generated report here.
   const [searchParams, setSearchParams] = useSearchParams();

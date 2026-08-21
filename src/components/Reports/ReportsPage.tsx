@@ -12,7 +12,7 @@ import { ReportsGrid } from './ReportsGrid';
 
 export function ReportsPage() {
   const navigate = useNavigate();
-  const { ink: INK, sub: SUB, hair: HAIR, accent: ACCENT, accentSoft: ACCENT_SOFT, accentMedium: ACCENT_MED, danger: DANGER, dangerSoft: DANGER_SOFT, surface: SURFACE, label: LABEL } = useSurfacePalette();
+  const { ink: INK, sub: SUB, hair: HAIR, accent: ACCENT, accentSoft: ACCENT_SOFT, accentMedium: ACCENT_MED, danger: DANGER, dangerSoft: DANGER_SOFT, surfaceCard: SURFACE, label: LABEL } = useSurfacePalette();
   const { rows, loading, generating, error, warnings, lastGenerated, initialized, init, generate, updateNotes, dismissError } =
     useReportsStore();
 
