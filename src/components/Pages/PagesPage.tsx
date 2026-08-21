@@ -126,6 +126,11 @@ export function PagesPage() {
 
 // Every column is a grid item wrapping a `height: 100%` scroll container, so it
 // must be free to shrink below its content height in both axes.
-const column: React.CSSProperties = { minWidth: 0, minHeight: 0, overflow: 'hidden' };
+//
+// Deliberately NOT `overflow: hidden`. The min-*: 0 above is what lets the inner
+// scroll containers work; clipping here adds nothing (the child is height:100%
+// with its own scroller) and it silently cut off the FeatureTip popover at the
+// column edge.
+const column: React.CSSProperties = { minWidth: 0, minHeight: 0 };
 
 export default PagesPage;
