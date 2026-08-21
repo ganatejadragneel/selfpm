@@ -30,7 +30,9 @@ export function FocusDashboard() {
   const muted = c.text.muted;
   const accent = c.primary.dark;
   const surface = t.currentTheme === 'dark' ? c.surface.glass : '#ffffff';
-  const canvas = t.currentTheme === 'dark' ? c.background.primary : '#f6f7f9';
+  // Transparent in dark so the page's aurora shows through — an opaque shell
+  // here is what made the app read as a void with cards floating in it.
+  const canvas = t.currentTheme === 'dark' ? 'transparent' : '#f6f7f9';
   const hairline = t.currentTheme === 'dark' ? c.surface.glassBorder : '#ececef';
 
   // Cards carry depth rather than a flat fill — see darkTheme surface.card.

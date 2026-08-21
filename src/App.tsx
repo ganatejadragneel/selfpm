@@ -288,7 +288,9 @@ function AppContent() {
     <div style={{
       minHeight: '100vh',
       backgroundImage: theme.currentTheme === 'dark' ? 'none' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      backgroundColor: theme.currentTheme === 'dark' ? theme.colors.background.primary : 'transparent',
+      // Dark: transparent, so the body's aurora is the canvas for every route.
+      // An opaque root here would flatten it back to black.
+      backgroundColor: 'transparent',
       color: theme.colors.text.primary
     }}>
       {/* ORE logging bar */}
