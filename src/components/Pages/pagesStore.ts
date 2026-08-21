@@ -106,6 +106,11 @@ export const usePagesStore = create<PagesStore>((set, get) => ({
   init: async () => {
     const uid = userId();
     if (!uid) return set({ error: 'Not authenticated' });
+    // Guard against a concurrent second run. React StrictMode double-invokes the
+    // mount effect, and both calls saw `initialized === false` — so init ran
+    // twice and the later one overwrote any selection made in between (which
+    // silently broke ?doc= deep-links), on top of doubling the queries.
+    if (get().loading) return;
     set({ loading: true, error: null });
 
     const { data: folderRows, error: fErr } = await supabase

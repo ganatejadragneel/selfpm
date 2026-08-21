@@ -3,6 +3,7 @@
 // swap to the Supabase-backed kbStore after the migration with no UI change.
 
 import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { usePagesStore, UNFILED } from './pagesStore';
 import { FolderList } from './FolderList';
 import { DocumentList } from './DocumentList';
@@ -30,9 +31,27 @@ export function PagesPage() {
     reorderDocument,
   } = usePagesStore();
 
+  // ?doc=<id> deep-link: the CPO Reports tab opens a generated report here.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedDoc = searchParams.get('doc');
+
   useEffect(() => {
     if (!initialized) init();
   }, [initialized, init]);
+
+  useEffect(() => {
+    if (!initialized || !requestedDoc) return;
+    const doc = documents.find((d) => d.id === requestedDoc);
+    // Select the document AND its folder, so the middle column shows it in
+    // context rather than the doc appearing selected in a folder it isn't in.
+    if (doc) {
+      setActiveFolder(doc.folder_id ?? UNFILED);
+      setActiveDoc(doc.id);
+    }
+    // Clear the param either way: a stale id must not keep re-firing this.
+    searchParams.delete('doc');
+    setSearchParams(searchParams, { replace: true });
+  }, [initialized, requestedDoc, documents, setActiveFolder, setActiveDoc, searchParams, setSearchParams]);
 
   if (loading && !initialized) {
     return (

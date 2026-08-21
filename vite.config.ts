@@ -4,6 +4,45 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 // Dev-only middleware: holds the Anthropic key server-side and proxies the
 // Focus dashboard's generate calls. The key is NEVER bundled (no VITE_ prefix).
+// Local report generation. The browser builds the payload+context under its own
+// RLS session and posts them here; this side only holds the Anthropic key and
+// makes the call — the same split the edge function does server-side in prod.
+function reportsApiPlugin(apiKey: string): PluginOption {
+  return {
+    name: 'reports-api',
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use('/api/reports/generate', (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          return res.end('Method Not Allowed');
+        }
+        let body = '';
+        req.on('data', (c) => (body += c));
+        req.on('end', async () => {
+          res.setHeader('Content-Type', 'application/json');
+          try {
+            const { payload, context, model } = JSON.parse(body || '{}');
+            if (!apiKey) {
+              res.statusCode = 500;
+              return res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set in .env.local' }));
+            }
+            if (!payload || !context) {
+              res.statusCode = 400;
+              return res.end(JSON.stringify({ error: 'payload and context are required' }));
+            }
+            const mod = await server.ssrLoadModule('/src/server/report.ts');
+            const result = await mod.generateReport({ payload, context, model, apiKey });
+            res.end(JSON.stringify(result));
+          } catch (e) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
+          }
+        });
+      });
+    },
+  };
+}
+
 function focusApiPlugin(apiKey: string): PluginOption {
   return {
     name: 'focus-api',
@@ -45,6 +84,7 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     focusApiPlugin(env.ANTHROPIC_API_KEY || ''),
+    reportsApiPlugin(env.ANTHROPIC_API_KEY || ''),
     // Bundle analyzer - generates stats.html after build
     visualizer({
       filename: 'dist/bundle-analysis.html',
