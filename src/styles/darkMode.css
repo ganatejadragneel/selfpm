@@ -104,10 +104,12 @@
   color: #ece9f5;
 }
 
-/* Modal backgrounds in dark mode */
+/* A fallback for dialogs that bring no background of their own. NOT !important:
+   a panel that styles itself — the tips panel needs to sit ABOVE the page, not
+   match it — must be able to win. */
 [data-theme="dark"] [role="dialog"] {
-  background-color: #0f0b1a !important;
-  color: #ece9f5 !important;
+  background-color: #0f0b1a;
+  color: #ece9f5;
 }
 
 /* Card backgrounds in dark mode */
@@ -147,9 +149,12 @@
   background: #171225 !important;
 }
 
-[data-theme="dark"] [style*="rgba(255, 255, 255"] {
-  background: rgba(24, 19, 38, 0.88) !important;
-}
+/* REMOVED: [style*="rgba(255, 255, 255"] { background: … !important }
+   That selector matched the style ATTRIBUTE TEXT, not a property — so an inline
+   `color: rgba(255,255,255,0.82)` forced a dark background onto the element.
+   It was painting boxes behind white-on-gradient text (the tip panel's eyebrow
+   and close button). A rule that cannot tell a colour from a background does not
+   belong in a themed app. */
 
 /* Headers and navigation in dark mode */
 [data-theme="dark"] header,

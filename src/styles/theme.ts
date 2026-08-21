@@ -22,6 +22,8 @@ export const theme = {
       grid: 'none',
       card: '#ffffff',
       cardLive: '#ffffff',
+
+      elevated: '#ffffff',
     },
     status: {
       success: {

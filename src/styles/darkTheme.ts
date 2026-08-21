@@ -20,6 +20,9 @@ export const darkTheme = {
       glass: 'rgba(24, 19, 38, 0.82)',
       glassBorder: 'rgba(167, 139, 250, 0.14)',
       white: '#171225',
+      /** For things that float ABOVE the page — popovers, panels, menus. It has
+       *  to out-contrast the card layer, or a floating panel reads as a hole. */
+      elevated: '#241c3d',
 
       // ── Depth ────────────────────────────────────────────────────────────
       // Cards are gradients, not flat fills. Lit from the top-left and falling
