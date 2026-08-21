@@ -61,6 +61,13 @@ export const theme = {
   },
   
   effects: {
+    // Present so consumers can read `effects.glow.*` on either theme. Light does
+    // not glow — these are deliberately no-ops rather than absent keys.
+    glow: {
+      accent: 'none',
+      accentStrong: 'none',
+      inset: 'none',
+    },
     blur: 'blur(10px)',
     shadow: {
       sm: '0 2px 16px rgba(0, 0, 0, 0.04)',
@@ -107,6 +114,24 @@ export const theme = {
       medium: '500',
       semibold: '600',
       bold: '700',
+    },
+    families: {
+      /** Metadata, counters, timestamps — anything read as data rather than prose. */
+      mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+    },
+    /** Small, uppercase, widely letterspaced section/unit label. */
+    label: {
+      fontSize: '11px',
+      fontWeight: '700',
+      letterSpacing: '0.11em',
+      textTransform: 'uppercase',
+    },
+    /** Hero numerals: the metric itself. */
+    metric: {
+      fontSize: '56px',
+      fontWeight: '700',
+      letterSpacing: '-0.03em',
+      lineHeight: 1,
     },
   },
 } as const;

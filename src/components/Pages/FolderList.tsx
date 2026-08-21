@@ -6,12 +6,8 @@ import { Folder, FolderInput, ScrollText, Settings, Lock, Plus, X } from 'lucide
 import type { KbFolder } from './types';
 import { FeatureTip } from '../tips/FeatureTip';
 import { UNFILED } from './pagesStore';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
-const HAIR = '#ececef';
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
 
 function folderIcon(f: KbFolder, size = 15) {
   if (f.role === 'cpo_reports') return <ScrollText size={size} />;
@@ -36,6 +32,39 @@ export function FolderList({
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const { muted: MUTED, accent: ACCENT, hair: HAIR } = useSurfacePalette();
+  const labelStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.07em',
+    color: MUTED,
+  };
+  const addBtnStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    width: '100%',
+    padding: '8px 10px',
+    margin: '2px 0',
+    border: 'none',
+    background: 'none',
+    color: ACCENT,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    borderRadius: 8,
+  };
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 10px',
+    border: `1px solid ${ACCENT}`,
+    borderRadius: 8,
+    fontSize: 13.5,
+    outline: 'none',
+    margin: '2px 0',
+  };
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
 
@@ -123,6 +152,16 @@ function Row({
   onDelete?: (id: string) => void;
   system?: boolean;
 }) {
+  const { ink: INK, sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT } = useSurfacePalette();
+  const actionBtn: React.CSSProperties = {
+    border: 'none',
+    background: 'none',
+    cursor: 'pointer',
+    color: MUTED,
+    padding: 2,
+    display: 'inline-flex',
+    flex: 'none',
+  };
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(f.name);
 
@@ -148,7 +187,7 @@ function Row({
         fontSize: 13.5,
         fontWeight: active ? 700 : 500,
         color: active ? ACCENT : INK,
-        background: active ? 'rgba(102,126,234,0.10)' : 'transparent',
+        background: active ? ACCENT_SOFT : 'transparent',
       }}
     >
       <span style={{ color: active ? ACCENT : system ? MUTED : SUB, display: 'inline-flex' }}>
@@ -208,6 +247,7 @@ function Row({
 }
 
 function UnfiledRow({ active, onSelect }: { active: boolean; onSelect: () => void }) {
+  const { sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT } = useSurfacePalette();
   return (
     <div
       onClick={onSelect}
@@ -222,7 +262,7 @@ function UnfiledRow({ active, onSelect }: { active: boolean; onSelect: () => voi
         fontSize: 13.5,
         fontWeight: active ? 700 : 500,
         color: active ? ACCENT : SUB,
-        background: active ? 'rgba(102,126,234,0.10)' : 'transparent',
+        background: active ? ACCENT_SOFT : 'transparent',
         fontStyle: 'italic',
       }}
     >
@@ -232,47 +272,6 @@ function UnfiledRow({ active, onSelect }: { active: boolean; onSelect: () => voi
   );
 }
 
-const labelStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: 11,
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.07em',
-  color: MUTED,
-};
 
-const addBtnStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  width: '100%',
-  padding: '8px 10px',
-  margin: '2px 0',
-  border: 'none',
-  background: 'none',
-  color: ACCENT,
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: 'pointer',
-  borderRadius: 8,
-};
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '8px 10px',
-  border: `1px solid ${ACCENT}`,
-  borderRadius: 8,
-  fontSize: 13.5,
-  outline: 'none',
-  margin: '2px 0',
-};
 
-const actionBtn: React.CSSProperties = {
-  border: 'none',
-  background: 'none',
-  cursor: 'pointer',
-  color: MUTED,
-  padding: 2,
-  display: 'inline-flex',
-  flex: 'none',
-};

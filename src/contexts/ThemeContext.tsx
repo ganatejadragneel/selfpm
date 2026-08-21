@@ -12,9 +12,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initialize theme from localStorage or default to 'light'
+  // Year 2: dark is the app, not an option. A seeker who explicitly chose a theme
+  // keeps their choice; everyone else — including anyone who never touched the
+  // toggle — now lands on dark. Light is retained for one release as a fallback,
+  // then removed.
   const [theme, setTheme] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
-    return savedTheme || 'light';
+    return savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
   });
 
   // Apply theme to document root

@@ -5,12 +5,18 @@
  * actually do — not that pixels moved.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { ThemeProvider } from '../../contexts/ThemeContext';
 import { GeneratePanel } from './GeneratePanel';
 import { ReportsGrid } from './ReportsGrid';
 import type { ReportGridRow } from './reportsLogic';
 
 afterEach(cleanup);
+
+// These components read their colours from the theme, so they need the provider.
+// Wrapping here (rather than mocking the hook) means the tests exercise the same
+// token path the app does — a missing token shows up as a test failure.
+const render = (ui: React.ReactElement) => rtlRender(<ThemeProvider>{ui}</ThemeProvider>);
 
 const rows: ReportGridRow[] = [
   { id: '1', name: 'CPO Report — Aug 17', generated: '2026-08-21', period: '2026-08-17', notes: 'strong week', commitmentCount: 2, imported: false },

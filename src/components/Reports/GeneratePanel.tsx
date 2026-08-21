@@ -4,13 +4,7 @@
 import { useState } from 'react';
 import { Zap, Loader2 } from 'lucide-react';
 import { DEFAULT_PERIOD_DAYS, validatePeriodInput } from './reportsLogic';
-
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
-const HAIR = '#ececef';
-const DANGER = '#b91c1c';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
 export function GeneratePanel({
   generating,
@@ -19,6 +13,7 @@ export function GeneratePanel({
   generating: boolean;
   onGenerate: (days: number) => void;
 }) {
+  const { ink: INK, muted: MUTED, accent: ACCENT, accentMedium: ACCENT_MED, hair: HAIR, danger: DANGER, surface: SURFACE, label: LABEL } = useSurfacePalette();
   const [raw, setRaw] = useState(String(DEFAULT_PERIOD_DAYS));
   const [touched, setTouched] = useState(false);
   const v = validatePeriodInput(raw);
@@ -33,11 +28,10 @@ export function GeneratePanel({
   return (
     <div
       style={{
-        background: '#fff',
+        background: SURFACE,
         border: `1px solid ${HAIR}`,
         borderRadius: 16,
         padding: '18px 20px',
-        boxShadow: '0 8px 28px rgba(0,0,0,0.06)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -52,8 +46,8 @@ export function GeneratePanel({
             padding: '11px 18px',
             border: 'none',
             borderRadius: 10,
-            background: generating ? 'rgba(102,126,234,0.45)' : ACCENT,
-            color: '#fff',
+            background: generating ? ACCENT_MED : ACCENT,
+            color: generating ? ACCENT : '#0a0711',
             fontSize: 14,
             fontWeight: 600,
             cursor: generating ? 'default' : 'pointer',
@@ -64,7 +58,7 @@ export function GeneratePanel({
           {generating ? 'Generating…' : 'Generate Report'}
         </button>
 
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, color: SUB }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...LABEL, color: MUTED }}>
           Report: last
           <input
             value={raw}
@@ -81,6 +75,7 @@ export function GeneratePanel({
               border: `1px solid ${showError ? DANGER : HAIR}`,
               borderRadius: 8,
               fontSize: 14,
+              background: 'transparent',
               color: INK,
               textAlign: 'center',
               outline: 'none',

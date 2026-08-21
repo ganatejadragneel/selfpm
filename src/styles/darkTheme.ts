@@ -1,67 +1,83 @@
-// Dark Theme - Full dark mode transformation with deep colors
+// Dark Theme — the Year 2 look: near-black with a violet cast, one accent, glow
+// used sparingly to mark the live/active thing rather than as decoration.
+//
+// This is becoming THE theme (light is retained for now but no longer the
+// default). Keys are unchanged from the light theme so every consumer keeps
+// working; only the values move.
 export const darkTheme = {
   colors: {
     primary: {
-      gradient: 'linear-gradient(135deg, #4c7ce0 0%, #6b5b95 100%)', // Muted blue-purple for dark mode
-      light: 'rgba(76, 124, 224, 0.08)',
-      medium: 'rgba(76, 124, 224, 0.15)',
-      dark: '#4c7ce0',
+      // The single accent. Violet at three depths — chip fills, hovers, and the
+      // solid used for the one active element on a screen.
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+      light: 'rgba(167, 139, 250, 0.10)',
+      medium: 'rgba(167, 139, 250, 0.18)',
+      dark: '#a78bfa',
     },
     surface: {
-      glass: 'rgba(28, 33, 39, 0.95)', // Very dark grey glass
-      glassBorder: 'rgba(55, 65, 81, 0.4)', // Dark grey border
-      white: '#1c2127', // Dark grey for all cards/surfaces
+      // Cards sit just above the page, tinted violet rather than neutral grey —
+      // that tint is most of why the mockup reads as one system.
+      glass: 'rgba(24, 19, 38, 0.82)',
+      glassBorder: 'rgba(167, 139, 250, 0.14)',
+      white: '#171225',
     },
     background: {
-      primary: '#0d1117', // Very dark blue-black background
-      secondary: '#161b22', // Slightly lighter dark
-      tertiary: '#21262d', // Even lighter for elevation
+      primary: '#0a0711',
+      secondary: '#0f0b1a',
+      tertiary: '#171225',
     },
     status: {
       success: {
-        gradient: 'linear-gradient(135deg, #2ea043 0%, #238636 100%)',
-        light: 'rgba(46, 160, 67, 0.08)',
-        medium: 'rgba(46, 160, 67, 0.15)',
-        dark: '#2ea043',
+        gradient: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
+        light: 'rgba(52, 211, 153, 0.10)',
+        medium: 'rgba(52, 211, 153, 0.18)',
+        dark: '#34d399',
       },
       info: {
-        gradient: 'linear-gradient(135deg, #388bfd 0%, #1f6feb 100%)',
-        light: 'rgba(56, 139, 253, 0.08)',
-        medium: 'rgba(56, 139, 253, 0.15)',
-        dark: '#388bfd',
+        gradient: 'linear-gradient(135deg, #818cf8 0%, #6366f1 100%)',
+        light: 'rgba(129, 140, 248, 0.10)',
+        medium: 'rgba(129, 140, 248, 0.18)',
+        dark: '#818cf8',
       },
       warning: {
-        gradient: 'linear-gradient(135deg, #e3b341 0%, #bb8009 100%)',
-        light: 'rgba(227, 179, 65, 0.08)',
-        medium: 'rgba(227, 179, 65, 0.15)',
-        dark: '#e3b341',
+        gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+        light: 'rgba(251, 191, 36, 0.10)',
+        medium: 'rgba(251, 191, 36, 0.18)',
+        dark: '#fbbf24',
       },
       error: {
-        gradient: 'linear-gradient(135deg, #f85149 0%, #da3633 100%)',
-        light: 'rgba(248, 81, 73, 0.08)',
-        medium: 'rgba(248, 81, 73, 0.15)',
-        dark: '#f85149',
+        gradient: 'linear-gradient(135deg, #fb7185 0%, #e11d48 100%)',
+        light: 'rgba(251, 113, 133, 0.10)',
+        medium: 'rgba(251, 113, 133, 0.18)',
+        dark: '#fb7185',
       },
       purple: {
-        gradient: 'linear-gradient(135deg, #a371f7 0%, #8957e5 100%)',
-        light: 'rgba(163, 113, 247, 0.08)',
-        medium: 'rgba(163, 113, 247, 0.15)',
-        dark: '#a371f7',
+        gradient: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)',
+        light: 'rgba(167, 139, 250, 0.10)',
+        medium: 'rgba(167, 139, 250, 0.18)',
+        dark: '#a78bfa',
       },
     },
     text: {
-      primary: '#e6edf3', // Light grey-white for primary text
-      secondary: '#8b949e', // Medium grey for secondary
-      muted: '#6e7681', // Darker grey for muted
+      primary: '#ece9f5',
+      secondary: '#a49dbb',
+      muted: '#6f6885',
     },
     border: {
-      light: 'rgba(48, 54, 61, 0.6)', // Dark border
-      medium: 'rgba(55, 65, 81, 0.8)', // Slightly lighter border
+      light: 'rgba(167, 139, 250, 0.12)',
+      medium: 'rgba(167, 139, 250, 0.22)',
     },
   },
-  
+
   effects: {
     blur: 'blur(16px)',
+    // Glow marks the ONE live element on a screen. If more than one thing glows,
+    // nothing does.
+    glow: {
+      accent: '0 0 24px rgba(139, 92, 246, 0.35)',
+      accentStrong: '0 0 36px rgba(139, 92, 246, 0.55)',
+      inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+    },
     shadow: {
       sm: '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24)',
       md: '0 4px 6px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.12)',
@@ -107,6 +123,29 @@ export const darkTheme = {
       medium: '500',
       semibold: '600',
       bold: '700',
+    },
+    families: {
+      /** Metadata, counters, timestamps — anything read as data rather than prose. */
+      mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+    },
+    /**
+     * The micro-label: small, uppercase, widely letterspaced. Used for every
+     * section header and unit caption ("THIS WEEK SO FAR", "GOAL 7/DAY"). This
+     * one style carries most of the designed feel — it is what separates a label
+     * from the value it labels without needing a rule, a box, or a colour.
+     */
+    label: {
+      fontSize: '11px',
+      fontWeight: '700',
+      letterSpacing: '0.11em',
+      textTransform: 'uppercase',
+    },
+    /** Hero numerals: the metric itself, tight and large. */
+    metric: {
+      fontSize: '56px',
+      fontWeight: '700',
+      letterSpacing: '-0.03em',
+      lineHeight: 1,
     },
   },
 } as const;

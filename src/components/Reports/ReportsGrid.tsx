@@ -4,25 +4,7 @@
 import { useState } from 'react';
 import { FileText, ChevronRight } from 'lucide-react';
 import { formatDate, type ReportGridRow } from './reportsLogic';
-
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
-const HAIR = '#ececef';
-
-const th: React.CSSProperties = {
-  textAlign: 'left',
-  fontSize: 12,
-  fontWeight: 700,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
-  color: MUTED,
-  padding: '10px 14px',
-  borderBottom: `1px solid ${HAIR}`,
-  whiteSpace: 'nowrap',
-};
-const td: React.CSSProperties = { padding: '12px 14px', borderBottom: `1px solid ${HAIR}`, fontSize: 13.5, color: INK, verticalAlign: 'middle' };
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
 export function ReportsGrid({
   rows,
@@ -35,8 +17,19 @@ export function ReportsGrid({
   onOpen: (id: string) => void;
   onNotesChange: (id: string, notes: string) => void;
 }) {
+  const { ink: INK, sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT, hair: HAIR, label: LABEL, mono: MONO } = useSurfacePalette();
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+
+  const th: React.CSSProperties = {
+    textAlign: 'left',
+    ...LABEL,
+    color: MUTED,
+    padding: '10px 14px',
+    borderBottom: `1px solid ${HAIR}`,
+    whiteSpace: 'nowrap',
+  };
+  const td: React.CSSProperties = { padding: '12px 14px', borderBottom: `1px solid ${HAIR}`, fontSize: 13.5, color: INK, verticalAlign: 'middle' };
 
   if (loading) {
     return <div style={{ padding: '28px 16px', textAlign: 'center', color: MUTED, fontSize: 14 }}>Loading your reports…</div>;
@@ -84,7 +77,7 @@ export function ReportsGrid({
                   {r.commitmentCount > 0 && (
                     <span
                       title={`${r.commitmentCount} commitment${r.commitmentCount > 1 ? 's' : ''} the next report will grade`}
-                      style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: ACCENT, background: 'rgba(102,126,234,0.10)', borderRadius: 999, padding: '2px 8px' }}
+                      style={{ flex: 'none', fontSize: 11, fontWeight: 700, color: ACCENT, background: ACCENT_SOFT, borderRadius: 999, padding: '2px 8px' }}
                     >
                       {r.commitmentCount}c
                     </span>
@@ -96,8 +89,8 @@ export function ReportsGrid({
                   )}
                 </div>
               </td>
-              <td style={{ ...td, color: SUB, whiteSpace: 'nowrap' }}>{formatDate(r.generated)}</td>
-              <td style={{ ...td, color: SUB, whiteSpace: 'nowrap' }}>{formatDate(r.period)}</td>
+              <td style={{ ...td, color: SUB, whiteSpace: 'nowrap', fontFamily: MONO, fontSize: 12.5 }}>{formatDate(r.generated)}</td>
+              <td style={{ ...td, color: SUB, whiteSpace: 'nowrap', fontFamily: MONO, fontSize: 12.5 }}>{formatDate(r.period)}</td>
               <td style={td} onClick={(e) => e.stopPropagation()}>
                 {editing === r.id ? (
                   <input
@@ -110,7 +103,7 @@ export function ReportsGrid({
                       if (e.key === 'Escape') setEditing(null);
                     }}
                     aria-label={`Note for ${r.name}`}
-                    style={{ width: '100%', padding: '6px 8px', border: `1px solid ${ACCENT}`, borderRadius: 6, fontSize: 13, outline: 'none' }}
+                    style={{ width: '100%', padding: '6px 8px', border: `1px solid ${ACCENT}`, borderRadius: 6, fontSize: 13, outline: 'none', background: 'transparent', color: INK }}
                   />
                 ) : (
                   <span
