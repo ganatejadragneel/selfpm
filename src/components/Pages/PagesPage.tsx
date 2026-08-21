@@ -66,6 +66,11 @@ export function PagesPage() {
       style={{
         display: 'grid',
         gridTemplateColumns: '220px 270px 1fr',
+        // minmax(0, 1fr) pins the single row to the container's height. Without it
+        // the implicit `auto` row grows to fit its content, so each column's
+        // `height: 100%` resolves against the overgrown row and the inner
+        // `overflow-y: auto` never scrolls — a long folder just gets clipped.
+        gridTemplateRows: 'minmax(0, 1fr)',
         height: 'calc(100vh - 150px)',
         minHeight: 520,
         background: '#ffffff',
@@ -75,7 +80,7 @@ export function PagesPage() {
         overflow: 'hidden',
       }}
     >
-      <div style={{ borderRight: '1px solid #ececef', background: '#fbfbfc' }}>
+      <div style={{ ...column, borderRight: '1px solid #ececef', background: '#fbfbfc' }}>
         <FolderList
           folders={folders}
           activeFolderId={activeFolderId}
@@ -87,7 +92,7 @@ export function PagesPage() {
         />
       </div>
 
-      <div style={{ borderRight: '1px solid #ececef' }}>
+      <div style={{ ...column, borderRight: '1px solid #ececef' }}>
         <DocumentList
           folderName={folderName}
           documents={folderDocs}
@@ -108,7 +113,7 @@ export function PagesPage() {
         />
       </div>
 
-      <div>
+      <div style={column}>
         <DocumentEditor
           doc={activeDoc}
           saving={saving}
@@ -118,5 +123,9 @@ export function PagesPage() {
     </div>
   );
 }
+
+// Every column is a grid item wrapping a `height: 100%` scroll container, so it
+// must be free to shrink below its content height in both axes.
+const column: React.CSSProperties = { minWidth: 0, minHeight: 0, overflow: 'hidden' };
 
 export default PagesPage;
