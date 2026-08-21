@@ -14,6 +14,7 @@ import { FocusTrendChart } from './FocusTrendChart';
 import { SeekerTitle } from './SeekerTitle';
 import { type DailyGoal } from './sampleData';
 import { useSurfacePalette } from '../../hooks/useSurfacePalette';
+import { TenureBadge } from './TenureBadge';
 
 export function FocusDashboard() {
   const t = useThemeColors();
@@ -92,11 +93,13 @@ export function FocusDashboard() {
       <SeekerTitle ink={ink} sub={sub} muted={muted} accent={accent} hairline={hairline} surface={surface} />
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 22 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 22, flexWrap: 'wrap' }}>
         <h1 style={{ fontSize: 30, fontWeight: 700, color: ink, margin: 0, letterSpacing: '-0.02em' }}>
           {config.focusOreName}
         </h1>
         <span style={{ fontSize: 14, color: muted }}>· week of {format(week.weekDays[0].date, 'MMM d')}</span>
+        <div style={{ flex: 1 }} />
+        <TenureBadge />
       </div>
 
       {/* ── Hero row: week strip + target ── */}
