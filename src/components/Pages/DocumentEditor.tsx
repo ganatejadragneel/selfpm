@@ -7,6 +7,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { List, ListOrdered, Check, Loader2, Lock } from 'lucide-react';
 import type { KbDocument } from './types';
+import { FeatureTip } from '../tips/FeatureTip';
 
 const HAIR = '#ececef';
 const INK = '#1f2937';
@@ -160,6 +161,7 @@ export function DocumentEditor({
 
         <div style={{ flex: 1 }} />
 
+        {doc.role === 'charter' && <FeatureTip id="charter" align="right" />}
         {reserved && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: MUTED }}>
             <Lock size={12} /> {doc.role ? `reserved · ${doc.role}` : 'generated report'}

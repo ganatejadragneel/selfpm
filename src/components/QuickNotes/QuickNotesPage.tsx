@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, Filter, Plus, SlidersHorizontal, X } from 'lucide-react';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import { useThemeColors } from '../../hooks/useThemeColors';
+import { FeatureTip } from '../tips/FeatureTip';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useQuickNotesStore } from '../../store/quickNotesStore';
 import { LoadingSpinner } from '../ui';
@@ -380,6 +381,7 @@ export const QuickNotesPage: React.FC = () => {
               }}>
                 Quick Notes
               </h1>
+              <FeatureTip id="quick-notes" />
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                 <span style={{
                   background: isDark ? 'rgba(251,146,60,0.2)' : 'rgba(255,255,255,0.75)',
