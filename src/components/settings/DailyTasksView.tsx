@@ -76,8 +76,8 @@ export const DailyTasksView: React.FC = () => {
 
     try {
       const updatedTask = {
-        name: editForm.name,
-        description: editForm.description,
+        name: editForm.name.trim(),
+        description: editForm.description.trim(),
         type: editForm.type,
         options: (editForm.type === 'dropdown' || editForm.type === 'multi_select') ? editForm.options.filter(opt => opt.trim()) : null,
         alt_task: editForm.alt_task.trim() || null,

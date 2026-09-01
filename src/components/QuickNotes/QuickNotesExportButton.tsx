@@ -164,13 +164,9 @@ export const QuickNotesExportButton = memo(function QuickNotesExportButton({
 
   const baseStyle: React.CSSProperties = {
     ...glass,
-    borderRadius: '10px', padding: '8px 14px', fontSize: '13px',
-    display: 'flex', alignItems: 'center', gap: '6px',
     color: textSecondary,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    whiteSpace: 'nowrap',
     opacity: disabled ? 0.5 : 1,
-    transition: 'color 0.15s',
   };
 
   const dropdownStyle: React.CSSProperties = {
@@ -181,14 +177,10 @@ export const QuickNotesExportButton = memo(function QuickNotesExportButton({
     ...glass,
     borderRadius: theme.borderRadius.md,
     boxShadow: theme.effects.shadow.md,
-    minWidth: 200, overflow: 'hidden',
   };
 
   const itemStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
-    padding: '10px 14px', background: 'none', border: 'none',
-    color: textPrimary, fontSize: 13, cursor: 'pointer', textAlign: 'left',
-    fontFamily: 'inherit',
+    color: textPrimary,
   };
 
   const successBg = isDark ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.1)';
@@ -198,9 +190,10 @@ export const QuickNotesExportButton = memo(function QuickNotesExportButton({
   const hoverBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={wrapperRef} className="relative inline-block">
       <button
         ref={buttonRef}
+        className="rounded-[10px] py-2 px-[14px] text-[13px] flex items-center gap-[6px] whitespace-nowrap transition-colors duration-[150ms]"
         onClick={() => { if (!disabled && status === 'idle') setOpen(o => !o); }}
         disabled={disabled}
         style={{
@@ -222,8 +215,9 @@ export const QuickNotesExportButton = memo(function QuickNotesExportButton({
       </button>
 
       {open && status === 'idle' && dropdownPos && createPortal(
-        <div ref={dropdownRef} style={dropdownStyle}>
+        <div ref={dropdownRef} className="min-w-[200px] overflow-hidden" style={dropdownStyle}>
           <button
+            className="flex items-center gap-2 w-full py-[10px] px-[14px] bg-transparent border-none text-[13px] cursor-pointer text-left font-[inherit]"
             style={itemStyle}
             onClick={() => handleExport('csv')}
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
@@ -231,8 +225,9 @@ export const QuickNotesExportButton = memo(function QuickNotesExportButton({
           >
             <Download size={14} /> CSV — {notes.length} note{notes.length !== 1 ? 's' : ''}
           </button>
-          <div style={{ height: 1, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
+          <div className="h-px" style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }} />
           <button
+            className="flex items-center gap-2 w-full py-[10px] px-[14px] bg-transparent border-none text-[13px] cursor-pointer text-left font-[inherit]"
             style={itemStyle}
             onClick={() => handleExport('json')}
             onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}

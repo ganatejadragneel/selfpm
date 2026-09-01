@@ -26,56 +26,38 @@ export const QuickNoteFAB: React.FC = () => {
       {/* Speed-dial container */}
       <div
         id="qn-fab-root"
+        className="fixed bottom-7 right-7 flex flex-col items-end gap-3 z-[900]"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
-        style={{
-          position: 'fixed',
-          bottom: '28px',
-          right: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: '12px',
-          zIndex: 900,
-        }}
       >
         {/* Speed-dial options */}
         <div
+          className="flex flex-col items-end gap-[10px] [transform-origin:bottom_right] [transition:opacity_0.2s,transform_0.25s_cubic-bezier(.34,1.56,.64,1)]"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: '10px',
             opacity: open ? 1 : 0,
             pointerEvents: open ? 'all' : 'none',
             transform: open ? 'scale(1) translateY(0)' : 'scale(0.75) translateY(16px)',
-            transformOrigin: 'bottom right',
-            transition: 'opacity 0.2s, transform 0.25s cubic-bezier(.34,1.56,.64,1)',
           }}
         >
           {/* View All Notes */}
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            className="flex items-center gap-[10px] cursor-pointer"
             onClick={() => { setOpen(false); navigate('/allNotes'); }}
           >
-            <span style={{
-              ...glassBase,
-              borderRadius: '20px',
-              padding: '7px 14px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: theme.colors.text.primary,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            }}>View All Notes</span>
-            <button style={{
-              width: '44px', height: '44px', borderRadius: '50%', border: 'none',
-              background: 'linear-gradient(135deg,#0ea5e9,#6366f1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
-              boxShadow: '0 4px 16px rgba(14,165,233,0.35)',
-              transition: 'transform 0.15s',
-            }}
+            <span
+              className="rounded-[20px] py-[7px] px-[14px] text-[13px] font-medium whitespace-nowrap"
+              style={{
+                ...glassBase,
+                color: theme.colors.text.primary,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+              }}
+            >View All Notes</span>
+            <button
+              className="w-11 h-11 rounded-full border-none flex items-center justify-center cursor-pointer shrink-0 transition-transform duration-[150ms]"
+              style={{
+                background: 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+                boxShadow: '0 4px 16px rgba(14,165,233,0.35)',
+              }}
               onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
               onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
             >
@@ -85,27 +67,22 @@ export const QuickNoteFAB: React.FC = () => {
 
           {/* Add Quick Note */}
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            className="flex items-center gap-[10px] cursor-pointer"
             onClick={() => { setOpen(false); setShowModal(true); }}
           >
-            <span style={{
-              ...glassBase,
-              borderRadius: '20px',
-              padding: '7px 14px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: theme.colors.text.primary,
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            }}>Add Quick Note</span>
-            <button style={{
-              width: '44px', height: '44px', borderRadius: '50%', border: 'none',
-              background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
-              boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
-              transition: 'transform 0.15s',
-            }}
+            <span
+              className="rounded-[20px] py-[7px] px-[14px] text-[13px] font-medium whitespace-nowrap"
+              style={{
+                ...glassBase,
+                color: theme.colors.text.primary,
+                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+              }}
+            >Add Quick Note</span>
+            <button
+              className="w-11 h-11 rounded-full border-none bg-brand-gradient flex items-center justify-center cursor-pointer shrink-0 transition-transform duration-[150ms]"
+              style={{
+                boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
+              }}
               onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
               onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
             >
@@ -116,23 +93,18 @@ export const QuickNoteFAB: React.FC = () => {
 
         {/* Main FAB trigger */}
         <button
+          className="w-[52px] h-[52px] rounded-full border-none bg-brand-gradient flex items-center justify-center cursor-pointer z-[901]"
           style={{
-            width: '52px', height: '52px', borderRadius: '50%', border: 'none',
-            background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
             boxShadow: '0 8px 24px rgba(99,102,241,0.45)',
             transition: 'transform 0.3s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s',
-            zIndex: 901,
           }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          <div style={{
-            transition: 'transform 0.3s ease',
-            transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div
+            className="flex items-center justify-center transition-transform duration-300 ease-[ease]"
+            style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}
+          >
             {open ? <X size={22} color="white" /> : <ChevronUp size={22} color="white" />}
           </div>
         </button>

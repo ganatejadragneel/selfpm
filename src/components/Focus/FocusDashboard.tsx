@@ -15,7 +15,7 @@ import { type DailyGoal } from './sampleData';
 export function FocusDashboard() {
   const t = useThemeColors();
   const c = t.colors;
-  const { metrics: m, brief, config, oreConfigured, loading, initialized, init } = useFocusDataStore();
+  const { metrics: m, brief, config, oreConfigured, availableOres, loading, initialized, init } = useFocusDataStore();
 
   useEffect(() => {
     if (!initialized) init();
@@ -47,9 +47,20 @@ export function FocusDashboard() {
   }
   if (!oreConfigured) {
     return shell(
-      <div style={{ color: muted, fontSize: 14, padding: 40, textAlign: 'center', lineHeight: 1.6 }}>
-        No Focus ORE yet. Create a daily task named{' '}
-        <strong style={{ color: ink }}>“{config.focusOreName}”</strong> (or set your ORE on the Charter page) to light up this dashboard.
+      <div style={{ color: muted, fontSize: 14, padding: 40, textAlign: 'center', lineHeight: 1.7, maxWidth: 560, margin: '0 auto' }}>
+        <div>
+          No daily task named <strong style={{ color: ink }}>“{config.focusOreName}”</strong> — that's the Focus ORE your
+          Charter page asks for.
+        </div>
+        {availableOres.length > 0 && (
+          <div style={{ marginTop: 14, fontSize: 13 }}>
+            Your daily tasks are:{' '}
+            <span style={{ color: sub }}>{availableOres.map((n) => `“${n}”`).join(', ')}</span>.
+            <br />
+            Point the <strong style={{ color: ink }}>ore:</strong> line on your Charter page at one of them, or create the
+            task above.
+          </div>
+        )}
       </div>
     );
   }

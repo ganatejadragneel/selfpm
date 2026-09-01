@@ -110,26 +110,18 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
       onKeyDown={handleKeyDown}
     >
       {/* Form header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        marginBottom: '18px',
-      }}>
+      <div className="flex items-center gap-2 mb-[18px]">
         <Sparkles className="w-4 h-4" style={{ color: isDark ? '#8b949e' : '#1e293b' }} />
-        <span style={{
-          fontSize: '12px',
-          fontWeight: '600',
-          color: isDark ? '#8b949e' : '#1e293b',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-        }}>
+        <span
+          className="text-[12px] font-semibold tracking-[0.06em] uppercase"
+          style={{ color: isDark ? '#8b949e' : '#1e293b' }}
+        >
           New Note
         </span>
       </div>
 
       {/* Title input */}
-      <div style={{ marginBottom: '12px' }}>
+      <div className="mb-3">
         <input
           placeholder="Give it a title..."
           value={title}
@@ -154,45 +146,29 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
       </div>
 
       {/* Tag input area */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        gap: '6px',
-        padding: '8px 12px',
-        marginBottom: '12px',
-        background: inputBg,
-        border: `1.5px solid ${inputBorder}`,
-        borderRadius: '12px',
-        minHeight: '38px',
-        position: 'relative',
-        transition: 'all 0.2s ease',
-      }}>
-        <Tag className="w-3.5 h-3.5" style={{ color: placeholderColor, flexShrink: 0 }} />
+      <div
+        className="flex flex-wrap items-center gap-[6px] px-3 py-2 mb-3 rounded-control relative"
+        style={{
+          background: inputBg,
+          border: `1.5px solid ${inputBorder}`,
+          minHeight: '38px',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <Tag className="w-3.5 h-3.5 shrink-0" style={{ color: placeholderColor }} />
         {tags.map(tag => (
-          <span key={tag} style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '12px',
-            fontWeight: '500',
-            color: isDark ? '#c9d1d9' : '#1e293b',
-            background: isDark ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255, 255, 255, 0.4)',
-            padding: '3px 8px',
-            borderRadius: '8px',
-          }}>
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 text-[12px] font-medium px-2 py-[3px] rounded-chip"
+            style={{
+              color: isDark ? '#c9d1d9' : '#1e293b',
+              background: isDark ? 'rgba(102, 126, 234, 0.2)' : 'rgba(255, 255, 255, 0.4)',
+            }}
+          >
             {tag}
             <button
               onClick={() => removeTag(tag)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                color: 'inherit',
-                opacity: 0.6,
-              }}
+              className="bg-transparent border-0 cursor-pointer p-0 flex text-inherit opacity-60"
             >
               <X className="w-3 h-3" />
             </button>
@@ -220,37 +196,22 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
 
         {/* Tag suggestions dropdown */}
         {showTagSuggestions && filteredSuggestions.length > 0 && tagInput && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            marginTop: '4px',
-            background: isDark ? 'rgba(22, 27, 34, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '10px',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-            boxShadow: `0 8px 24px rgba(0,0,0,${isDark ? '0.4' : '0.12'})`,
-            zIndex: 10,
-            overflow: 'hidden',
-          }}>
+          <div
+            className="absolute top-full left-0 right-0 mt-1 rounded-[10px] z-10 overflow-hidden"
+            style={{
+              background: isDark ? 'rgba(22, 27, 34, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(12px)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+              boxShadow: `0 8px 24px rgba(0,0,0,${isDark ? '0.4' : '0.12'})`,
+            }}
+          >
             {filteredSuggestions.map(tag => (
               <button
                 key={tag}
                 onClick={() => addTag(tag)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-[12px] bg-transparent border-0 cursor-pointer text-left font-[inherit]"
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '8px 12px',
-                  fontSize: '12px',
                   color: inputText,
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontFamily: 'inherit',
                   transition: 'background 0.1s ease',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; }}
@@ -265,7 +226,7 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
       </div>
 
       {/* Content textarea */}
-      <div style={{ position: 'relative', marginBottom: '14px' }}>
+      <div className="relative mb-[14px]">
         <textarea
           placeholder="What's on your mind? Write freely..."
           value={content}
@@ -290,26 +251,19 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
           onFocus={(e) => { e.currentTarget.style.borderColor = inputFocusBorder; e.currentTarget.style.boxShadow = `0 0 0 3px rgba(102, 126, 234, 0.08)`; }}
           onBlur={(e) => { e.currentTarget.style.borderColor = inputBorder; e.currentTarget.style.boxShadow = 'none'; }}
         />
-        <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+        <div className="absolute top-3 right-3">
           <SpeechToTextButton onTranscription={handleTranscription} size="sm" />
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
           {/* Character progress bar */}
-          <div style={{
-            width: '40px',
-            height: '3px',
-            borderRadius: '2px',
-            background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)',
-            overflow: 'hidden',
-          }}>
+          <div
+            className="w-10 h-[3px] rounded-sm overflow-hidden"
+            style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)' }}
+          >
             <div style={{
               width: `${charPercent}%`,
               height: '100%',
@@ -322,25 +276,28 @@ export const QuickNoteForm: React.FC<QuickNoteFormProps> = ({ onSave, existingTa
               transition: 'width 0.2s ease, background 0.2s ease',
             }} />
           </div>
-          <span style={{
-            fontSize: '11px',
-            color: isOverLimit
-              ? theme.colors.status.error.dark
-              : isDark ? '#6e7681' : '#334155',
-            fontWeight: isOverLimit ? '600' : '400',
-            fontVariantNumeric: 'tabular-nums',
-          }}>
+          <span
+            className="text-[11px] tabular-nums"
+            style={{
+              color: isOverLimit
+                ? theme.colors.status.error.dark
+                : isDark ? '#6e7681' : '#334155',
+              fontWeight: isOverLimit ? '600' : '400',
+            }}
+          >
             {content.length.toLocaleString()}/{MAX_CONTENT_LENGTH.toLocaleString()}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{
-            fontSize: '11px',
-            color: isDark ? '#6e7681' : '#334155',
-            opacity: canSave ? 1 : 0,
-            transition: 'opacity 0.2s ease',
-          }}>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[11px]"
+            style={{
+              color: isDark ? '#6e7681' : '#334155',
+              opacity: canSave ? 1 : 0,
+              transition: 'opacity 0.2s ease',
+            }}
+          >
             {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
           </span>
           <Button

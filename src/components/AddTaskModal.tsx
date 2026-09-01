@@ -56,66 +56,18 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
   };
 
   return (
-    <div 
-      style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999, 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px'
-      }}
-    >
-      <div 
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '20px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          width: '100%',
-          maxWidth: '500px',
-          maxHeight: '90vh',
-          overflow: 'hidden'
-        }}
-      >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
+      <div className="bg-surface rounded-[20px] shadow-modal w-full max-w-[500px] max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div style={{ 
-          padding: '32px 32px 24px 32px', 
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-          borderBottom: '1px solid rgba(102, 126, 234, 0.1)' 
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              margin: 0 
-            }}>
+        <div className="px-8 pt-8 pb-6 bg-brand-500/5 border-b border-brand-500/10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-brand-gradient text-2xl font-bold m-0">
               Add New Task
             </h2>
-            
+
             <button
               onClick={onClose}
-              style={{
-                width: '40px',
-                height: '40px',
-                border: 'none',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontSize: '20px',
-                color: '#667eea',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
+              className="w-10 h-10 border-none bg-brand-500/10 rounded-control cursor-pointer text-xl text-brand-500 flex items-center justify-center transition-all"
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(102, 126, 234, 0.2)';
                 e.currentTarget.style.transform = 'scale(1.05)';
@@ -130,12 +82,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           </div>
         </div>
 
-        <div style={{ 
-          padding: '32px', 
-          overflow: 'auto', 
-          maxHeight: 'calc(90vh - 140px)',
-          boxSizing: 'border-box'
-        }}>
+        <div className="p-8 overflow-auto box-border" style={{ maxHeight: 'calc(90vh - 140px)' }}>
           {/* Category Selection */}
           <ButtonGroup
             label="Category"
@@ -146,7 +93,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           />
 
           {/* Task Title */}
-          <div style={{ marginBottom: '20px' }}>
+          <div className="mb-5">
             <Input
               label="Task Title *"
               value={form.values.title}
@@ -158,7 +105,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '20px', position: 'relative' }}>
+          <div className="mb-5 relative">
             <Textarea
               label="Description"
               value={form.values.description}
@@ -166,11 +113,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
               placeholder="Add more details..."
               rows={3}
             />
-            <div style={{
-              position: 'absolute',
-              right: '8px',
-              top: '32px'
-            }}>
+            <div className="absolute right-2 top-8">
               <SpeechToTextButton
                 onTranscription={(text) => form.setValue('description', form.values.description ? `${form.values.description} ${text}` : text)}
                 size="sm"
@@ -192,7 +135,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           />
 
           {/* Due Date and Progress Goal */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+          <div className="grid grid-cols-2 gap-4 mb-5">
             <Input
               label="Due Date"
               type="date"
@@ -252,23 +195,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', paddingTop: '8px' }}>
+          <div className="flex gap-3 pt-2">
             <button
               onClick={handleSubmit}
               disabled={!form.isValid || !form.values.title.trim()}
+              className="flex-1 py-3.5 px-6 text-white border-none rounded-control text-sm font-semibold transition-all"
               style={{
-                flex: 1,
-                padding: '14px 24px',
                 backgroundImage: !form.values.title.trim() ? 'none' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                backgroundColor: !form.values.title.trim() ? '#e5e7eb' : 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
+                backgroundColor: !form.values.title.trim() ? 'var(--color-line)' : 'transparent',
                 cursor: !form.values.title.trim() ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
                 boxShadow: !form.values.title.trim() ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.3)',
-                transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
                 if (form.values.title.trim()) {
@@ -287,24 +223,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, initialCateg
             </button>
             <button
               onClick={onClose}
-              style={{
-                padding: '14px 24px',
-                border: '2px solid #e5e7eb',
-                color: '#6b7280',
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                transition: 'all 0.2s ease'
-              }}
+              className="py-3.5 px-6 border-2 border-line text-ink-soft bg-surface rounded-control cursor-pointer text-sm font-medium transition-all"
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.backgroundColor = 'var(--color-surface-subtle)';
+                e.currentTarget.style.borderColor = 'var(--color-line-strong)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.backgroundColor = 'var(--color-surface)';
+                e.currentTarget.style.borderColor = 'var(--color-line)';
               }}
             >
               Cancel

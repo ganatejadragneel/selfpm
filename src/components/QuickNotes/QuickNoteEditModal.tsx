@@ -118,7 +118,7 @@ export const QuickNoteEditModal: React.FC<QuickNoteEditModalProps> = ({ note, on
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 600, color: theme.colors.text.primary }}>
-            <Sparkles size={18} color="#8b5cf6" />
+            <Sparkles size={18} color="var(--color-accent-500)" />
             Edit Note
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: theme.colors.text.muted, cursor: 'pointer', display: 'flex', padding: '2px' }}>
@@ -152,7 +152,7 @@ export const QuickNoteEditModal: React.FC<QuickNoteEditModalProps> = ({ note, on
             style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
           />
           {content.length > MAX_CONTENT_LENGTH * 0.8 && (
-            <div style={{ fontSize: '11px', color: content.length > MAX_CONTENT_LENGTH ? '#ef4444' : '#f59e0b', marginTop: '4px', textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', color: content.length > MAX_CONTENT_LENGTH ? 'var(--color-red-500)' : 'var(--color-amber-500)', marginTop: '4px', textAlign: 'right' }}>
               {content.length}/{MAX_CONTENT_LENGTH}
             </div>
           )}
@@ -168,7 +168,7 @@ export const QuickNoteEditModal: React.FC<QuickNoteEditModalProps> = ({ note, on
             {tags.map(tag => (
               <span key={tag} style={{
                 background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
-                color: '#818cf8', borderRadius: '20px', padding: '2px 8px', fontSize: '12px',
+                color: 'var(--color-brand-400)', borderRadius: '20px', padding: '2px 8px', fontSize: '12px',
                 display: 'flex', alignItems: 'center', gap: '4px',
               }}>
                 <Tag size={10} />{tag}
@@ -205,7 +205,7 @@ export const QuickNoteEditModal: React.FC<QuickNoteEditModalProps> = ({ note, on
         </div>
 
         {error && (
-          <div style={{ marginBottom: '14px', fontSize: '13px', color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+          <div style={{ marginBottom: '14px', fontSize: '13px', color: 'var(--color-red-400)', background: 'rgba(239,68,68,0.1)', padding: '8px 12px', borderRadius: '8px' }}>
             {error}
           </div>
         )}
@@ -219,7 +219,7 @@ export const QuickNoteEditModal: React.FC<QuickNoteEditModalProps> = ({ note, on
             padding: '9px 18px', fontSize: '14px', cursor: 'pointer',
           }}>Cancel</button>
           <button onClick={handleSave} disabled={!canSave} style={{
-            background: canSave ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(99,102,241,0.3)',
+            background: canSave ? 'linear-gradient(135deg,var(--color-brand-500),var(--color-accent-500))' : 'rgba(99,102,241,0.3)',
             border: 'none', color: 'white', borderRadius: '10px',
             padding: '9px 20px', fontSize: '14px', fontWeight: 500,
             cursor: canSave ? 'pointer' : 'not-allowed',
