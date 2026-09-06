@@ -15,7 +15,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useThemeColors } from '../../hooks/useThemeColors';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronDown } from 'lucide-react';
 import { TIPS, type TipId } from './tipRegistry';
 import { useTipsStore } from './tipsStore';
 import { TipPanel } from './TipPanel';
@@ -81,21 +81,43 @@ export function FeatureTip({ id, align = 'left' }: Props) {
 
   return (
     <span ref={wrapRef} style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+      {/* An unread chip reads as a STATUS badge unless it says otherwise, so it
+          carries a disclosure chevron and a slow breathing ring: the chevron is
+          the universal "this opens something" signal, the ring says "not yet
+          read". Both stop the moment it is opened, and the whole animation is
+          dropped for anyone who asked for reduced motion. */}
+      <style>{`
+        @keyframes tip-breathe {
+          0%, 100% { box-shadow: 0 2px 10px rgba(102,126,234,0.45), 0 0 0 0 rgba(102,126,234,0.40); }
+          50%      { box-shadow: 0 2px 10px rgba(102,126,234,0.45), 0 0 0 5px rgba(102,126,234,0); }
+        }
+        .tip-chip { transition: transform .15s ease, color .15s, border-color .15s, background .15s; }
+        .tip-chip:hover { transform: translateY(-1px); }
+        .tip-chip-unread { animation: tip-breathe 2.6s ease-in-out infinite; }
+        .tip-chip .tip-chevron { transition: transform .18s ease; }
+        .tip-chip[aria-expanded="true"] .tip-chevron { transform: rotate(180deg); }
+        @media (prefers-reduced-motion: reduce) {
+          .tip-chip, .tip-chip .tip-chevron { transition: none; }
+          .tip-chip-unread { animation: none; }
+          .tip-chip:hover { transform: none; }
+        }
+      `}</style>
       {/* Loud exactly once. An unread tip is a filled gradient chip with a spark;
           the moment it is read it becomes a hairline "?" and never asks again.
           That is the whole non-invasive bargain — noticeable when it has something
           to say, invisible for the rest of the product's life. */}
       <button
+        className={`tip-chip${unread && !open ? ' tip-chip-unread' : ''}`}
         onMouseDown={(e) => e.preventDefault()}
         onClick={toggle}
-        aria-label={`What is ${tip.title}?`}
+        aria-label={`What is ${tip.title}? Opens an explanation.`}
         aria-expanded={open}
-        title={`What is ${tip.title}?`}
+        title={`New — see how ${tip.title} works`}
         style={{
           position: 'relative',
           height: 24,
           width: unread ? 'auto' : 24,
-          padding: unread ? '0 9px 0 7px' : 0,
+          padding: unread ? '0 6px 0 7px' : 0,
           display: 'flex',
           alignItems: 'center',
           gap: 4,
@@ -110,14 +132,14 @@ export function FeatureTip({ id, align = 'left' }: Props) {
           lineHeight: 1,
           cursor: 'pointer',
           justifyContent: 'center',
-          boxShadow: unread ? '0 2px 10px rgba(102,126,234,0.45)' : 'none',
-          transition: 'color .15s, border-color .15s, background .15s',
+          boxShadow: unread && !open ? undefined : 'none',
         }}
       >
         {unread ? (
           <>
             <Sparkles size={12} />
             New
+            <ChevronDown className="tip-chevron" size={11} style={{ opacity: 0.9, marginLeft: -1 }} />
           </>
         ) : (
           '?'
