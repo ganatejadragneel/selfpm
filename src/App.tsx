@@ -21,6 +21,7 @@ import { ChevronLeft, ChevronRight, Calendar, Plus, Shield } from 'lucide-react'
 import { QuickNotesPage, QuickNoteFAB } from './components/QuickNotes';
 import { FocusDashboard } from './components/Focus';
 import { PagesPage } from './components/Pages';
+import { ReportsPage } from './components/Reports';
 import { AppShell, type ShellTab } from './components/AppShell';
 import { getWeek, format, addWeeks } from 'date-fns';
 import { Button, LoadingSpinner } from './components/ui';
@@ -308,18 +309,7 @@ function AppContent() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<div style={pageWrap}><FocusDashboard /></div>} />
         <Route path="/pages" element={<div style={pageWrap}><PagesPage /></div>} />
-        <Route path="/cpo-reports" element={
-          <div style={pageWrap}>
-            <div style={{
-              background: theme.colors.surface.glass, backdropFilter: theme.effects.blur,
-              border: `1px solid ${theme.colors.surface.glassBorder}`, borderRadius: 18,
-              padding: 48, textAlign: 'center', color: theme.colors.text.secondary
-            }}>
-              <h2 style={{ margin: '0 0 8px', color: theme.colors.text.primary }}>CPO Reports</h2>
-              <p style={{ margin: 0 }}>Generate and re-read your CPO reports here. Coming soon.</p>
-            </div>
-          </div>
-        } />
+        <Route path="/cpo-reports" element={<div style={pageWrap}><ReportsPage /></div>} />
         <Route path="/tasks" element={tasksBoard} />
         <Route path="/allNotes" element={<QuickNotesPage />} />
         <Route path="/sprints" element={<div style={pageWrap}><SprintDashboard /></div>} />

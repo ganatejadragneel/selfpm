@@ -70,3 +70,6 @@ scripts/verify_note_column.js
 
 # Local Netlify folder
 .netlify
+
+# Locally generated AI output (reports, evals) — personal content, never pushed
+out/

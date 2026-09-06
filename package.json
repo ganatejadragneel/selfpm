@@ -12,7 +12,13 @@
     "preview": "vite preview",
     "focus:gen": "tsx scripts/focus/generate.ts",
     "focus:compare": "tsx scripts/focus/compare.ts",
-    "focus:eval": "tsx scripts/focus/eval.ts"
+    "focus:eval": "tsx scripts/focus/eval.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "report:context": "tsx scripts/reports/context.ts",
+    "report:payload": "tsx scripts/reports/payload.ts",
+    "report:gen": "tsx scripts/reports/generate.ts",
+    "report:continuity": "tsx scripts/reports/continuity.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
@@ -35,6 +41,8 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
@@ -45,6 +53,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^4.1.12",
@@ -52,6 +61,7 @@
     "tsx": "^4.22.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "vite": "^7.1.2",
+    "vitest": "^3.2.7"
   }
 }
