@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { subDays, format } from 'date-fns';
 import { supabase } from '../../lib/supabase';
 import { useSupabaseAuthStore } from '../../store/supabaseAuthStore';
-import { computeMetrics, type FocusMetrics } from './focusLogic';
+import { computeMetrics, computeWeekStats, type FocusMetrics, type WeekStats } from './focusLogic';
 import { type FocusDay } from './sampleData';
 import { parseCharter, normalizeName, DEFAULT_CHARTER, type CharterConfig } from './charterConfig';
 
@@ -24,8 +24,15 @@ interface FocusBrief {
   model: string | null;
 }
 
+// One fetch covers every surface: the 7-day strip, the Mon-Sun week (which needs
+// last week too), and the 3-month trend. 98 days = 14 whole weeks, so the 3m
+// chart's oldest weekly bucket is always complete rather than a partial stub.
+const HISTORY_DAYS = 98;
+
 interface FocusDataStore {
   metrics: FocusMetrics | null;
+  week: WeekStats | null;
+  days: FocusDay[];
   brief: FocusBrief | null;
   config: CharterConfig;
   oreConfigured: boolean;
@@ -38,6 +45,8 @@ interface FocusDataStore {
 
 export const useFocusDataStore = create<FocusDataStore>((set) => ({
   metrics: null,
+  week: null,
+  days: [],
   brief: null,
   config: DEFAULT_CHARTER,
   oreConfigured: true,
@@ -82,12 +91,14 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
         loading: false,
         initialized: true,
         metrics: computeMetrics([], 7, now, config.weeklyAverageGoal),
+        week: computeWeekStats([], now, config.weeklyAverageGoal),
+        days: [],
       });
     }
 
-    // 2) the 7-day window of dates (offset 0 = today … 6)
+    // 2) the history window of dates (offset 0 = today … HISTORY_DAYS-1)
     const dates: { offset: number; str: string }[] = [];
-    for (let offset = 0; offset < 7; offset++) dates.push({ offset, str: format(subDays(now, offset), 'yyyy-MM-dd') });
+    for (let offset = 0; offset < HISTORY_DAYS; offset++) dates.push({ offset, str: format(subDays(now, offset), 'yyyy-MM-dd') });
     const dateStrs = dates.map((d) => d.str);
 
     // 3) completions (the hours) + per-day notes for the Focus ORE in the window
@@ -103,7 +114,7 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
         .select('note_date, note_text')
         .eq('new_user_id', uid)
         .eq('custom_task_id', ore.id)
-        .in('note_date', dateStrs),
+        .in('note_date', dateStrs.slice(0, 7)), // notes only surface on the 7-day strip
     ]);
 
     const compByDate = new Map((comps ?? []).map((c: { completion_date: string; value: unknown }) => [c.completion_date, c.value]));
@@ -125,6 +136,8 @@ export const useFocusDataStore = create<FocusDataStore>((set) => ({
 
     set({
       metrics: computeMetrics(focusDays, 7, now, config.weeklyAverageGoal),
+      week: computeWeekStats(focusDays, now, config.weeklyAverageGoal),
+      days: focusDays,
       // surface the ORE's own stored name, so the dashboard title reads exactly
       // like the task card the user already knows (minus the stray whitespace)
       config: { ...config, focusOreName: ore.name.trim() },

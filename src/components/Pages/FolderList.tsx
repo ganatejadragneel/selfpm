@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Folder, FolderInput, ScrollText, Settings, Lock, Plus, X } from 'lucide-react';
 import type { KbFolder } from './types';
+import { FeatureTip } from '../tips/FeatureTip';
 import { UNFILED } from './pagesStore';
 
 const HAIR = '#ececef';
@@ -51,8 +52,9 @@ export function FolderList({
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <style>{`.folder-row .folder-del{opacity:0;transition:opacity .15s}.folder-row:hover .folder-del{opacity:1}`}</style>
 
-      <div style={{ padding: '16px 14px 8px' }}>
-        <h3 style={labelStyle}>Folders</h3>
+      <div style={{ padding: '16px 14px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h3 style={{ ...labelStyle, margin: 0 }}>Folders</h3>
+        <FeatureTip id="pages" />
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>

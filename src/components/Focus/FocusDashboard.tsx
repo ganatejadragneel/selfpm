@@ -7,15 +7,17 @@ import { useEffect, useState } from 'react';
 import { Sparkles, TrendingUp, TrendingDown, Plus, Check, Minus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useThemeColors } from '../../hooks/useThemeColors';
-import { type WindowDay, type FocusMetrics } from './focusLogic';
+import { type WindowDay, type WeekStats } from './focusLogic';
 import { useDailyGoalsStore } from './dailyGoalsStore';
 import { useFocusDataStore } from './focusDataStore';
+import { FocusTrendChart } from './FocusTrendChart';
+import { SeekerTitle } from './SeekerTitle';
 import { type DailyGoal } from './sampleData';
 
 export function FocusDashboard() {
   const t = useThemeColors();
   const c = t.colors;
-  const { metrics: m, brief, config, oreConfigured, availableOres, loading, initialized, init } = useFocusDataStore();
+  const { metrics: m, week, days, brief, config, oreConfigured, availableOres, loading, initialized, init } = useFocusDataStore();
 
   useEffect(() => {
     if (!initialized) init();
@@ -64,7 +66,7 @@ export function FocusDashboard() {
       </div>
     );
   }
-  if (!m) return null;
+  if (!m || !week) return null;
 
   const yesterday = m.yesterday;
 
@@ -77,12 +79,15 @@ export function FocusDashboard() {
         minHeight: 'calc(100vh - 140px)',
       }}
     >
+      {/* ── Seeker Title — above everything, deliberately ── */}
+      <SeekerTitle ink={ink} sub={sub} muted={muted} accent={accent} hairline={hairline} surface={surface} />
+
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 22 }}>
         <h1 style={{ fontSize: 30, fontWeight: 700, color: ink, margin: 0, letterSpacing: '-0.02em' }}>
           {config.focusOreName}
         </h1>
-        <span style={{ fontSize: 14, color: muted }}>· last 7 days</span>
+        <span style={{ fontSize: 14, color: muted }}>· week of {format(week.weekDays[0].date, 'MMM d')}</span>
       </div>
 
       {/* ── Hero row: week strip + target ── */}
@@ -94,8 +99,25 @@ export function FocusDashboard() {
           marginBottom: 16,
         }}
       >
-        <WeekStrip m={m} card={card} accent={accent} sub={sub} muted={muted} ink={ink} />
-        <TargetStat m={m} card={card} accent={accent} sub={sub} muted={muted} ink={ink} />
+        <WeekStrip w={week} card={card} accent={accent} muted={muted} ink={ink} />
+        <TargetStat m={week} card={card} accent={accent} sub={sub} muted={muted} ink={ink} />
+      </div>
+
+      {/* ── Trend ── */}
+      <div style={{ marginBottom: 16 }}>
+        <FocusTrendChart
+          days={days}
+          goal={config.weeklyAverageGoal}
+          unit={config.unit}
+          oreName={config.focusOreName}
+          card={card}
+          ink={ink}
+          sub={sub}
+          muted={muted}
+          accent={accent}
+          hairline={hairline}
+          surface={surface}
+        />
       </div>
 
       {/* ── Main: focus block (left) + daily goals (right rail) ── */}
@@ -142,65 +164,90 @@ export function FocusDashboard() {
   );
 }
 
-// ───────────────────────── Week strip (live, deterministic) ─────────────────────────
+// ───────────────────── This week (Mon–Sun) — the dashboard's hero ─────────────────────
+// The one number this view leads with. Calendar week, not rolling-7: on a Wednesday
+// this averages Mon–Wed. The delta compares against the SAME elapsed days last week
+// (Mon–Wed vs Mon–Wed) — comparing a partial week to a whole one would show a loss
+// every Monday for arithmetic reasons rather than behavioural ones.
 function WeekStrip({
-  m,
+  w,
   card,
   accent,
-  sub,
   muted,
   ink,
 }: {
-  m: FocusMetrics;
+  w: WeekStats;
   card: React.CSSProperties;
   accent: string;
-  sub: string;
   muted: string;
   ink: string;
 }) {
-  const CHART_H = 132;
-  const up = m.average >= m.goal;
+  const CHART_H = 108;
+  const flat = w.delta === 0;
+  const up = w.delta > 0;
+  const deltaColor = flat ? muted : up ? '#10b981' : '#ef4444';
+  const DeltaIcon = flat ? Minus : up ? TrendingUp : TrendingDown;
+  const spanLabel = w.daysElapsed === 1 ? 'Mon' : `Mon–${format(w.weekDays[w.daysElapsed - 1].date, 'EEE')}`;
 
   return (
     <div style={card}>
-      <Header label="This week" muted={muted}>
-        <span style={{ fontSize: 13, color: sub, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          {up ? (
-            <TrendingUp size={14} color="#10b981" />
-          ) : (
-            <TrendingDown size={14} color={muted} />
-          )}
-          {m.average}h avg/day
-        </span>
+      <Header label="This week so far" muted={muted}>
+        <span style={{ fontSize: 12, color: muted }}>goal {w.goal}/day</span>
       </Header>
 
-      <div style={{ position: 'relative', height: CHART_H, marginTop: 18 }}>
-        {/* goal line */}
-        <GoalLine value={m.goal} max={m.max} chartH={CHART_H} muted={muted} />
+      {/* hero figure — proportional figures, never tabular at display size */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontSize: 52, fontWeight: 700, color: ink, lineHeight: 1, letterSpacing: '-0.03em' }}>
+            {w.average}
+          </span>
+          <span style={{ fontSize: 15, color: muted, fontWeight: 500 }}>hrs/day</span>
+        </div>
 
+        <div
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '4px 9px', borderRadius: 999,
+            background: `${deltaColor}14`, marginBottom: 4,
+          }}
+        >
+          <DeltaIcon size={13} color={deltaColor} />
+          <span style={{ fontSize: 12.5, fontWeight: 650, color: deltaColor }}>
+            {flat ? 'level' : `${up ? '+' : ''}${w.delta}`}
+          </span>
+          <span style={{ fontSize: 11.5, color: muted }}>vs {spanLabel} last week</span>
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', height: CHART_H, marginTop: 16 }}>
+        <GoalLine value={w.goal} max={w.max} chartH={CHART_H} muted={muted} />
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: CHART_H }}>
-          {m.window.map((d) => (
-            <Bar key={d.offset} day={d} max={m.max} chartH={CHART_H} accent={accent} muted={muted} />
+          {w.weekDays.map((d) => (
+            <Bar key={d.offset} day={d} max={w.max} chartH={CHART_H} accent={accent} muted={muted} />
           ))}
         </div>
       </div>
 
-      {/* day labels */}
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        {m.window.map((d) => (
+        {w.weekDays.map((d) => (
           <div
             key={d.offset}
             style={{
               flex: 1,
               textAlign: 'center',
               fontSize: 11,
-              fontWeight: d.isYesterday ? 700 : 500,
-              color: d.isYesterday ? ink : muted,
+              fontWeight: d.isToday ? 700 : 500,
+              color: d.isFuture ? `${muted}80` : d.isToday ? ink : muted,
             }}
           >
             {d.weekdayLabel}
           </div>
         ))}
+      </div>
+
+      <div style={{ fontSize: 11.5, color: muted, marginTop: 10 }}>
+        {w.total} hrs logged across {w.daysElapsed} {w.daysElapsed === 1 ? 'day' : 'days'}
+        {' · last week '}{w.lastWeekAverage}/day over the same span
       </div>
     </div>
   );
@@ -219,10 +266,25 @@ function Bar({
   accent: string;
   muted: string;
 }) {
-  const h = Math.max(3, (day.hours / max) * chartH);
   const emphasized = day.isYesterday;
   const today = day.isToday;
+  // 4px rounded data-end, square at the baseline; capped width so the slot keeps its air
+  const barStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: 24,
+    margin: '0 auto',
+    borderRadius: '4px 4px 0 0',
+  };
 
+  if (day.isFuture) {
+    return (
+      <div style={{ flex: 1, height: chartH, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+        <div style={{ ...barStyle, height: 3, background: `${muted}33` }} />
+      </div>
+    );
+  }
+
+  const h = Math.max(3, (day.hours / max) * chartH);
   const fill = emphasized ? accent : today ? 'transparent' : 'rgba(102, 126, 234, 0.22)';
 
   return (
@@ -234,21 +296,31 @@ function Bar({
         flexDirection: 'column',
         justifyContent: 'flex-end',
         position: 'relative',
-        borderLeft: day.weekBoundary ? `1px dashed ${muted}55` : 'none',
-        paddingLeft: day.weekBoundary ? 4 : 0,
       }}
-      title={`${day.hours}h`}
+      title={`${format(day.date, 'EEE MMM d')} · ${day.hours}h`}
     >
-      {/* hours label on the emphasized bar */}
+      {/* absolutely positioned: an in-flow label would eat into the bar's own
+          height, making an emphasized bar render shorter than an equal neighbour */}
       {emphasized && (
-        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: accent, marginBottom: 4 }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: h + 4,
+            textAlign: 'center',
+            fontSize: 11,
+            fontWeight: 700,
+            color: accent,
+          }}
+        >
           {day.hours}h
         </div>
       )}
       <div
         style={{
+          ...barStyle,
           height: h,
-          borderRadius: 7,
           background: fill,
           border: today ? `1.5px dashed ${accent}88` : 'none',
         }}
@@ -256,6 +328,7 @@ function Bar({
     </div>
   );
 }
+
 
 function GoalLine({
   value,
@@ -298,15 +371,15 @@ function TargetStat({
   muted,
   ink,
 }: {
-  m: FocusMetrics;
+  m: WeekStats;
   card: React.CSSProperties;
   accent: string;
   sub: string;
   muted: string;
   ink: string;
 }) {
-  const value = m.metGoal ? 0 : m.targetToday;
-  const big = m.metGoal ? '✓' : `${value}`;
+  const value = m.targetMet ? 0 : m.targetToday;
+  const big = m.targetMet ? '✓' : `${value}`;
 
   return (
     <div style={{ ...card, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -319,20 +392,20 @@ function TargetStat({
             lineHeight: 0.95,
             fontWeight: 700,
             letterSpacing: '-0.04em',
-            color: m.metGoal ? '#10b981' : accent,
+            color: m.targetMet ? '#10b981' : accent,
           }}
         >
           {big}
         </span>
-        {!m.metGoal && <span style={{ fontSize: 20, fontWeight: 600, color: sub, marginBottom: 6 }}>hrs</span>}
+        {!m.targetMet && <span style={{ fontSize: 20, fontWeight: 600, color: sub, marginBottom: 6 }}>hrs</span>}
       </div>
 
       <div style={{ marginTop: 10, fontSize: 13, color: sub, lineHeight: 1.5 }}>
-        {m.metGoal ? (
+        {m.targetMet ? (
           <>You're already holding the <strong style={{ color: ink }}>{m.goal}h/day</strong> average. Anything today is ahead.</>
         ) : (
           <>
-            needed today to hold your <strong style={{ color: ink }}>{m.goal}h/day</strong> average
+            needed today to hold <strong style={{ color: ink }}>{m.goal}h/day</strong> across this week
             {m.unreachable && (
               <span style={{ display: 'block', marginTop: 6, color: muted, fontStyle: 'italic' }}>
                 more than fits in the day — this is the raw gap, not a realistic ask.

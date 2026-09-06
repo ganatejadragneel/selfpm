@@ -35,12 +35,15 @@ export async function callClaude(opts: {
   user: string;
   model?: ModelId;
   maxTokens?: number;
-  apiKey: string;
+  apiKey?: string;
 }): Promise<{ text: string; usage: { input_tokens: number; output_tokens: number }; modelUsed: string; ms: number }> {
   const { system, user, model = 'sonnet', maxTokens = 512, apiKey } = opts;
   const modelUsed = MODELS[model] ?? MODELS.sonnet;
 
-  const client = new Anthropic({ apiKey });
+  // With no explicit key the SDK resolves credentials itself: ANTHROPIC_API_KEY,
+  // then ANTHROPIC_AUTH_TOKEN, then an `ant auth login` profile. That lets local
+  // dev run off the signed-in profile without a key pasted into .env.local.
+  const client = apiKey ? new Anthropic({ apiKey }) : new Anthropic();
   const started = Date.now();
   const resp = await client.messages.create({
     model: modelUsed,
@@ -67,7 +70,7 @@ export async function callClaude(opts: {
 export async function generateFocusBox(opts: {
   box: FocusBox;
   model?: ModelId;
-  apiKey: string;
+  apiKey?: string;
   now?: Date;
 }): Promise<GenerateResult> {
   const { box, model = 'sonnet', apiKey, now } = opts;

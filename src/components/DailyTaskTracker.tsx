@@ -4,6 +4,7 @@ import { theme } from '../styles/theme';
 import { useSupabaseAuthStore } from '../store/supabaseAuthStore';
 import { supabase } from '../lib/supabase';
 import { TaskNoteModal } from './TaskNoteModal';
+import { FeatureTip } from './tips/FeatureTip';
 import { getTodayLocalString, getYesterdayLocalString, isSameLocalDate, parseLocalDate } from '../utils/dateUtils';
 import { parseTaskValue, createTaskValue } from '../utils/taskValueUtils';
 import type { CustomDailyTask } from '../types';
@@ -729,6 +730,7 @@ export const DailyTaskTracker: React.FC = () => {
                 }}>
                   Daily Tasks
                 </h3>
+                  <FeatureTip id="daily-ores" />
                 <div style={{
                   fontSize: theme.typography.sizes.sm,
                   color: theme.colors.text.secondary,

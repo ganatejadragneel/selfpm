@@ -27,8 +27,7 @@ const model = (process.argv[3] as ModelId) || 'sonnet';
 const apiKey = process.env.ANTHROPIC_API_KEY || '';
 
 if (!apiKey) {
-  console.error('✗ ANTHROPIC_API_KEY is not set. Paste it into .env.local.');
-  process.exit(1);
+  console.error('… no ANTHROPIC_API_KEY — falling back to the signed-in `ant auth login` profile.');
 }
 
 const r = await generateFocusBox({ box, model, apiKey });
