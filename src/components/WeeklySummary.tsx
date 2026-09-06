@@ -956,7 +956,7 @@ export const WeeklySummary: React.FC<WeeklySummaryProps> = ({ tasks, weekNumber,
           backdropFilter: 'blur(4px)'
         }}>
           <div style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+            background: 'var(--spm-panel)',
             borderRadius: '20px',
             padding: isMobile ? '24px' : '32px',
             minWidth: isMobile ? '320px' : '400px',

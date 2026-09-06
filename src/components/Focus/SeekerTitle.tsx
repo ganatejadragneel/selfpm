@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BookmarkPlus, Library, Check, X } from 'lucide-react';
 import { useSeekerTitleStore, countWords, MAX_WORDS } from './seekerTitleStore';
 import { FeatureTip } from '../tips/FeatureTip';
+import { useTypewriter } from './useTypewriter';
 
 interface Props {
   ink: string;
@@ -46,6 +47,13 @@ export function SeekerTitle({ ink, sub, muted, accent, hairline, surface }: Prop
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
   }, [openLibrary]);
+
+  // The placeholder writes itself while the field is empty and untouched. It
+  // stops the instant there is anything to say — a caret next to the seeker's own
+  // line would compete with it.
+  const PROMPT = 'Write a line to steady yourself before you look…';
+  const animating = !body && !focused;
+  const typed = useTypewriter(PROMPT, animating);
 
   const words = countWords(body);
   const over = words > MAX_WORDS;
@@ -100,7 +108,7 @@ export function SeekerTitle({ ink, sub, muted, accent, hairline, surface }: Prop
             if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
             if (e.key === 'Escape') (e.target as HTMLInputElement).blur();
           }}
-          placeholder="Write a line to steady yourself before you look…"
+          placeholder={animating ? `${typed}\u258c` : PROMPT}
           aria-label={`Seeker Title, up to ${MAX_WORDS} words`}
           style={{
             flex: 1,
@@ -116,6 +124,7 @@ export function SeekerTitle({ ink, sub, muted, accent, hairline, surface }: Prop
             color: body ? ink : muted,
           }}
         />
+
 
         {/* the counter appears only once it could plausibly matter */}
         {(focused || over) && (

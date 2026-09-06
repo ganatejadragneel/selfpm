@@ -8,12 +8,8 @@ import remarkGfm from 'remark-gfm';
 import { List, ListOrdered, Check, Loader2, Lock } from 'lucide-react';
 import type { KbDocument } from './types';
 import { FeatureTip } from '../tips/FeatureTip';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
-const HAIR = '#ececef';
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
 const SERIF = 'Georgia, "Iowan Old Style", "Times New Roman", serif';
 
 type Mode = 'write' | 'preview';
@@ -27,6 +23,19 @@ export function DocumentEditor({
   saving: boolean;
   onChange: (patch: Partial<Pick<KbDocument, 'title' | 'content'>>) => void;
 }) {
+  const { ink: INK, sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT, hair: HAIR, surface: SURFACE } = useSurfacePalette();
+  const iconBtn: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 30,
+    height: 28,
+    border: 'none',
+    borderRadius: 6,
+    background: 'transparent',
+    color: SUB,
+    cursor: 'pointer',
+  };
   const [mode, setMode] = useState<Mode>('write');
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -124,7 +133,7 @@ export function DocumentEditor({
           borderBottom: `1px solid ${HAIR}`,
         }}
       >
-        <div style={{ display: 'flex', gap: 2, background: '#f1f2f5', borderRadius: 8, padding: 3 }}>
+        <div style={{ display: 'flex', gap: 2, background: ACCENT_SOFT, borderRadius: 8, padding: 3 }}>
           {(['write', 'preview'] as Mode[]).map((m) => (
             <button
               key={m}
@@ -138,7 +147,7 @@ export function DocumentEditor({
                 cursor: 'pointer',
                 textTransform: 'capitalize',
                 color: mode === m ? INK : MUTED,
-                background: mode === m ? '#fff' : 'transparent',
+                background: mode === m ? SURFACE : 'transparent',
                 boxShadow: mode === m ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               }}
             >
@@ -207,7 +216,7 @@ export function DocumentEditor({
               .pages-md strong { font-weight: 700; }
               .pages-md em { font-style: italic; }
               .pages-md a { color: ${ACCENT}; text-decoration: underline; }
-              .pages-md code { font-family: ui-monospace, monospace; font-size: 13px; background:#f1f2f5; padding:1px 5px; border-radius:4px; }
+              .pages-md code { font-family: ui-monospace, monospace; font-size: 13px; background:${ACCENT_SOFT}; padding:1px 5px; border-radius:4px; }
               .pages-md blockquote { border-left: 3px solid ${HAIR}; margin: 0 0 12px; padding-left: 14px; color: ${SUB}; }
               .pages-md hr { border: none; border-top: 1px solid ${HAIR}; margin: 18px 0; }
               .pages-md table { border-collapse: collapse; margin: 0 0 12px; }
@@ -226,6 +235,7 @@ export function DocumentEditor({
 }
 
 function SaveIndicator({ saving }: { saving: boolean }) {
+  const { muted: MUTED, accent: ACCENT } = useSurfacePalette();
   return (
     <span
       style={{
@@ -251,15 +261,3 @@ function SaveIndicator({ saving }: { saving: boolean }) {
   );
 }
 
-const iconBtn: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 30,
-  height: 28,
-  border: 'none',
-  borderRadius: 6,
-  background: 'transparent',
-  color: SUB,
-  cursor: 'pointer',
-};

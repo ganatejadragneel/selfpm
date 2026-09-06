@@ -231,7 +231,7 @@ export const TaskNoteModal: React.FC<TaskNoteModalProps> = ({
                   resize: 'vertical',
                   outline: 'none',
                   transition: 'border-color 0.2s ease',
-                  background: 'rgba(248, 250, 252, 0.5)',
+                  background: 'var(--spm-field)',
                   boxSizing: 'border-box'
                 }}
                 onFocus={(e) => {

@@ -4,6 +4,7 @@
 
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 import { usePagesStore, UNFILED } from './pagesStore';
 import { FolderList } from './FolderList';
 import { DocumentList } from './DocumentList';
@@ -30,6 +31,8 @@ export function PagesPage() {
     deleteDocument,
     reorderDocument,
   } = usePagesStore();
+
+  const { hair: HAIR, surfaceCard: SURFACE, muted: MUTED } = useSurfacePalette();
 
   // ?doc=<id> deep-link: the CPO Reports tab opens a generated report here.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,9 +65,9 @@ export function PagesPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#fff',
+          background: SURFACE,
           borderRadius: 18,
-          color: '#9ca3af',
+          color: MUTED,
           fontSize: 14,
         }}
       >
@@ -92,14 +95,14 @@ export function PagesPage() {
         gridTemplateRows: 'minmax(0, 1fr)',
         height: 'calc(100vh - 150px)',
         minHeight: 520,
-        background: '#ffffff',
+        background: SURFACE,
         borderRadius: 18,
-        border: '1px solid rgba(255,255,255,0.5)',
+        border: `1px solid ${HAIR}`,
         boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
         overflow: 'hidden',
       }}
     >
-      <div style={{ ...column, borderRight: '1px solid #ececef', background: '#fbfbfc' }}>
+      <div style={{ ...column, borderRight: `1px solid ${HAIR}` }}>
         <FolderList
           folders={folders}
           activeFolderId={activeFolderId}
@@ -111,7 +114,7 @@ export function PagesPage() {
         />
       </div>
 
-      <div style={{ ...column, borderRight: '1px solid #ececef' }}>
+      <div style={{ ...column, borderRight: `1px solid ${HAIR}` }}>
         <DocumentList
           folderName={folderName}
           documents={folderDocs}

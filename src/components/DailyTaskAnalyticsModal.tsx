@@ -455,7 +455,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(248, 250, 252, 0.8)',
+                  background: 'var(--spm-field-strong)',
                   borderRadius: theme.borderRadius.md,
                   padding: '6px',
                   border: `1px solid ${theme.colors.border.light}`,
@@ -498,7 +498,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  background: 'rgba(248, 250, 252, 0.8)',
+                  background: 'var(--spm-field-strong)',
                   borderRadius: theme.borderRadius.md,
                   padding: theme.spacing.xs,
                   border: `1px solid ${theme.colors.border.light}`,
@@ -771,7 +771,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                       
                       {/* Bar Chart Container */}
                       <div style={{
-                        background: 'rgba(248, 250, 252, 0.5)',
+                        background: 'var(--spm-field)',
                         borderRadius: theme.borderRadius.lg,
                         padding: theme.spacing.xl,
                         border: `1px solid ${theme.colors.border.light}`,
@@ -1046,7 +1046,7 @@ export const DailyTaskAnalyticsModal: React.FC<DailyTaskAnalyticsModalProps> = (
                       
                       {/* Heat Map Container */}
                       <div style={{
-                        background: 'rgba(248, 250, 252, 0.5)',
+                        background: 'var(--spm-field)',
                         borderRadius: theme.borderRadius.lg,
                         padding: theme.spacing.xl,
                         border: `1px solid ${theme.colors.border.light}`,

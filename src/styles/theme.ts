@@ -16,6 +16,14 @@ export const theme = {
       glass: 'rgba(255, 255, 255, 0.95)',
       glassBorder: 'rgba(255, 255, 255, 0.3)',
       white: 'white',
+
+      // Light does not use depth gradients; these are flat so consumers can read
+      // the same keys on either theme.
+      grid: 'none',
+      card: '#ffffff',
+      cardLive: '#ffffff',
+
+      elevated: '#ffffff',
     },
     status: {
       success: {
@@ -61,6 +69,18 @@ export const theme = {
   },
   
   effects: {
+    // Present so consumers can read `effects.glow.*` on either theme. Light does
+    // not glow — these are deliberately no-ops rather than absent keys.
+    dataFill: {
+      bar: 'rgba(102, 126, 234, 0.22)',
+      barActive: '#667eea',
+      area: 'linear-gradient(180deg, rgba(102,126,234,0.28) 0%, rgba(102,126,234,0.02) 100%)',
+    },
+    glow: {
+      accent: 'none',
+      accentStrong: 'none',
+      inset: 'none',
+    },
     blur: 'blur(10px)',
     shadow: {
       sm: '0 2px 16px rgba(0, 0, 0, 0.04)',
@@ -107,6 +127,24 @@ export const theme = {
       medium: '500',
       semibold: '600',
       bold: '700',
+    },
+    families: {
+      /** Metadata, counters, timestamps — anything read as data rather than prose. */
+      mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+    },
+    /** Small, uppercase, widely letterspaced section/unit label. */
+    label: {
+      fontSize: '11px',
+      fontWeight: '700',
+      letterSpacing: '0.11em',
+      textTransform: 'uppercase',
+    },
+    /** Hero numerals: the metric itself. */
+    metric: {
+      fontSize: '56px',
+      fontWeight: '700',
+      letterSpacing: '-0.03em',
+      lineHeight: 1,
     },
   },
 } as const;

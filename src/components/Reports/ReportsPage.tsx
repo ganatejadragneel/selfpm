@@ -5,18 +5,14 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { useReportsStore } from './reportsStore';
-
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const HAIR = '#ececef';
-const ACCENT = '#667eea';
-const DANGER = '#b91c1c';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
 import { GeneratePanel } from './GeneratePanel';
 import { ReportsGrid } from './ReportsGrid';
 
 export function ReportsPage() {
   const navigate = useNavigate();
+  const { ink: INK, sub: SUB, hair: HAIR, accent: ACCENT, accentSoft: ACCENT_SOFT, accentMedium: ACCENT_MED, danger: DANGER, dangerSoft: DANGER_SOFT, surfaceCard: SURFACE, label: LABEL } = useSurfacePalette();
   const { rows, loading, generating, error, warnings, lastGenerated, initialized, init, generate, updateNotes, dismissError } =
     useReportsStore();
 
@@ -35,7 +31,7 @@ export function ReportsPage() {
       <style>{`
         .rp-spin { animation: rp-spin 1s linear infinite; }
         @keyframes rp-spin { to { transform: rotate(360deg); } }
-        .rp-row:hover { background: rgba(102,126,234,0.05); }
+        .rp-row:hover { background: ${ACCENT_SOFT}; }
       `}</style>
 
       <GeneratePanel generating={generating} onGenerate={handleGenerate} />
@@ -43,7 +39,7 @@ export function ReportsPage() {
       {error && (
         <div
           role="alert"
-          style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '12px 14px', color: DANGER, fontSize: 13.5 }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: DANGER_SOFT, border: `1px solid ${DANGER}55`, borderRadius: 12, padding: '12px 14px', color: DANGER, fontSize: 13.5 }}
         >
           <AlertCircle size={16} style={{ flex: 'none', marginTop: 1 }} />
           <div style={{ flex: 1 }}>
@@ -57,7 +53,7 @@ export function ReportsPage() {
       )}
 
       {lastGenerated && !error && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(102,126,234,0.06)', border: `1px solid rgba(102,126,234,0.25)`, borderRadius: 12, padding: '12px 14px', fontSize: 13.5, color: INK }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: ACCENT_SOFT, border: `1px solid ${ACCENT_MED}`, borderRadius: 12, padding: '12px 14px', fontSize: 13.5, color: INK }}>
           <CheckCircle2 size={16} color={ACCENT} style={{ flex: 'none', marginTop: 1 }} />
           <div>
             <strong>{lastGenerated.title}</strong> saved to Pages
@@ -73,9 +69,9 @@ export function ReportsPage() {
         </div>
       )}
 
-      <div style={{ background: '#fff', border: `1px solid ${HAIR}`, borderRadius: 16, boxShadow: '0 8px 28px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+      <div style={{ background: SURFACE, border: `1px solid ${HAIR}`, borderRadius: 16, overflow: 'hidden' }}>
         <div style={{ padding: '14px 16px 6px', display: 'flex', alignItems: 'baseline', gap: 10 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: INK }}>Your reports</h3>
+          <h3 style={{ margin: 0, ...LABEL, color: INK }}>Your reports</h3>
           {rows.length > 0 && <span style={{ fontSize: 12.5, color: SUB }}>{rows.length}</span>}
         </div>
         <ReportsGrid rows={rows} loading={loading && !initialized} onOpen={(id) => navigate(`/pages?doc=${id}`)} onNotesChange={updateNotes} />

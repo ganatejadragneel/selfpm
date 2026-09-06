@@ -376,7 +376,7 @@ export const AddCustomTaskForm: React.FC = () => {
             padding: `${theme.spacing.md} ${theme.spacing.lg}`,
             background: allowMultiple
               ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)'
-              : 'rgba(248, 250, 252, 0.8)',
+              : 'var(--spm-field-strong)',
             borderRadius: theme.borderRadius.md,
             border: `1px solid ${allowMultiple ? 'rgba(139, 92, 246, 0.3)' : theme.colors.border.light}`,
             cursor: 'pointer',
@@ -512,7 +512,7 @@ export const AddCustomTaskForm: React.FC = () => {
                 opacity: options.length >= MAX_DROPDOWN_OPTIONS ? 0.5 : 1,
                 cursor: options.length >= MAX_DROPDOWN_OPTIONS ? 'not-allowed' : 'pointer',
                 background: options.length >= MAX_DROPDOWN_OPTIONS 
-                  ? 'rgba(248, 250, 252, 0.5)'
+                  ? 'var(--spm-field)'
                   : enhancedAddButtonStyle.background,
                 borderColor: options.length >= MAX_DROPDOWN_OPTIONS 
                   ? theme.colors.border.light
@@ -604,7 +604,7 @@ const enhancedAddButtonStyle: React.CSSProperties = {
   width: '100%',
   marginTop: theme.spacing.md,
   padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
+  background: 'var(--spm-panel)',
   border: `2px dashed ${theme.colors.primary.light}`,
   color: theme.colors.primary.dark,
   borderRadius: theme.borderRadius.md,

@@ -79,6 +79,18 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Light defaults for the subtle-fill variables (dark overrides them in
+   darkMode.css). These exist because a number of components hardcode a light
+   slate for fields and panels — and some import the static light theme object
+   outright, so they cannot respond to the theme at all. Inline styles can read a
+   custom property, so routing those fills through these fixes every one of them
+   without making each component theme-aware first. */
+:root {
+  --spm-field: rgba(248, 250, 252, 0.5);
+  --spm-field-strong: rgba(248, 250, 252, 0.8);
+  --spm-panel: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+}
+
 /* The two signature gradients, as reusable utilities so they stay identical
    everywhere (legacy: linear-gradient(135deg, #667eea 0%, #764ba2 100%)). */
 @layer utilities {

@@ -36,6 +36,8 @@ export interface AppShellProps {
 export function AppShell({ activeTab, onTabChange, onCapture, onPrivacyPledge, onOreReport, rightSlot }: AppShellProps) {
   const t = useThemeColors();
   const c = t.colors;
+  // SelfPM's first entry was 2025-09-02; the year rolls on each anniversary.
+  const yearNumber = Math.max(1, Math.floor((Date.now() - Date.UTC(2025, 8, 2)) / (365.25 * 24 * 3600 * 1000)) + 1);
   const dark = t.currentTheme === 'dark';
 
   const glass = c.surface.glass;
@@ -109,6 +111,22 @@ export function AppShell({ activeTab, onTabChange, onCapture, onPrivacyPledge, o
             }}
           >
             SelfPM
+          </span>
+          {/* Year marker. SelfPM began 2025-09-02; year 2 opens on the anniversary.
+              Computed rather than hardcoded so it never needs remembering. */}
+          <span
+            title={`Year ${yearNumber} of SelfPM`}
+            style={{
+              ...t.typography.label,
+              color: c.text.muted,
+              border: `1px solid ${c.border.light}`,
+              borderRadius: 999,
+              padding: '3px 7px',
+              lineHeight: 1,
+              flex: 'none',
+            }}
+          >
+            YR {yearNumber}
           </span>
         </div>
 

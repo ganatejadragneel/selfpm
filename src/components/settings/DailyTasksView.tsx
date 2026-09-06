@@ -197,7 +197,7 @@ export const DailyTasksView: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: theme.spacing.xl,
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+        background: 'var(--spm-panel)',
         borderRadius: theme.borderRadius.xl,
         backdropFilter: 'blur(10px)'
       }}>
@@ -234,7 +234,7 @@ export const DailyTasksView: React.FC = () => {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+      background: 'var(--spm-panel)',
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing['2xl'],
       border: '1px solid rgba(255, 255, 255, 0.8)',
@@ -311,7 +311,7 @@ export const DailyTasksView: React.FC = () => {
         <div style={{
           textAlign: 'center',
           padding: theme.spacing['3xl'],
-          background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+          background: 'var(--spm-panel)',
           borderRadius: theme.borderRadius.xl,
           border: `2px dashed ${theme.colors.primary.light}40`,
           backdropFilter: 'blur(10px)'
@@ -352,7 +352,7 @@ export const DailyTasksView: React.FC = () => {
         }}>
           {tasks.map(task => (
             <div key={task.id} style={{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.8) 100%)',
+              background: 'var(--spm-panel)',
               borderRadius: theme.borderRadius.xl,
               padding: theme.spacing.xl,
               border: `2px solid ${theme.colors.border.light}40`,
@@ -660,7 +660,7 @@ export const DailyTasksView: React.FC = () => {
                     
                     {/* Task details */}
                     <div style={{
-                      background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%)',
+                      background: 'var(--spm-panel)',
                       borderRadius: theme.borderRadius.md,
                       padding: theme.spacing.md,
                       border: `1px solid ${theme.colors.border.light}30`,

@@ -86,7 +86,7 @@ export const formStyles = {
     justifyContent: 'center',
     gap: theme.spacing.xs,
     padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
+    background: 'var(--spm-panel)',
     color: theme.colors.text.secondary,
     border: `2px solid ${theme.colors.border.light}`,
     borderRadius: theme.borderRadius.md,
@@ -190,7 +190,7 @@ export const formStyles = {
 
   // Card styles
   formCard: {
-    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+    background: 'var(--spm-panel)',
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing['2xl'],
     border: '1px solid rgba(255, 255, 255, 0.8)',

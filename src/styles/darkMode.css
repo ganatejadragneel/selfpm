@@ -14,11 +14,50 @@
 /* Dark mode specific styles */
 [data-theme="dark"] {
   color-scheme: dark;
+
+  /* Subtle fills, as variables rather than literals.
+     Many components hardcode a light slate (rgba(248,250,252,…)) for fields and
+     panels, and some import the static light theme object outright — so they
+     cannot respond to the theme at all. Inline styles CAN read a custom
+     property, so routing those fills through these two variables fixes every one
+     of them without having to make each component theme-aware first. */
+  --spm-field: rgba(167, 139, 250, 0.07);
+  --spm-field-strong: rgba(167, 139, 250, 0.11);
+  --spm-panel: linear-gradient(135deg, rgba(40, 31, 63, 0.82) 0%, rgba(23, 18, 37, 0.86) 100%);
 }
 
+/* ── The canvas ──────────────────────────────────────────────────────────────
+   Flat near-black made every screen feel like a void with cards floating in it.
+   Three wide, very soft colour fields sit behind everything instead: violet at
+   the top-left, indigo at the right, a warmer magenta low and centre. They are
+   large and low-opacity on purpose — you should read them as the page being lit
+   from somewhere, not as shapes.
+
+   The drift is 40s and moves only a few percent. It is meant to be noticed once
+   and then forgotten; anything faster competes with the data. Dropped entirely
+   under prefers-reduced-motion. */
 [data-theme="dark"] body {
-  background: #0d1117;
-  color: #e6edf3;
+  background-color: #0a0711;
+  color: #ece9f5;
+  background-image:
+    radial-gradient(62% 48% at 10% 4%, rgba(139, 92, 246, 0.40) 0%, transparent 64%),
+    radial-gradient(56% 44% at 94% 18%, rgba(99, 102, 241, 0.34) 0%, transparent 62%),
+    radial-gradient(70% 50% at 48% 100%, rgba(192, 38, 211, 0.26) 0%, transparent 68%),
+    radial-gradient(48% 40% at 82% 78%, rgba(167, 139, 250, 0.22) 0%, transparent 66%),
+    radial-gradient(54% 42% at 26% 62%, rgba(76, 29, 149, 0.30) 0%, transparent 66%);
+  background-attachment: fixed;
+  background-size: 160% 160%;
+  animation: spm-aurora 40s ease-in-out infinite alternate;
+}
+
+@keyframes spm-aurora {
+  0%   { background-position: 0% 50%, 100% 0%, 50% 100%, 80% 60%; }
+  50%  { background-position: 8% 42%, 92% 10%, 44% 92%, 72% 68%; }
+  100% { background-position: 2% 58%, 96% 4%, 56% 100%, 86% 56%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="dark"] body { animation: none; }
 }
 
 /* Scrollbar styling for dark mode */
@@ -28,60 +67,64 @@
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-track {
-  background: #161b22;
+  background: #0f0b1a;
   border-radius: 10px;
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: rgba(167, 139, 250, 0.22);
   border-radius: 10px;
-  border: 2px solid #161b22;
+  border: 2px solid #0f0b1a;
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: #6f6885;
 }
 
 /* Dark mode component overrides */
+/* A default for bare fields — deliberately NOT !important. A component that
+   styles its own field (the Seeker Title is transparent by design) must be able
+   to win, and previously could not. */
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-  background-color: #161b22 !important;
-  color: #e6edf3 !important;
-  border-color: #30363d !important;
+  background-color: #0f0b1a;
+  color: #ece9f5;
+  border-color: rgba(167, 139, 250, 0.22);
 }
 
 [data-theme="dark"] input:focus,
 [data-theme="dark"] textarea:focus,
 [data-theme="dark"] select:focus {
-  background-color: #1c2127 !important;
-  border-color: #388bfd !important;
-  outline: none !important;
+  border-color: rgba(167, 139, 250, 0.45);
+  outline: none;
 }
 
 [data-theme="dark"] button {
-  color: #e6edf3;
+  color: #ece9f5;
 }
 
-/* Modal backgrounds in dark mode */
+/* A fallback for dialogs that bring no background of their own. NOT !important:
+   a panel that styles itself — the tips panel needs to sit ABOVE the page, not
+   match it — must be able to win. */
 [data-theme="dark"] [role="dialog"] {
-  background-color: #161b22 !important;
-  color: #e6edf3 !important;
+  background-color: #0f0b1a;
+  color: #ece9f5;
 }
 
 /* Card backgrounds in dark mode */
 [data-theme="dark"] .card,
 [data-theme="dark"] [class*="card"],
 [data-theme="dark"] [class*="Card"] {
-  background-color: #1c2127 !important;
-  border-color: #30363d !important;
+  background-color: #171225 !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Daily task component in dark mode */
 [data-theme="dark"] [class*="daily"],
 [data-theme="dark"] [class*="Daily"] {
-  background-color: #161b22 !important;
-  border-color: #30363d !important;
+  background-color: #0f0b1a !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Dropdown menus in dark mode */
@@ -89,32 +132,35 @@
 [data-theme="dark"] [class*="Dropdown"],
 [data-theme="dark"] [class*="menu"],
 [data-theme="dark"] [class*="Menu"] {
-  background-color: #1c2127 !important;
-  border-color: #30363d !important;
+  background-color: #171225 !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Override any white backgrounds in dark mode */
 [data-theme="dark"] * {
-  --bg-white: #1c2127;
-  --bg-glass: rgba(28, 33, 39, 0.95);
+  --bg-white: #171225;
+  --bg-glass: rgba(24, 19, 38, 0.88);
 }
 
 [data-theme="dark"] [style*="background: white"],
 [data-theme="dark"] [style*="background-color: white"],
 [data-theme="dark"] [style*="background:white"],
 [data-theme="dark"] [style*="background-color:white"] {
-  background: #1c2127 !important;
+  background: #171225 !important;
 }
 
-[data-theme="dark"] [style*="rgba(255, 255, 255"] {
-  background: rgba(28, 33, 39, 0.95) !important;
-}
+/* REMOVED: [style*="rgba(255, 255, 255"] { background: … !important }
+   That selector matched the style ATTRIBUTE TEXT, not a property — so an inline
+   `color: rgba(255,255,255,0.82)` forced a dark background onto the element.
+   It was painting boxes behind white-on-gradient text (the tip panel's eyebrow
+   and close button). A rule that cannot tell a colour from a background does not
+   belong in a themed app. */
 
 /* Headers and navigation in dark mode */
 [data-theme="dark"] header,
 [data-theme="dark"] nav {
-  background: #161b22 !important;
-  border-color: #30363d !important;
+  background: #0f0b1a !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Badges and chips in dark mode */
@@ -124,24 +170,24 @@
 [data-theme="dark"] [class*="Chip"],
 [data-theme="dark"] [class*="tag"],
 [data-theme="dark"] [class*="Tag"] {
-  background: rgba(48, 54, 61, 0.5) !important;
-  color: #e6edf3 !important;
-  border-color: #30363d !important;
+  background: rgba(167, 139, 250, 0.16) !important;
+  color: #ece9f5 !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Tooltips in dark mode */
 [data-theme="dark"] [class*="tooltip"],
 [data-theme="dark"] [class*="Tooltip"],
 [data-theme="dark"] [role="tooltip"] {
-  background: #21262d !important;
-  color: #e6edf3 !important;
-  border-color: #30363d !important;
+  background: #171225 !important;
+  color: #ece9f5 !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
 }
 
 /* Progress bars in dark mode */
 [data-theme="dark"] [class*="progress"],
 [data-theme="dark"] [class*="Progress"] {
-  background: #161b22 !important;
+  background: #0f0b1a !important;
 }
 
 /* Hover states in dark mode */
@@ -152,7 +198,7 @@
 
 /* Focus states in dark mode */
 [data-theme="dark"] *:focus-visible {
-  outline-color: #388bfd !important;
+  outline-color: #a78bfa !important;
 }
 
 /* Fix black/dark text that becomes invisible */
@@ -167,7 +213,7 @@
 [data-theme="dark"] [style*="color: #3"],
 [data-theme="dark"] [style*="color: #4"],
 [data-theme="dark"] [style*="color: #5"] {
-  color: #e6edf3 !important;
+  color: #ece9f5 !important;
 }
 
 /* Ensure all text in specific elements is visible */
@@ -184,7 +230,7 @@
 [data-theme="dark"] li,
 [data-theme="dark"] td,
 [data-theme="dark"] th {
-  color: #e6edf3 !important;
+  color: #ece9f5 !important;
 }
 
 /* Keep gradient text as is */
@@ -198,12 +244,12 @@
 [data-theme="dark"] [style*="#4b5563"],
 [data-theme="dark"] [style*="#6b7280"],
 [data-theme="dark"] [style*="#9ca3af"] {
-  color: #e6edf3 !important;
+  color: #ece9f5 !important;
 }
 
 /* Button text should always be visible */
 [data-theme="dark"] button {
-  color: #e6edf3 !important;
+  color: #ece9f5 !important;
 }
 
 /* Links should be visible */

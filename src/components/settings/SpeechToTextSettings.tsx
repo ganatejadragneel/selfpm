@@ -113,7 +113,7 @@ export const SpeechToTextSettings: React.FC = () => {
           ].map((feature, index) => (
             <li key={index} style={{
               padding: theme.spacing.md,
-              background: 'rgba(248, 250, 252, 0.5)',
+              background: 'var(--spm-field)',
               borderRadius: theme.borderRadius.sm,
               fontSize: theme.typography.sizes.sm,
               color: theme.colors.text.primary,
@@ -128,7 +128,7 @@ export const SpeechToTextSettings: React.FC = () => {
       {/* Browser Compatibility */}
       <div style={{
         padding: theme.spacing.lg,
-        background: 'rgba(248, 250, 252, 0.5)',
+        background: 'var(--spm-field)',
         borderRadius: theme.borderRadius.lg,
         border: `1px solid ${theme.colors.border.light}`
       }}>

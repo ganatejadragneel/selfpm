@@ -3,12 +3,8 @@
 
 import { Plus, FileText, ChevronUp, ChevronDown, X } from 'lucide-react';
 import type { KbDocument } from './types';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
-const HAIR = '#ececef';
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
 
 function snippet(content: string): string {
   const firstReal = content
@@ -42,6 +38,32 @@ export function DocumentList({
   onDelete: (id: string) => void;
   onReorder: (id: string, dir: 'up' | 'down') => void;
 }) {
+  const { ink: INK, sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT, hair: HAIR } = useSurfacePalette();
+  const newBtnStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 30,
+    height: 30,
+    border: 'none',
+    borderRadius: 8,
+    background: ACCENT_SOFT,
+    color: ACCENT,
+    cursor: 'pointer',
+    flex: 'none',
+  };
+  const iconBtn: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    border: 'none',
+    borderRadius: 6,
+    background: 'transparent',
+    color: MUTED,
+    cursor: 'pointer',
+  };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <style>{`.doc-row .doc-actions{opacity:0;transition:opacity .15s}.doc-row:hover .doc-actions{opacity:1}`}</style>
@@ -99,7 +121,7 @@ export function DocumentList({
                   gap: 6,
                   borderBottom: `1px solid ${HAIR}`,
                   borderLeft: active ? `3px solid ${ACCENT}` : '3px solid transparent',
-                  background: active ? 'rgba(102,126,234,0.06)' : 'transparent',
+                  background: active ? ACCENT_SOFT : 'transparent',
                   padding: '11px 12px 11px 14px',
                   cursor: 'pointer',
                 }}
@@ -181,29 +203,4 @@ export function DocumentList({
   );
 }
 
-const newBtnStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 30,
-  height: 30,
-  border: 'none',
-  borderRadius: 8,
-  background: 'rgba(102,126,234,0.10)',
-  color: ACCENT,
-  cursor: 'pointer',
-  flex: 'none',
-};
 
-const iconBtn: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 24,
-  height: 24,
-  border: 'none',
-  borderRadius: 6,
-  background: 'transparent',
-  color: MUTED,
-  cursor: 'pointer',
-};

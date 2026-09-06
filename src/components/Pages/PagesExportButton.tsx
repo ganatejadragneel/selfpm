@@ -16,12 +16,8 @@ import {
   slugify,
 } from './pagesExport';
 import type { PagesExportFormat, PagesExportScope } from './pagesExport';
+import { useSurfacePalette } from '../../hooks/useSurfacePalette';
 
-const HAIR = '#ececef';
-const INK = '#1f2937';
-const SUB = '#6b7280';
-const MUTED = '#9ca3af';
-const ACCENT = '#667eea';
 
 type Format = PagesExportFormat;
 type Scope = PagesExportScope;
@@ -57,6 +53,7 @@ export const PagesExportButton = memo(function PagesExportButton({
   folderDocs,
   folderName,
 }: PagesExportButtonProps) {
+  const { ink: INK, sub: SUB, muted: MUTED, accent: ACCENT, accentSoft: ACCENT_SOFT, hair: HAIR, surface: SURFACE } = useSurfacePalette();
   const [open, setOpen] = useState(false);
   const [scope, setScope] = useState<Scope>('all');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -138,7 +135,7 @@ export const PagesExportButton = memo(function PagesExportButton({
     fontSize: 11.5,
     fontWeight: scope === value ? 700 : 500,
     color: scope === value ? ACCENT : SUB,
-    background: scope === value ? 'rgba(102,126,234,0.10)' : 'transparent',
+    background: scope === value ? ACCENT_SOFT : 'transparent',
     border: 'none',
     borderRadius: 6,
     cursor: 'pointer',
@@ -183,7 +180,7 @@ export const PagesExportButton = memo(function PagesExportButton({
               ? 'rgba(34,197,94,0.12)'
               : status === 'error'
                 ? 'rgba(239,68,68,0.12)'
-                : '#fff',
+                : SURFACE,
           color:
             status === 'success' ? '#16a34a' : status === 'error' ? '#dc2626' : open ? ACCENT : SUB,
           cursor: disabled ? 'not-allowed' : 'pointer',
@@ -212,7 +209,7 @@ export const PagesExportButton = memo(function PagesExportButton({
               left: dropdownPos.left,
               zIndex: 9999,
               width: 232,
-              background: '#fff',
+              background: SURFACE,
               border: `1px solid ${HAIR}`,
               borderRadius: 10,
               boxShadow: '0 12px 32px rgba(0,0,0,0.14)',
@@ -311,6 +308,7 @@ function ExportRow({
   style: React.CSSProperties;
   onClick: () => void;
 }) {
+  const { sub: SUB, muted: MUTED } = useSurfacePalette();
   return (
     <button
       onClick={onClick}
